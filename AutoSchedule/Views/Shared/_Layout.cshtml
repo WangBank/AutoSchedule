@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>自动传输管理后台</title>
+    <link href="~/css/layui.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="layui-layout-body">
+
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header">
+            <div class="layui-logo">自动传输管理后台</div>
+            <!-- 头部区域（可配合layui已有的水平导航） -->
+            <ul class="layui-nav layui-layout-left">
+                @*<li class="layui-nav-item"><a href="">新增</a></li>
+                    <li class="layui-nav-item"><a href="">返回</a></li>*@
+                @*<li class="layui-nav-item">
+                        <a href="javascript:;">其它系统</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="">邮件管理</a></dd>
+                            <dd><a href="">消息管理</a></dd>
+                            <dd><a href="">授权管理</a></dd>
+                        </dl>
+                    </li>*@
+            </ul>
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">
+                        <img src="http://t.cn/RCzsdCq" class="layui-nav-img">
+                        贤心
+                    </a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="">基本资料</a></dd>
+                        <dd><a href="">安全设置</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item"><a href="">退了</a></li>
+            </ul>
+        </div>
+
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+                <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+                <ul class="layui-nav layui-nav-tree" lay-filter="test">
+
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">选项</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/DataSource/DataSource">数据源设置</a></dd>
+                            <dd><a href="/Organization/Organization">组织机构设置</a></dd>
+                            <dd><a href="/SystemKey/SystemKey">系统变量设置</a></dd>
+                            <dd><a href="/TaskPlan/TaskPlan">任务计划</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="layui-body">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">新增</button>
+            @*<button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>*@
+            @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
+        </div>
+    </script>
+
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/layui.js"></script>
+    <script>
+        layui.use('table', function () {
+            var table = layui.table;
+
+            //数据源设置表格
+            table.render({
+                elem: '#dataSource'
+                , url: '/DataSource/DataSourceResult'
+                , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+                , cols: [[
+                    { type: 'radio' },
+                    { field: 'GUID', title: '编号', sort: true },
+                    { field: 'Name', title: '名称', sort: true },
+                    { field: 'GroupSqlString', title: '分组数据源', sort: true },
+                    { field: 'SqlString', title: '数据源', sort: true },
+                    { field: 'AfterSqlString', title: '调用正常后执行语句', sort: true },
+                    { field: 'AfterSqlstring2', title: '调用异常后执行语句', sort: true },
+                    { field: 'IsStart', title: '单据类型', sort: true },
+                    { field: 'FType', title: '是否启用', sort: true },
+                    { field: 'MainKey', title: '主关键字段', sort: true }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                ]]
+            });
+
+            //组织机构表格
+            table.render({
+                elem: '#organization'
+                , url: '/Organization/OrgResult'
+                , toolbar: '#toolbarDemo'
+                , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                , cols: [[
+                    { type: 'radio' },
+                    //orgName = "123",orgNum = ""
+                    { field: 'orgNum', title: '编号', sort: true },
+                    { field: 'orgName',title: '名称', sort: true }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                ]]
+            });
+
+
+            //系统变量设置表格
+            table.render({
+                elem: '#SystemKey'
+                , toolbar: '#toolbarDemo'
+                , url: '/SystemKey/SystemKeyResult'
+                , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                , cols: [[
+                    { type: 'radio' },
+                    { field: 'KeyName', title: '关键字名称', sort: true },
+                    { field: 'KeyValue', title: '关键字值', sort: true }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                ]]
+            });
+
+            //任务计划表格
+            table.render({
+                elem: '#TaskPlan'
+                , toolbar: '#toolbarDemo'
+                , url: '/TaskPlan/TaskPlanResult'
+                , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                , cols: [[
+                    { type: 'radio' },
+                    { field: 'GUID',  title: '任务编号', hide: true, sort: true },
+                    { field: 'CODE',title: '任务编号', sort: true },
+                    { field: 'Name',  title: '任务名称', sort: true },
+                    { field: 'Frequency',  title: '执行频率', sort: true },
+                    { field: 'TaskPlanType',  title: '任务类型', sort: true },
+                    { field: 'OrgCode',  title: '所属机构', sort: true }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                ]]
+            });
+
+            //任务计划表格明细
+
+            //监听行单击事件（单击事件为：rowDouble）
+            table.on('row(TaskPlan)', function (obj) {
+                var data = obj.data;
+                var guid = data.GUID;
+                table.render({
+                    elem: '#TaskPlanDetail'
+                    , toolbar: '#toolbarDemo'
+                    , url: '/TaskPlan/TaskPlanDetailResult?guid=' + guid
+                    , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                    , cols: [[
+                        { type: 'radio' },
+                        { field: 'dsGuid',  title: '编号', sort: true },
+                        { field: 'dsName', title: '名称', sort: true },
+                        { field: 'dsState', title: '是否启用', sort: true },
+                        { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                    ]]
+                });
+
+                //标注选中样式
+                obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+            });
+            // 头部按钮事件
+            table.on('toolbar(dataSource)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'getCheckData':
+                        var data = checkStatus.data;
+                        layer.alert(JSON.stringify(data));
+                        break;
+                    case 'getCheckLength':
+                        var data = checkStatus.data;
+                        layer.msg('选中了：' + data.length + ' 个');
+                        break;
+                    case 'add':
+                        var data = checkStatus.data;
+                        layer.msg('选中了：' + data.length + ' 个');
+                        break;
+                    case 'isAll':
+                        layer.msg(checkStatus.isAll ? '全选' : '未全选');
+                        break;
+
+                    //自定义头工具栏右侧图标 - 提示
+                    case 'LAYTABLE_TIPS':
+                        layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                        break;
+                };
+            });
+
+            //监听行工具事件
+            table.on('tool(dataSource)', function (obj) {
+                var data = obj.data;
+                //console.log(obj)
+                if (obj.event === 'detail') {
+                    layer.msg('ID：' + data.GUID + ' 的查看操作');
+                } else
+                    if (obj.event === 'del') {
+                        layer.confirm('真的删除行么', function (index) {
+                            obj.del();
+                            layer.close(index);
+                        });
+                    } else if (obj.event === 'edit') {
+                        layer.prompt({
+                            formType: 2
+                            , value: data.GroupSqlString
+                        }, function (value, index) {
+                            obj.update({
+                                GroupSqlString: value
+                            });
+                            layer.close(index);
+                        });
+                    }
+            });
+        });
+
+    </script>
+    <script>
+        //JavaScript代码区域
+        layui.use('element', function () {
+            var element = layui.element;
+
+        });
+    </script>
+    @*@RenderSection("Scripts", required: false)*@
+</body>
+</html>
+
+
+
+
