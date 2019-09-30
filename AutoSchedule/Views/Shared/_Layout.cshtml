@@ -73,7 +73,6 @@
     </script>
 
     <script type="text/html" id="barDemo">
-        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
@@ -118,7 +117,7 @@
                     { type: 'radio' },
                     //orgName = "123",orgNum = ""
                     { field: 'orgNum', title: '编号', sort: true },
-                    { field: 'orgName',title: '名称', sort: true }
+                    { field: 'orgName', title: '名称', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
             });
@@ -137,7 +136,7 @@
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
             });
-
+            //aaaaa
             //任务计划表格
             table.render({
                 elem: '#TaskPlan'
@@ -146,12 +145,12 @@
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                 , cols: [[
                     { type: 'radio' },
-                    { field: 'GUID',  title: '任务编号', hide: true, sort: true },
-                    { field: 'CODE',title: '任务编号', sort: true },
-                    { field: 'Name',  title: '任务名称', sort: true },
-                    { field: 'Frequency',  title: '执行频率', sort: true },
-                    { field: 'TaskPlanType',  title: '任务类型', sort: true },
-                    { field: 'OrgCode',  title: '所属机构', sort: true }
+                    { field: 'GUID', title: '任务编号', hide: true, sort: true },
+                    { field: 'CODE', title: '任务编号', sort: true },
+                    { field: 'Name', title: '任务名称', sort: true },
+                    { field: 'Frequency', title: '执行频率', sort: true },
+                    { field: 'TaskPlanType', title: '任务类型', sort: true },
+                    { field: 'OrgCode', title: '所属机构', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
             });
@@ -169,7 +168,7 @@
                     , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                     , cols: [[
                         { type: 'radio' },
-                        { field: 'dsGuid',  title: '编号', sort: true },
+                        { field: 'dsGuid', title: '编号', sort: true },
                         { field: 'dsName', title: '名称', sort: true },
                         { field: 'dsState', title: '是否启用', sort: true },
                         { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
@@ -193,7 +192,16 @@
                         break;
                     case 'add':
                         var data = checkStatus.data;
-                        layer.msg('选中了：' + data.length + ' 个');
+                        //iframe层
+                        layer.open({
+                            type: 2,
+                            title: '新增数据源',
+                            shadeClose: true,
+                            shade: 0.8,
+                            area: ['700px', '700px'],
+                            content: '/DataSource/DataSourceDetail' //iframe的url
+                        });
+                        //layer.msg('选中了：' + data.length + ' 个');
                         break;
                     case 'isAll':
                         layer.msg(checkStatus.isAll ? '全选' : '未全选');
@@ -217,6 +225,18 @@
                         layer.confirm('真的删除行么', function (index) {
                             obj.del();
                             layer.close(index);
+                            $.ajax({
+                                url: "/DataSource/DataSourceDelete?GUID="+data.GUID,
+                                async: true,
+                                type: "Get",
+                                dataType: "json",
+                                contentType: "application/json;charset=UTF-8",
+                                success: function (dataResult) {
+                                    if (dataResult.code != "0") {
+                                        alert(dataResult.msg);
+                                    }
+                                }
+                            });
                         });
                     } else if (obj.event === 'edit') {
                         layer.prompt({
