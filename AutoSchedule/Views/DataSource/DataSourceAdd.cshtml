@@ -72,12 +72,7 @@
                 <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="AfterSqlstring2"></textarea>
             </div>
         </div>
-        @*<div class="layui-form-item layui-form-text">
-                <label class="layui-form-label">编辑器</label>
-                <div class="layui-input-block">
-                    <textarea class="layui-textarea layui-hide" name="content" lay-verify="content" id="LAY_demo_editor"></textarea>
-                </div>
-            </div>*@
+
         <div class="layui-form-item">
             <div class="layui-input-block">
                 <button type="button" class="layui-btn" lay-submit="" lay-filter="ensure">立即提交</button>
@@ -95,9 +90,6 @@
                 , layedit = layui.layedit
                 , laydate = layui.laydate;
 
-            //创建一个编辑器
-            //var editIndex = layedit.build('LAY_demo_editor');
-
             ////监听指定开关
             form.on('switch(switchTest)', function (data) {
                 layer.msg('启用状态：' + (this.checked ? '是' : '否'), {
@@ -105,14 +97,11 @@
                 });
             });
 
-
-            //console.log(layui.table.cache.tablename);
-
             form.on('submit(ensure)', function (data) {
                 var dataDetail = JSON.stringify(data.field);
                 console.log(dataDetail);
                 $.ajax({
-                    url: "/DataSource/DataSourceDetail",
+                    url: "/DataSource/DataSourceAdd",
                     async: true,
                     type: "POST",
                     dataType: "json",

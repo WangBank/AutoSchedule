@@ -26,10 +26,7 @@ namespace AutoSchedule.Controllers
             
             return View();
         }
-        public IActionResult DataSourceDetail()
-        {
-            return View();
-        }
+        
         public async Task<IActionResult> DataSourceEdit(string guid)
         {
             var ds = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == guid).FirstOrDefaultAsync();
@@ -37,15 +34,14 @@ namespace AutoSchedule.Controllers
         }
 
         [HttpPost]
-        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
-        public async Task<string> DataSourceEdit([FromBody]DataSourceAddIn dataSourceAddIn)
+        public async Task<string> DataSourceEdit([FromBody]DataSource dataSourceAddIn)
         {
 
             var dsdelete = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
             _SqlLiteContext.OpenSql.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() == 0)
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
             }
             Dtos.Models.DataSource dataSource = new DataSource
             {
@@ -63,40 +59,49 @@ namespace AutoSchedule.Controllers
             var addresult = await _SqlLiteContext.SaveChangesAsync();
             if (addresult > 0)
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "", code = "0" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
             }
             else
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
             }
+        }
+
+        public IActionResult DataSourceAdd()
+        {
+            return View();
         }
 
         [HttpPost]
-        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
-        public async Task<string> DataSourceDetail([FromBody]DataSourceAddIn dataSourceAddIn)
+        public async Task<string> DataSourceAdd([FromBody]DataSource dataSourceAddIn)
         {
             var ds = await _SqlLiteContext.OpenSql.AsNoTracking().OrderByDescending(o => o.GUID).FirstOrDefaultAsync();
-            Dtos.Models.DataSource dataSource = new DataSource { 
-                GUID = (int.Parse(ds.GUID) + 1).ToString(),AfterSqlString = dataSourceAddIn.AfterSqlString,AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2,FType = dataSourceAddIn.FType,GroupSqlString = dataSourceAddIn.GroupSqlString,IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ?"0":"1",MainKey = dataSourceAddIn.MainKey,SqlString = dataSourceAddIn.SqlString,Name = dataSourceAddIn.Name
+            Dtos.Models.DataSource dataSource = new DataSource
+            {
+                GUID = (int.Parse(ds.GUID) + 1).ToString(),
+                AfterSqlString = dataSourceAddIn.AfterSqlString,
+                AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2,
+                FType = dataSourceAddIn.FType,
+                GroupSqlString = dataSourceAddIn.GroupSqlString,
+                IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ? "0" : "1",
+                MainKey = dataSourceAddIn.MainKey,
+                SqlString = dataSourceAddIn.SqlString,
+                Name = dataSourceAddIn.Name
             };
             await _SqlLiteContext.OpenSql.AddAsync(dataSource);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
-            if (addresult>0)
+            if (addresult > 0)
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "", code = "0" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
             }
             else
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "新增数据源失败", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "新增数据源失败", code = "-1" });
             }
         }
 
-        /// <summary>
-        /// 数据源
-        /// </summary>
-        /// <returns></returns>
         [HttpGet]
-        public async Task<IActionResult> DataSourceResult()
+        public async Task<string> DataSourceResult()
         {
             var dts = await _SqlLiteContext.OpenSql.AsNoTracking().OrderBy(o=>o.GUID).ToListAsync();
             List<DataSourceModel> data = new List<DataSourceModel>();
@@ -104,8 +109,7 @@ namespace AutoSchedule.Controllers
             {
                 data.Add(new DataSourceModel { GUID = item.GUID, Name = item.Name, AfterSqlString = item.AfterSqlString, AfterSqlstring2 = item.AfterSqlstring2, FType = item.FType, GroupSqlString = item.GroupSqlString, SqlString = item.SqlString, IsStart = item.IsStart, MainKey = item.MainKey });
             }
-            string result = System.Text.Json.JsonSerializer.Serialize<DataSourceData>(new DataSourceData { msg = "", count = data.Count, code = 0, data = data });
-            return Content(result);
+            return System.Text.Json.JsonSerializer.Serialize(new DataSourceData { msg = "", count = data.Count, code = 0, data = data });
         }
 
 
@@ -120,11 +124,12 @@ namespace AutoSchedule.Controllers
             _SqlLiteContext.OpenSql.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "", code = "0" });
+               return System.Text.Json.JsonSerializer.Serialize( new ResponseCommon { msg = "", code = "0" });
+               
             }
             else
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "删除数据源失败", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize( new ResponseCommon { msg = "删除数据源失败", code = "-1" });
             }
         }
     }

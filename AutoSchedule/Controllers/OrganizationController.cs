@@ -1,9 +1,12 @@
-﻿using AutoSchedule.Dtos.Data;
+﻿using AutoSchedule.Common;
+using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
+using AutoSchedule.Dtos.RequestIn;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -29,7 +32,7 @@ namespace AutoSchedule.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<IActionResult> OrgResult()
+        public async Task<string> OrgResult()
         {
             var org = await _SqlLiteContext.OrgSetting.AsNoTracking().OrderBy(o=>o.CODE).ToListAsync();
             List<OrganizationModel> data = new List<OrganizationModel>();
@@ -37,8 +40,7 @@ namespace AutoSchedule.Controllers
             {
                 data.Add(new OrganizationModel { orgName = item.NAME, orgNum = item.CODE });
             }
-            string result = System.Text.Json.JsonSerializer.Serialize<OrganizationData>(new OrganizationData { msg = "", count = data.Count, code = 0, data = data });
-            return Content(result);
+            return System.Text.Json.JsonSerializer.Serialize(new OrganizationData { msg = "", count = data.Count, code = 0, data = data });
         }
 
 
@@ -46,6 +48,91 @@ namespace AutoSchedule.Controllers
         public IActionResult OrgAdd()
         {
             return View();
+        }
+
+        [HttpPost]
+        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
+        public async Task<string> OrgAdd([FromBody]Organization organizationAddIn)
+        {
+            //判断当前是否有重复
+            if (_SqlLiteContext.OrgSetting.AsNoTracking().Contains(organizationAddIn))
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
+            }
+            Dtos.Models.Organization organizationAdd = new Dtos.Models.Organization
+            {
+                CODE = organizationAddIn.CODE,
+                NAME = organizationAddIn.NAME,
+                DataBaseName = organizationAddIn.DataBaseName,
+                DBType = organizationAddIn.DBType,
+                Password = organizationAddIn.Password,
+                ServerName = organizationAddIn.ServerName,
+                UserName = organizationAddIn.UserName
+            };
+            await _SqlLiteContext.OrgSetting.AddAsync(organizationAdd);
+            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            if (addresult > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "新增组织机构失败", code = "-1" });
+            }
+        }
+
+        [HttpPost]
+        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
+        public async Task<string> OrgTestConnect([FromBody]Organization organizationAddIn)
+        {
+            //判断当前是否有重复
+            if (_SqlLiteContext.OrgSetting.AsNoTracking().Contains(organizationAddIn))
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
+            }
+            string conString = "";
+            bool result = false;
+            //测试数据库连接
+            switch (organizationAddIn.DBType)
+            {
+                //Oracle 0
+                //SqlServer  1
+                //MySql  2
+                case "0":
+                    //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
+                    conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
+                    result = await TestConnect.ConnectOracleAsync(conString);
+                    break;
+                case "1":
+                    //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
+
+                    conString = $"data source={organizationAddIn.ServerName.Replace(":",",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
+                    result = await TestConnect.ConnectSqlServerAsync(conString);
+                    break;
+                case "2":
+                    string[] mysqlIp = organizationAddIn.ServerName.Split(':');
+                    //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
+                    conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
+                    result = await TestConnect.ConnectMysqlAsync(conString);
+                    break;
+                case "3":
+                    break;
+                case "4":
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (result)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接成功！", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查用户名和密码后重试！", code = "-1" });
+            }
+
         }
     }
 }
