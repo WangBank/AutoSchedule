@@ -100,8 +100,8 @@
                     { field: 'SqlString', title: '数据源', sort: true },
                     { field: 'AfterSqlString', title: '调用正常后执行语句', sort: true },
                     { field: 'AfterSqlstring2', title: '调用异常后执行语句', sort: true },
-                    { field: 'IsStart', title: '单据类型', sort: true },
-                    { field: 'FType', title: '是否启用', sort: true },
+                    { field: 'FType', title: '单据类型', sort: true },
+                    { field: 'IsStart', title: '是否启用', sort: true },
                     { field: 'MainKey', title: '主关键字段', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
@@ -136,7 +136,7 @@
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
             });
-            //aaaaa
+
             //任务计划表格
             table.render({
                 elem: '#TaskPlan'
@@ -155,9 +155,8 @@
                 ]]
             });
 
-            //任务计划表格明细
 
-            //监听行单击事件（单击事件为：rowDouble）
+            //点击任务计划，会显示相应的明细
             table.on('row(TaskPlan)', function (obj) {
                 var data = obj.data;
                 var guid = data.GUID;
@@ -178,43 +177,25 @@
                 //标注选中样式
                 obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
             });
-            // 头部按钮事件
+
+            // 数据源新增
             table.on('toolbar(dataSource)', function (obj) {
                 var checkStatus = table.checkStatus(obj.config.id);
-                switch (obj.event) {
-                    case 'getCheckData':
-                        var data = checkStatus.data;
-                        layer.alert(JSON.stringify(data));
-                        break;
-                    case 'getCheckLength':
-                        var data = checkStatus.data;
-                        layer.msg('选中了：' + data.length + ' 个');
-                        break;
-                    case 'add':
-                        var data = checkStatus.data;
-                        //iframe层
-                        layer.open({
-                            type: 2,
-                            title: '新增数据源',
-                            shadeClose: true,
-                            shade: 0.8,
-                            area: ['700px', '700px'],
-                            content: '/DataSource/DataSourceDetail' //iframe的url
-                        });
-                        //layer.msg('选中了：' + data.length + ' 个');
-                        break;
-                    case 'isAll':
-                        layer.msg(checkStatus.isAll ? '全选' : '未全选');
-                        break;
-
-                    //自定义头工具栏右侧图标 - 提示
-                    case 'LAYTABLE_TIPS':
-                        layer.alert('这是工具栏右侧自定义的一个图标按钮');
-                        break;
-                };
+                if (obj.event == 'add') {
+                    var data = checkStatus.data;
+                    //iframe层
+                    layer.open({
+                        type: 2,
+                        title: '新增数据源',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/DataSource/DataSourceDetail' //iframe的url
+                    });
+                }
             });
 
-            //监听行工具事件
+            //数据源编辑
             table.on('tool(dataSource)', function (obj) {
                 var data = obj.data;
                 //console.log(obj)
@@ -223,30 +204,80 @@
                 } else
                     if (obj.event === 'del') {
                         layer.confirm('真的删除行么', function (index) {
-                            obj.del();
-                            layer.close(index);
                             $.ajax({
-                                url: "/DataSource/DataSourceDelete?GUID="+data.GUID,
+                                url: "/DataSource/DataSourceDelete?GUID=" + data.GUID,
                                 async: true,
                                 type: "Get",
                                 dataType: "json",
                                 contentType: "application/json;charset=UTF-8",
                                 success: function (dataResult) {
-                                    if (dataResult.code != "0") {
-                                        alert(dataResult.msg);
+                                    if (dataResult.code == "0") {
+                                        obj.del();
+                                        layer.close(index);
                                     }
                                 }
                             });
                         });
                     } else if (obj.event === 'edit') {
-                        layer.prompt({
-                            formType: 2
-                            , value: data.GroupSqlString
-                        }, function (value, index) {
-                            obj.update({
-                                GroupSqlString: value
+                        layer.open({
+                            type: 2,
+                            title: '新增数据源',
+                            shadeClose: true,
+                            shade: 0.8,
+                            area: ['700px', '700px'],
+                            content: '/DataSource/DataSourceEdit?guid=' + data.GUID //iframe的url
+                        });
+                    }
+            });
+
+            // 组织机构新增
+            table.on('toolbar(organization)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                if (obj.event == 'add') {
+                    var data = checkStatus.data;
+                    //iframe层
+                    layer.open({
+                        type: 2,
+                        title: '新增组织机构',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/Organization/OrgAdd' //iframe的url
+                    });
+                }
+            });
+
+            //组织机构编辑
+            table.on('tool(organization)', function (obj) {
+                var data = obj.data;
+                //console.log(obj)
+                if (obj.event === 'detail') {
+                    layer.msg('ID：' + data.GUID + ' 的查看操作');
+                } else
+                    if (obj.event === 'del') {
+                        layer.confirm('真的删除行么', function (index) {
+                            $.ajax({
+                                url: "/DataSource/DataSourceDelete?GUID=" + data.GUID,
+                                async: true,
+                                type: "Get",
+                                dataType: "json",
+                                contentType: "application/json;charset=UTF-8",
+                                success: function (dataResult) {
+                                    if (dataResult.code == "0") {
+                                        obj.del();
+                                        layer.close(index);
+                                    }
+                                }
                             });
-                            layer.close(index);
+                        });
+                    } else if (obj.event === 'edit') {
+                        layer.open({
+                            type: 2,
+                            title: '新增数据源',
+                            shadeClose: true,
+                            shade: 0.8,
+                            area: ['700px', '700px'],
+                            content: '/DataSource/DataSourceEdit?guid=' + data.GUID //iframe的url
                         });
                     }
             });
@@ -260,7 +291,6 @@
 
         });
     </script>
-    @*@RenderSection("Scripts", required: false)*@
 </body>
 </html>
 

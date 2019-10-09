@@ -2,6 +2,8 @@
 @{
     Layout = null;
 }
+@using AutoSchedule.Dtos.Models;
+@model DataSource;
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,60 +18,67 @@
 <body>
 
     <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
-        <legend>数据源增加表单</legend>
+        <legend>数据源修改表单</legend>
     </fieldset>
 
     <form class="layui-form">
         <div class="layui-form-item">
             <label class="layui-form-label">单据类型</label>
             <div class="layui-input-block">
-                <select name="FType" lay-filter="fType">
-                    <option value="0" selected="">业务单据</option>
+                <select name="FType" lay-filter="aihao">
+                    <option value="0" selected="selected">业务单据</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item" hidden="hidden">
+            <label class="layui-form-label">guid</label>
+            <div class="layui-input-block">
+                <input type="text" name="GUID" lay-verify="required" autocomplete="off" class="layui-input" value="@Model.GUID">
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label">单据名称</label>
             <div class="layui-input-block">
-                <input type="text" name="Name" lay-verify="required" autocomplete="off" placeholder="请输入单据名称" class="layui-input">
+                <input type="text" name="Name" lay-verify="required" autocomplete="off" placeholder="请输入单据名称" class="layui-input" value="@Model.Name">
             </div>
         </div>
 
         <div class="layui-form-item" pane="">
             <label class="layui-form-label">是否启用</label>
             <div class="layui-input-block">
-                <input type="checkbox" checked="" lay-verify="required" name="IsStart" lay-skin="switch" lay-filter="switchTest" title="是否启用">
+                <input type="checkbox" checked="" lay-verify="required" name="IsStart" lay-skin="switch" lay-filter="switchTest" title="是否启用" value="@Model.IsStart">
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label">主关键字段</label>
             <div class="layui-input-block">
-                <input type="text" name="MainKey" lay-verify="required" autocomplete="off" placeholder="请输入单据名称" class="layui-input">
+                <input type="text" name="MainKey" lay-verify="required" autocomplete="off" placeholder="请输入单据名称" class="layui-input" value="@Model.MainKey">
             </div>
         </div>
 
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">分组数据源</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="GroupSqlString"></textarea>
+                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="GroupSqlString">@Model.GroupSqlString</textarea>
             </div>
         </div>
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">业务选择数据源</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="SqlString"></textarea>
+                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="SqlString">@Model.SqlString</textarea>
             </div>
         </div>
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">调用正常后执行语句</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="AfterSqlString"></textarea>
+                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="AfterSqlString">@Model.AfterSqlString</textarea>
             </div>
         </div>
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">调用异常后执行语句</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="AfterSqlstring2"></textarea>
+                <textarea placeholder="请输入内容" lay-verify="required" class="layui-textarea" name="AfterSqlstring2">@Model.AfterSqlstring2</textarea>
             </div>
         </div>
         @*<div class="layui-form-item layui-form-text">
@@ -80,7 +89,7 @@
             </div>*@
         <div class="layui-form-item">
             <div class="layui-input-block">
-                <button type="button" class="layui-btn" lay-submit="" lay-filter="ensure">立即提交</button>
+                <button type="button" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
                 <button type="reset" class="layui-btn layui-btn-primary">重置</button>
             </div>
         </div>
@@ -108,11 +117,12 @@
 
             //console.log(layui.table.cache.tablename);
 
-            form.on('submit(ensure)', function (data) {
+            form.on('submit(demo1)', function (data) {
                 var dataDetail = JSON.stringify(data.field);
+                dataDetail.GUID = @Model.GUID;
                 console.log(dataDetail);
                 $.ajax({
-                    url: "/DataSource/DataSourceDetail",
+                    url: "/DataSource/DataSourceEdit",
                     async: true,
                     type: "POST",
                     dataType: "json",
@@ -127,7 +137,7 @@
                         setTimeout(function () { parent.location.reload() }, 100); 
                     }
                 });
-                //window.parent.location.reload();
+                // window.parent.location.reload();
                
             });
 

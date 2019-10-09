@@ -30,6 +30,47 @@ namespace AutoSchedule.Controllers
         {
             return View();
         }
+        public async Task<IActionResult> DataSourceEdit(string guid)
+        {
+            var ds = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == guid).FirstOrDefaultAsync();
+            return View(ds);
+        }
+
+        [HttpPost]
+        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
+        public async Task<string> DataSourceEdit([FromBody]DataSourceAddIn dataSourceAddIn)
+        {
+
+            var dsdelete = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
+            _SqlLiteContext.OpenSql.Remove(dsdelete);
+            if (await _SqlLiteContext.SaveChangesAsync() == 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
+            }
+            Dtos.Models.DataSource dataSource = new DataSource
+            {
+                GUID = dataSourceAddIn.GUID,
+                AfterSqlString = dataSourceAddIn.AfterSqlString,
+                AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2,
+                FType = dataSourceAddIn.FType,
+                GroupSqlString = dataSourceAddIn.GroupSqlString,
+                IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ? "0" : "1",
+                MainKey = dataSourceAddIn.MainKey,
+                SqlString = dataSourceAddIn.SqlString,
+                Name = dataSourceAddIn.Name
+            };
+            await _SqlLiteContext.OpenSql.AddAsync(dataSource);
+            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            if (addresult > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
+            }
+        }
+
         [HttpPost]
         //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
         public async Task<string> DataSourceDetail([FromBody]DataSourceAddIn dataSourceAddIn)
@@ -57,7 +98,7 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<IActionResult> DataSourceResult()
         {
-            var dts = await _SqlLiteContext.OpenSql.AsNoTracking().ToListAsync();
+            var dts = await _SqlLiteContext.OpenSql.AsNoTracking().OrderBy(o=>o.GUID).ToListAsync();
             List<DataSourceModel> data = new List<DataSourceModel>();
             foreach (var item in dts)
             {
@@ -83,7 +124,7 @@ namespace AutoSchedule.Controllers
             }
             else
             {
-                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "新增数据源失败", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize<ResponseCommon>(new ResponseCommon { msg = "删除数据源失败", code = "-1" });
             }
         }
     }
