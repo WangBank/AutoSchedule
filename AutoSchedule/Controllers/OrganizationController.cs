@@ -81,47 +81,113 @@ namespace AutoSchedule.Controllers
             }
         }
 
+        public async Task<IActionResult> OrgEdit(string orgNum)
+        {
+            var ds = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgNum).FirstOrDefaultAsync();
+            return View(ds);
+        }
+
+        [HttpPost]
+        public async Task<string> OrgEdit([FromBody]Organization organizationIn)
+        {
+
+            var dsdelete = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == organizationIn.CODE).FirstOrDefaultAsync();
+            _SqlLiteContext.OrgSetting.Remove(dsdelete);
+            if (await _SqlLiteContext.SaveChangesAsync() == 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改组织机构失败", code = "-1" });
+            }
+            Dtos.Models.Organization organizationadd = new Organization
+            {
+                CODE = organizationIn.CODE,
+                NAME = organizationIn.NAME,
+                DataBaseName = organizationIn.DataBaseName,
+                DBType = organizationIn.DBType,
+                Password = organizationIn.Password,
+                ServerName = organizationIn.ServerName,
+                UserName = organizationIn.UserName
+            };
+            await _SqlLiteContext.OrgSetting.AddAsync(organizationadd);
+            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            if (addresult > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改组织机构失败", code = "-1" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<string> OrgDelete(string orgNum)
+        {
+            var dsdelete = _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgNum).FirstOrDefault();
+            _SqlLiteContext.OrgSetting.Remove(dsdelete);
+            if (await _SqlLiteContext.SaveChangesAsync() > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除组织机构失败", code = "-1" });
+            }
+        }
+
         [HttpPost]
         //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
         public async Task<string> OrgTestConnect([FromBody]Organization organizationAddIn)
         {
             //判断当前是否有重复
-            if (_SqlLiteContext.OrgSetting.AsNoTracking().Contains(organizationAddIn))
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
-            }
+            //if (_SqlLiteContext.OrgSetting.AsNoTracking().Contains(organizationAddIn))
+            //{
+            //    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
+            //}
             string conString = "";
             bool result = false;
-            //测试数据库连接
-            switch (organizationAddIn.DBType)
+            try
             {
-                //Oracle 0
-                //SqlServer  1
-                //MySql  2
-                case "0":
-                    //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
-                    conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
-                    result = await TestConnect.ConnectOracleAsync(conString);
-                    break;
-                case "1":
-                    //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
+                switch (organizationAddIn.DBType)
+                {
+                    //Oracle 0
+                    //SqlServer  1
+                    //MySql  2
+                    case "0":
+                        //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
+                        conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
+                        result = await TestConnect.ConnectOracleAsync(conString);
+                        break;
+                    case "1":
+                        //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
 
-                    conString = $"data source={organizationAddIn.ServerName.Replace(":",",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
-                    result = await TestConnect.ConnectSqlServerAsync(conString);
-                    break;
-                case "2":
-                    string[] mysqlIp = organizationAddIn.ServerName.Split(':');
-                    //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
-                    conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
-                    result = await TestConnect.ConnectMysqlAsync(conString);
-                    break;
-                case "3":
-                    break;
-                case "4":
-                    break;
+                        conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
+                        result = await TestConnect.ConnectSqlServerAsync(conString);
+                        break;
+                    case "2":
+                        string name = "";
+                        if (!organizationAddIn.ServerName.Contains(':'))
+                        {
+                            name = organizationAddIn.ServerName + ":3306";
+                        }
+                        string[] mysqlIp = name.Split(':');
+                        //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
+                        conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
+                        result = await TestConnect.ConnectMysqlAsync(conString);
+                        break;
+                    case "3":
+                        break;
+                    case "4":
+                        break;
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
+                throw;
             }
 
             if (result)
@@ -130,7 +196,7 @@ namespace AutoSchedule.Controllers
             }
             else
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查用户名和密码后重试！", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
             }
 
         }

@@ -29,8 +29,8 @@
             <ul class="layui-nav layui-layout-right">
                 <li class="layui-nav-item">
                     <a href="javascript:;">
-                        <img src="http://t.cn/RCzsdCq" class="layui-nav-img">
-                        贤心
+                        <img src="~/images/Wolffy.jpg" class="layui-nav-img"/>
+                        王银行
                     </a>
                     <dl class="layui-nav-child">
                         <dd><a href="">基本资料</a></dd>
@@ -257,7 +257,7 @@
                     if (obj.event === 'del') {
                         layer.confirm('真的删除行么', function (index) {
                             $.ajax({
-                                url: "/DataSource/DataSourceDelete?GUID=" + data.GUID,
+                                url: "/Organization/OrgDelete?orgNum=" + data.orgNum,
                                 async: true,
                                 type: "Get",
                                 dataType: "json",
@@ -273,11 +273,11 @@
                     } else if (obj.event === 'edit') {
                         layer.open({
                             type: 2,
-                            title: '新增数据源',
+                            title: '组织结构修改',
                             shadeClose: true,
                             shade: 0.8,
                             area: ['700px', '700px'],
-                            content: '/DataSource/DataSourceEdit?guid=' + data.GUID //iframe的url
+                            content: '/Organization/OrgEdit?orgNum=' + data.orgNum //iframe的url
                         });
                     }
             });

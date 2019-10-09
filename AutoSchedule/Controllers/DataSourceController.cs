@@ -112,11 +112,6 @@ namespace AutoSchedule.Controllers
             return System.Text.Json.JsonSerializer.Serialize(new DataSourceData { msg = "", count = data.Count, code = 0, data = data });
         }
 
-
-        /// <summary>
-        /// delete
-        /// </summary>
-        /// <returns></returns>
         [HttpGet]
         public async Task<string> DataSourceDelete(string GUID)
         {

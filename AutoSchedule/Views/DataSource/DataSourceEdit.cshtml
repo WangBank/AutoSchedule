@@ -89,7 +89,7 @@
             </div>*@
         <div class="layui-form-item">
             <div class="layui-input-block">
-                <button type="button" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+                <button type="button" class="layui-btn" lay-submit="" lay-filter="enSure">立即提交</button>
                 <button type="reset" class="layui-btn layui-btn-primary">重置</button>
             </div>
         </div>
@@ -117,9 +117,8 @@
 
             //console.log(layui.table.cache.tablename);
 
-            form.on('submit(demo1)', function (data) {
+            form.on('submit(enSure)', function (data) {
                 var dataDetail = JSON.stringify(data.field);
-                dataDetail.GUID = @Model.GUID;
                 console.log(dataDetail);
                 $.ajax({
                     url: "/DataSource/DataSourceEdit",
