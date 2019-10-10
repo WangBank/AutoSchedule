@@ -36,7 +36,14 @@ namespace AutoSchedule.Controllers
             string FrequencyType = "";
             foreach (var item in skey)
             {
-                OrgName = (await _SqlLiteContext.OrgSetting.AsNoTracking().FirstAsync(o => o.CODE == item.OrgCode)).DataBaseName;
+                if (string.IsNullOrEmpty(item.OrgCode))
+                {
+                    OrgName = "";
+                }
+                else
+                {
+                    OrgName = (await _SqlLiteContext.OrgSetting.AsNoTracking().FirstAsync(o => o.CODE == item.OrgCode)).NAME;
+                }
                 if (item.TaskPlanType == "0")
                 {
                     TaskPlanName = "上传";
@@ -46,15 +53,15 @@ namespace AutoSchedule.Controllers
                     TaskPlanName = "下载";
                 }
 
-                if (item.Frequency == "0")
+                if (item.FrequencyType == "0")
                 {
                     FrequencyType = "秒";
                 }
-                else if (item.Frequency == "1")
+                else if (item.FrequencyType == "1")
                 {
                     FrequencyType = "分钟";
                 }
-                else if (item.Frequency == "2")
+                else if (item.FrequencyType == "2")
                 {
                     FrequencyType = "小时";
                 }
@@ -83,5 +90,52 @@ namespace AutoSchedule.Controllers
             }
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanDetailData { msg = "", count = data.Count, code = 0, data = data });
         }
+
+
+
+        public IActionResult TaskPlanAdd()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
+        public async Task<string> TaskPlanAdd([FromBody]TaskPlanExGuidCode TaskPlanAddIn)
+        {
+            string guid = "";
+            string code = "";
+            var isExist = await _SqlLiteContext.TaskPlan.AsNoTracking().OrderByDescending(o=>o.GUID).FirstOrDefaultAsync();
+            if (isExist ==null)
+            {
+                guid = "100";
+                code = guid;
+            }
+            else
+            {
+                guid = (int.Parse(isExist.GUID) + 1).ToString();
+                code = guid;
+            }
+            Dtos.Models.TaskPlan TaskPlanAdd = new Dtos.Models.TaskPlan
+            {
+                CODE = code,
+                Frequency = TaskPlanAddIn.Frequency,
+                FrequencyType = TaskPlanAddIn.FrequencyType,
+                GUID = guid,
+                Name = TaskPlanAddIn.Name,
+                OrgCode = TaskPlanAddIn.OrgCode,
+                TaskPlanType = TaskPlanAddIn.TaskPlanType
+            };
+            await _SqlLiteContext.TaskPlan.AddAsync(TaskPlanAdd);
+            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            if (addresult > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "新增任务计划失败", code = "-1" });
+            }
+        }
+
     }
 }

@@ -18,62 +18,54 @@
 <body>
 
     <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
-        <legend>组织机构增加表单</legend>
+        <legend>任务计划增加表单</legend>
     </fieldset>
 
     <form class="layui-form">
 
         <div class="layui-form-item">
-            <label class="layui-form-label">机构编号</label>
+            <label class="layui-form-label">任务类型</label>
             <div class="layui-input-block">
-                <input type="text" name="CODE" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">机构名称</label>
-            <div class="layui-input-block">
-                <input type="text" name="NAME" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
-            </div>
-        </div>
-
-        <div class="layui-form-item">
-            <label class="layui-form-label">数据库类型</label>
-            <div class="layui-input-block">
-                <select name="DBType" lay-filter="aihao">
-                    <option value="0" selected="">Oracle</option>
-                    <option value="1" selected="">SqlServer</option>
-                    <option value="2" selected="">MySql</option>
+                <select name="TaskPlanType" lay-filter="TaskPlanType">
+                    <option value="0" selected>上传</option>
+                    <option value="1" >下载</option>
                 </select>
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label">服务器名称</label>
+            <label class="layui-form-label">所属机构</label>
             <div class="layui-input-block">
-                <input type="text" name="ServerName" lay-verify="required" autocomplete="off" placeholder="请输入服务器名称，比如:192.168.5.7:3307" class="layui-input">
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">数据库名称</label>
-            <div class="layui-input-block">
-                <input type="text" name="DataBaseName" lay-verify="required" autocomplete="off" placeholder="请输入数据库名称" class="layui-input">
+                <select name="OrgCode" lay-filter="OrgCode" id="selectOrg">
+                </select>
             </div>
         </div>
 
         <div class="layui-form-item">
-            <label class="layui-form-label">用户名</label>
+            <label class="layui-form-label">任务名称</label>
             <div class="layui-input-block">
-                <input type="text" name="UserName" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
+                <input type="text" name="Name" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label">密码</label>
+            <label class="layui-form-label">时间数</label>
             <div class="layui-input-block">
-                <input type="password" name="Password" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
+                <input type="text" name="Frequency" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
+            <label class="layui-form-label">时间类型</label>
             <div class="layui-input-block">
-                <button type="button" class="layui-btn" lay-filter="testConnect" lay-submit="">测试连接</button>
+                <select name="FrequencyType" lay-filter="FrequencyType">
+                    <option value="0" selected>秒</option>
+                    <option value="1" selected="">分</option>
+                    <option value="2" selected="">时</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
                 <button type="button" class="layui-btn" lay-filter="enSure" lay-submit="">确定</button>
                 <button type="reset" class="layui-btn layui-btn-primary">重置</button>
             </div>
@@ -81,6 +73,30 @@
     </form>
 
     <script type="text/javascript">
+        $(function () {
+            GetOrgList();
+        });
+        function GetOrgList() {
+            $.get("/Organization/OrgResult", function (data) {
+                if (data.code == 0) {
+                    var table = data.data;
+                    for (var i = 0; i < table.length; i++) {
+                        var item = table[i];
+                        $("#selectOrg").append("<option value=\"" + item.orgNum + "\" selected=\"\">" + item.orgName + "</option>");
+                    }
+                    renderForm();
+                }
+
+                //返回的是json格式的数据
+            }, "json");
+        }
+        function renderForm() {
+            layui.use('form', function () {
+                var form = layui.form;
+                form.render();
+            });
+        }
+
         layui.use(['form', 'layedit', 'laydate'], function () {
             var form = layui.form
                 , layer = layui.layer;
@@ -88,7 +104,7 @@
                 var dataDetail = JSON.stringify(data.field);
                 console.log(dataDetail);
                 $.ajax({
-                    url: "/Organization/OrgAdd",
+                    url: "/TaskPlan/TaskPlanAdd",
                     async: true,
                     type: "POST",
                     dataType: "json",
@@ -101,24 +117,6 @@
                         var index = parent.layer.getFrameIndex(window.name);
                         setTimeout(function () { parent.layer.close(index) }, 1000);
                         setTimeout(function () { parent.location.reload() }, 100);
-                    }
-                });
-
-            });
-
-            //测试是否能够连接
-            form.on('submit(testConnect)', function (data) {
-                var dataDetail = JSON.stringify(data.field);
-                console.log(dataDetail);
-                $.ajax({
-                    url: "/Organization/OrgTestConnect",
-                    async: false,
-                    type: "POST",
-                    dataType: "json",
-                    contentType: "application/json;charset=UTF-8",
-                    data: dataDetail,
-                    success: function (dataResult) {
-                        alert(dataResult.msg);
                     }
                 });
 

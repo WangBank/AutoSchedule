@@ -34,7 +34,7 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> OrgResult()
         {
-            var org = await _SqlLiteContext.OrgSetting.AsNoTracking().OrderBy(o=>o.CODE).ToListAsync();
+            var org = await _SqlLiteContext.OrgSetting.AsNoTracking().OrderBy(o => o.CODE).ToListAsync();
             List<OrganizationModel> data = new List<OrganizationModel>();
             foreach (var item in org)
             {
@@ -119,11 +119,21 @@ namespace AutoSchedule.Controllers
             }
         }
 
+
+        //删除的时候，移除任务计划中相应的code
         [HttpGet]
         public async Task<string> OrgDelete(string orgNum)
         {
-            var dsdelete = _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgNum).FirstOrDefault();
-            _SqlLiteContext.OrgSetting.Remove(dsdelete);
+            var orgdelete = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgNum).FirstOrDefaultAsync();
+
+            var dstk = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.OrgCode == orgNum).ToListAsync();
+            for (int i = 0; i < dstk.Count; i++)
+            {
+                dstk[i].OrgCode = "";
+            }
+            _SqlLiteContext.TaskPlan.UpdateRange(dstk);
+            _SqlLiteContext.OrgSetting.Remove(orgdelete);
+
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
@@ -200,5 +210,7 @@ namespace AutoSchedule.Controllers
             }
 
         }
+
+
     }
 }

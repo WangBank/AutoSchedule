@@ -29,7 +29,7 @@
             <ul class="layui-nav layui-layout-right">
                 <li class="layui-nav-item">
                     <a href="javascript:;">
-                        <img src="~/images/Wolffy.jpg" class="layui-nav-img"/>
+                        <img src="~/images/Wolffy.jpg" class="layui-nav-img" />
                         王银行
                     </a>
                     <dl class="layui-nav-child">
@@ -198,10 +198,6 @@
             //数据源编辑
             table.on('tool(dataSource)', function (obj) {
                 var data = obj.data;
-                //console.log(obj)
-                if (obj.event === 'detail') {
-                    layer.msg('ID：' + data.GUID + ' 的查看操作');
-                } else
                     if (obj.event === 'del') {
                         layer.confirm('真的删除行么', function (index) {
                             $.ajax({
@@ -221,7 +217,7 @@
                     } else if (obj.event === 'edit') {
                         layer.open({
                             type: 2,
-                            title: '新增数据源',
+                            title: '编辑数据源',
                             shadeClose: true,
                             shade: 0.8,
                             area: ['700px', '700px'],
@@ -229,6 +225,104 @@
                         });
                     }
             });
+
+
+            // 系统变量新增
+            table.on('toolbar(SystemKey)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                if (obj.event == 'add') {
+                    var data = checkStatus.data;
+                    //iframe层
+                    layer.open({
+                        type: 2,
+                        title: '新增系统变量',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/SystemKey/SystemKeyAdd' //iframe的url
+                    });
+                }
+            });
+
+            //系统变量编辑
+            table.on('tool(SystemKey)', function (obj) {
+                var data = obj.data;
+                    if (obj.event === 'del') {
+                        layer.confirm('真的删除行么', function (index) {
+                            $.ajax({
+                                url: "/SystemKey/SystemKeyDelete?KeyName=" + data.KeyName,
+                                async: true,
+                                type: "Get",
+                                dataType: "json",
+                                contentType: "application/json;charset=UTF-8",
+                                success: function (dataResult) {
+                                    if (dataResult.code == "0") {
+                                        obj.del();
+                                        layer.close(index);
+                                    }
+                                }
+                            });
+                        });
+                    } else if (obj.event === 'edit') {
+                        layer.open({
+                            type: 2,
+                            title: '编辑数据源',
+                            shadeClose: true,
+                            shade: 0.8,
+                            area: ['700px', '700px'],
+                            content: '/SystemKey/SystemKeyEdit?KeyName=' + data.KeyName //iframe的url
+                        });
+                    }
+            });
+
+             // 任务计划新增
+            table.on('toolbar(TaskPlan)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                if (obj.event == 'add') {
+                    var data = checkStatus.data;
+                    //iframe层
+                    layer.open({
+                        type: 2,
+                        title: '新增系统变量',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/TaskPlan/TaskPlanAdd' //iframe的url
+                    });
+                }
+            });
+
+            //任务计划编辑
+            table.on('tool(TaskPlan)', function (obj) {
+                var data = obj.data;
+                    if (obj.event === 'del') {
+                        layer.confirm('真的删除行么', function (index) {
+                            $.ajax({
+                                url: "/TaskPlan/TaskPlanDelete?GUID=" + data.GUID,
+                                async: true,
+                                type: "Get",
+                                dataType: "json",
+                                contentType: "application/json;charset=UTF-8",
+                                success: function (dataResult) {
+                                    if (dataResult.code == "0") {
+                                        obj.del();
+                                        layer.close(index);
+                                    }
+                                }
+                            });
+                        });
+                    } else if (obj.event === 'edit') {
+                        layer.open({
+                            type: 2,
+                            title: '编辑任务计划',
+                            shadeClose: true,
+                            shade: 0.8,
+                            area: ['700px', '700px'],
+                            content: '/TaskPlan/TaskPlanEdit?GUID=' + data.GUID //iframe的url
+                        });
+                    }
+            });
+
 
             // 组织机构新增
             table.on('toolbar(organization)', function (obj) {
@@ -250,10 +344,6 @@
             //组织机构编辑
             table.on('tool(organization)', function (obj) {
                 var data = obj.data;
-                //console.log(obj)
-                if (obj.event === 'detail') {
-                    layer.msg('ID：' + data.GUID + ' 的查看操作');
-                } else
                     if (obj.event === 'del') {
                         layer.confirm('真的删除行么', function (index) {
                             $.ajax({

@@ -25,7 +25,7 @@ namespace AutoSchedule.Common
                 await con.CloseAsync();
                 await con.DisposeAsync();
                 return false;
-            }          
+            }
         }
 
         public static async Task<bool> ConnectMysqlAsync(string conString)
@@ -40,7 +40,7 @@ namespace AutoSchedule.Common
                 await con.DisposeAsync();
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await con.CloseAsync();
                 await con.DisposeAsync();
@@ -69,5 +69,5 @@ namespace AutoSchedule.Common
         }
     }
 
-   
+
 }

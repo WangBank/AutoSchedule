@@ -14,7 +14,7 @@ namespace AutoSchedule.Controllers
     {
         SqlLiteContext _SqlLiteContext;
         private readonly ILogger<DataSourceController> _logger;
-        
+
         public DataSourceController(ILogger<DataSourceController> logger, SqlLiteContext SqlLiteContext)
         {
             _SqlLiteContext = SqlLiteContext;
@@ -23,10 +23,10 @@ namespace AutoSchedule.Controllers
 
         public IActionResult DataSource()
         {
-            
+
             return View();
         }
-        
+
         public async Task<IActionResult> DataSourceEdit(string guid)
         {
             var ds = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == guid).FirstOrDefaultAsync();
@@ -103,11 +103,22 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> DataSourceResult()
         {
-            var dts = await _SqlLiteContext.OpenSql.AsNoTracking().OrderBy(o=>o.GUID).ToListAsync();
+            var dts = await _SqlLiteContext.OpenSql.AsNoTracking().OrderBy(o => o.GUID).ToListAsync();
             List<DataSourceModel> data = new List<DataSourceModel>();
             foreach (var item in dts)
             {
-                data.Add(new DataSourceModel { GUID = item.GUID, Name = item.Name, AfterSqlString = item.AfterSqlString, AfterSqlstring2 = item.AfterSqlstring2, FType = item.FType, GroupSqlString = item.GroupSqlString, SqlString = item.SqlString, IsStart = item.IsStart, MainKey = item.MainKey });
+                data.Add(new DataSourceModel
+                {
+                    Name = item.Name,
+                    AfterSqlString = item.AfterSqlString,
+                    AfterSqlstring2 = item.AfterSqlstring2,
+                    FType = item.FType,
+                    GroupSqlString = item.GroupSqlString,
+                    SqlString = item.SqlString,
+                    IsStart = item.IsStart,
+                    MainKey = item.MainKey,
+                GUID = item.GUID
+                });
             }
             return System.Text.Json.JsonSerializer.Serialize(new DataSourceData { msg = "", count = data.Count, code = 0, data = data });
         }
@@ -119,12 +130,12 @@ namespace AutoSchedule.Controllers
             _SqlLiteContext.OpenSql.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
-               return System.Text.Json.JsonSerializer.Serialize( new ResponseCommon { msg = "", code = "0" });
-               
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+
             }
             else
             {
-                return System.Text.Json.JsonSerializer.Serialize( new ResponseCommon { msg = "删除数据源失败", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除数据源失败", code = "-1" });
             }
         }
     }
