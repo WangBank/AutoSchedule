@@ -47,6 +47,8 @@ namespace AutoSchedule.Dtos.Models
         public string dsGuid { get; set; }
         public string dsName { get; set; }
         public string dsState { get; set; }
+        public string tkDetailGuid { get; set; }
+        
     }
 
     public class TaskPlanDetailData

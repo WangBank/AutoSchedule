@@ -86,7 +86,7 @@ namespace AutoSchedule.Controllers
                 dsName = (await _SqlLiteContext.OpenSql.AsNoTracking().FirstAsync(o => o.GUID == item.OpenSqlGuid)).Name;
                 dsState = (await _SqlLiteContext.OpenSql.AsNoTracking().FirstAsync(o => o.GUID == item.OpenSqlGuid)).IsStart;
 
-                data.Add(new TaskPlanDetailModel { dsGuid = item.OpenSqlGuid, dsName = dsName, dsState = dsState });
+                data.Add(new TaskPlanDetailModel { dsGuid = item.OpenSqlGuid, dsName = dsName, dsState = dsState,tkDetailGuid = item.GUID });
             }
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanDetailData { msg = "", count = data.Count, code = 0, data = data });
         }
@@ -134,6 +134,123 @@ namespace AutoSchedule.Controllers
             else
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "新增任务计划失败", code = "-1" });
+            }
+        }
+
+        public async Task<IActionResult> TaskPlanEdit(string GUID)
+        {
+            var ds = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == GUID).FirstOrDefaultAsync();
+            return View(ds);
+        }
+
+        [HttpPost]
+        public async Task<string> TaskPlanEdit([FromBody]TaskPlan TaskPlanIn)
+        {
+
+            var dsdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.CODE == TaskPlanIn.CODE).FirstOrDefaultAsync();
+            _SqlLiteContext.TaskPlan.Remove(dsdelete);
+            if (await _SqlLiteContext.SaveChangesAsync() == 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改任务计划失败", code = "-1" });
+            }
+            Dtos.Models.TaskPlan TaskPlanadd = new TaskPlan
+            {
+                CODE = TaskPlanIn.CODE,
+                Frequency = TaskPlanIn.Frequency,
+                FrequencyType = TaskPlanIn.FrequencyType,
+                GUID = TaskPlanIn.GUID,
+                Name = TaskPlanIn.Name,
+                OrgCode = TaskPlanIn.OrgCode,
+                TaskPlanType = TaskPlanIn.TaskPlanType
+            };
+            await _SqlLiteContext.TaskPlan.AddAsync(TaskPlanadd);
+            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            if (addresult > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改任务计划失败", code = "-1" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<string> TaskPlanDelete(string GUID)
+        {
+            var orgdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.CODE == GUID).FirstOrDefaultAsync();
+
+            var tkdetailrembe = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == GUID).ToListAsync();
+
+            _SqlLiteContext.TaskPlanRelation.RemoveRange(tkdetailrembe);
+            _SqlLiteContext.TaskPlan.Remove(orgdelete);
+
+            if (await _SqlLiteContext.SaveChangesAsync() > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除任务计划失败", code = "-1" });
+            }
+        }
+
+
+        public async Task<IActionResult> TaskPlanDetailAdd(string tkguid)
+        {
+            var ds = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == tkguid).FirstOrDefaultAsync();
+            return View(ds);
+        }
+
+        [HttpPost]
+        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
+        public async Task<string> TaskPlanDetailAdd([FromBody]TaskPlanDetailExGuid TaskPlanDetailExGuidAddIn)
+        {
+            string guid = "";
+            var isExist = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().OrderByDescending(o => o.GUID).FirstOrDefaultAsync();
+            if (isExist == null)
+            {
+                guid = "100";
+            }
+            else
+            {
+                guid = (int.Parse(isExist.GUID) + 1).ToString();
+            }
+            Dtos.Models.TaskPlanDetail TaskPlanDetailAdd = new Dtos.Models.TaskPlanDetail
+            {
+                GUID = guid,
+                OpenSqlGuid = TaskPlanDetailExGuidAddIn.OpenSqlGuid,
+                TaskPlanGuid = TaskPlanDetailExGuidAddIn.TaskPlanGuid
+
+            };
+            await _SqlLiteContext.TaskPlanRelation.AddAsync(TaskPlanDetailAdd);
+            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            if (addresult > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "新增任务计划明细失败", code = "-1" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<string> TaskPlanDetailDelete(string GUID)
+        {
+            var tkdetaildelete = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.GUID == GUID).FirstOrDefaultAsync();
+
+            _SqlLiteContext.TaskPlanRelation.Remove(tkdetaildelete);
+
+            if (await _SqlLiteContext.SaveChangesAsync() > 0)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+
+            }
+            else
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除任务计划明细失败", code = "-1" });
             }
         }
 

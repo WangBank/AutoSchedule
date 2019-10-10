@@ -57,6 +57,15 @@ namespace AutoSchedule.Dtos.Models
 
     }
 
+    public class TaskPlanDetailExGuid
+    {
+
+        public string TaskPlanGuid { get; set; }
+
+        public string OpenSqlGuid { get; set; }
+
+    }
+
     public class TaskPlanExGuidCode
     {
 

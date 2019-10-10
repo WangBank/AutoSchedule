@@ -71,7 +71,13 @@
             @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
         </div>
     </script>
-
+    <script type="text/html" id="toolbarDemoDetail">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">新增任务计划明细</button>
+            @*<button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>*@
+            @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
+        </div>
+    </script>
     <script type="text/html" id="barDemo">
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
@@ -83,6 +89,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/layui.js"></script>
     <script>
+        var tkguid = '';
         layui.use('table', function () {
             var table = layui.table;
 
@@ -158,15 +165,18 @@
 
             //点击任务计划，会显示相应的明细
             table.on('row(TaskPlan)', function (obj) {
+
                 var data = obj.data;
                 var guid = data.GUID;
+                tkguid = data.GUID;
                 table.render({
                     elem: '#TaskPlanDetail'
-                    , toolbar: '#toolbarDemo'
+                    , toolbar: '#toolbarDemoDetail'
                     , url: '/TaskPlan/TaskPlanDetailResult?guid=' + guid
                     , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                     , cols: [[
                         { type: 'radio' },
+                        { field: 'guid', title: 'tkDetailGuid', sort: true,hide:true },
                         { field: 'dsGuid', title: '编号', sort: true },
                         { field: 'dsName', title: '名称', sort: true },
                         { field: 'dsState', title: '是否启用', sort: true },
@@ -198,32 +208,32 @@
             //数据源编辑
             table.on('tool(dataSource)', function (obj) {
                 var data = obj.data;
-                    if (obj.event === 'del') {
-                        layer.confirm('真的删除行么', function (index) {
-                            $.ajax({
-                                url: "/DataSource/DataSourceDelete?GUID=" + data.GUID,
-                                async: true,
-                                type: "Get",
-                                dataType: "json",
-                                contentType: "application/json;charset=UTF-8",
-                                success: function (dataResult) {
-                                    if (dataResult.code == "0") {
-                                        obj.del();
-                                        layer.close(index);
-                                    }
+                if (obj.event === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        $.ajax({
+                            url: "/DataSource/DataSourceDelete?GUID=" + data.GUID,
+                            async: true,
+                            type: "Get",
+                            dataType: "json",
+                            contentType: "application/json;charset=UTF-8",
+                            success: function (dataResult) {
+                                if (dataResult.code == "0") {
+                                    obj.del();
+                                    layer.close(index);
                                 }
-                            });
+                            }
                         });
-                    } else if (obj.event === 'edit') {
-                        layer.open({
-                            type: 2,
-                            title: '编辑数据源',
-                            shadeClose: true,
-                            shade: 0.8,
-                            area: ['700px', '700px'],
-                            content: '/DataSource/DataSourceEdit?guid=' + data.GUID //iframe的url
-                        });
-                    }
+                    });
+                } else if (obj.event === 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '编辑数据源',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/DataSource/DataSourceEdit?guid=' + data.GUID //iframe的url
+                    });
+                }
             });
 
 
@@ -247,35 +257,35 @@
             //系统变量编辑
             table.on('tool(SystemKey)', function (obj) {
                 var data = obj.data;
-                    if (obj.event === 'del') {
-                        layer.confirm('真的删除行么', function (index) {
-                            $.ajax({
-                                url: "/SystemKey/SystemKeyDelete?KeyName=" + data.KeyName,
-                                async: true,
-                                type: "Get",
-                                dataType: "json",
-                                contentType: "application/json;charset=UTF-8",
-                                success: function (dataResult) {
-                                    if (dataResult.code == "0") {
-                                        obj.del();
-                                        layer.close(index);
-                                    }
+                if (obj.event === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        $.ajax({
+                            url: "/SystemKey/SystemKeyDelete?KeyName=" + data.KeyName,
+                            async: true,
+                            type: "Get",
+                            dataType: "json",
+                            contentType: "application/json;charset=UTF-8",
+                            success: function (dataResult) {
+                                if (dataResult.code == "0") {
+                                    obj.del();
+                                    layer.close(index);
                                 }
-                            });
+                            }
                         });
-                    } else if (obj.event === 'edit') {
-                        layer.open({
-                            type: 2,
-                            title: '编辑数据源',
-                            shadeClose: true,
-                            shade: 0.8,
-                            area: ['700px', '700px'],
-                            content: '/SystemKey/SystemKeyEdit?KeyName=' + data.KeyName //iframe的url
-                        });
-                    }
+                    });
+                } else if (obj.event === 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '编辑数据源',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/SystemKey/SystemKeyEdit?KeyName=' + data.KeyName //iframe的url
+                    });
+                }
             });
 
-             // 任务计划新增
+            // 任务计划新增
             table.on('toolbar(TaskPlan)', function (obj) {
                 var checkStatus = table.checkStatus(obj.config.id);
                 if (obj.event == 'add') {
@@ -283,7 +293,7 @@
                     //iframe层
                     layer.open({
                         type: 2,
-                        title: '新增系统变量',
+                        title: '新增任务计划',
                         shadeClose: true,
                         shade: 0.8,
                         area: ['700px', '700px'],
@@ -295,34 +305,82 @@
             //任务计划编辑
             table.on('tool(TaskPlan)', function (obj) {
                 var data = obj.data;
-                    if (obj.event === 'del') {
-                        layer.confirm('真的删除行么', function (index) {
-                            $.ajax({
-                                url: "/TaskPlan/TaskPlanDelete?GUID=" + data.GUID,
-                                async: true,
-                                type: "Get",
-                                dataType: "json",
-                                contentType: "application/json;charset=UTF-8",
-                                success: function (dataResult) {
-                                    if (dataResult.code == "0") {
-                                        obj.del();
-                                        layer.close(index);
-                                    }
+                if (obj.event === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        $.ajax({
+                            url: "/TaskPlan/TaskPlanDelete?GUID=" + data.GUID,
+                            async: true,
+                            type: "Get",
+                            dataType: "json",
+                            contentType: "application/json;charset=UTF-8",
+                            success: function (dataResult) {
+                                if (dataResult.code == "0") {
+                                    obj.del();
+                                    layer.close(index);
                                 }
-                            });
+                            }
                         });
-                    } else if (obj.event === 'edit') {
-                        layer.open({
-                            type: 2,
-                            title: '编辑任务计划',
-                            shadeClose: true,
-                            shade: 0.8,
-                            area: ['700px', '700px'],
-                            content: '/TaskPlan/TaskPlanEdit?GUID=' + data.GUID //iframe的url
-                        });
-                    }
+                    });
+                } else if (obj.event === 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '编辑任务计划',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/TaskPlan/TaskPlanEdit?GUID=' + data.GUID //iframe的url
+                    });
+                }
             });
 
+
+            // 任务计划明细新增
+            table.on('toolbar(TaskPlanDetail)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                if (obj.event == 'add') {
+                    var data = checkStatus.data;
+                    //iframe层
+                    layer.open({
+                        type: 2,
+                        title: '新增任务计划明细',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '300px'],
+                        content: '/TaskPlan/TaskPlanDetailAdd?tkguid=' + tkguid
+                    });
+                }
+            });
+
+            //任务计划明细编辑
+            table.on('tool(TaskPlanDetail)', function (obj) {
+                var data = obj.data;
+                if (obj.event === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        $.ajax({
+                            url: "/TaskPlan/TaskPlanDetailDelete?GUID=" + data.tkDetailGuid,
+                            async: true,
+                            type: "Get",
+                            dataType: "json",
+                            contentType: "application/json;charset=UTF-8",
+                            success: function (dataResult) {
+                                if (dataResult.code == "0") {
+                                    obj.del();
+                                    layer.close(index);
+                                }
+                            }
+                        });
+                    });
+                } else if (obj.event === 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '编辑任务计划明细',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/TaskPlan/TaskPlanDetailEdit?GUID=' + data.tkDetailGuid //iframe的url
+                    });
+                }
+            });
 
             // 组织机构新增
             table.on('toolbar(organization)', function (obj) {
@@ -344,32 +402,32 @@
             //组织机构编辑
             table.on('tool(organization)', function (obj) {
                 var data = obj.data;
-                    if (obj.event === 'del') {
-                        layer.confirm('真的删除行么', function (index) {
-                            $.ajax({
-                                url: "/Organization/OrgDelete?orgNum=" + data.orgNum,
-                                async: true,
-                                type: "Get",
-                                dataType: "json",
-                                contentType: "application/json;charset=UTF-8",
-                                success: function (dataResult) {
-                                    if (dataResult.code == "0") {
-                                        obj.del();
-                                        layer.close(index);
-                                    }
+                if (obj.event === 'del') {
+                    layer.confirm('真的删除行么', function (index) {
+                        $.ajax({
+                            url: "/Organization/OrgDelete?orgNum=" + data.orgNum,
+                            async: true,
+                            type: "Get",
+                            dataType: "json",
+                            contentType: "application/json;charset=UTF-8",
+                            success: function (dataResult) {
+                                if (dataResult.code == "0") {
+                                    obj.del();
+                                    layer.close(index);
                                 }
-                            });
+                            }
                         });
-                    } else if (obj.event === 'edit') {
-                        layer.open({
-                            type: 2,
-                            title: '组织结构修改',
-                            shadeClose: true,
-                            shade: 0.8,
-                            area: ['700px', '700px'],
-                            content: '/Organization/OrgEdit?orgNum=' + data.orgNum //iframe的url
-                        });
-                    }
+                    });
+                } else if (obj.event === 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: '组织结构修改',
+                        shadeClose: true,
+                        shade: 0.8,
+                        area: ['700px', '700px'],
+                        content: '/Organization/OrgEdit?orgNum=' + data.orgNum //iframe的url
+                    });
+                }
             });
         });
 
