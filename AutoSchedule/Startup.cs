@@ -1,3 +1,4 @@
+using AutoSchedule.Common;
 using AutoSchedule.Dtos.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -5,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Quartz;
+using Quartz.Impl;
+using Quartz.Spi;
 
 namespace AutoSchedule
 {
@@ -20,7 +24,13 @@ namespace AutoSchedule
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.AddSingleton<QuartzStartup>();
+            services.AddTransient<HelloJob>();
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//×¢²áISchedulerFactoryµÄÊµÀý¡£
+
+            services.AddSingleton<IJobFactory, IOCJobFactory>();
+            //.AddRazorRuntimeCompilation();
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")));
         }
 

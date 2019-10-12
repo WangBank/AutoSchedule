@@ -4,6 +4,7 @@ using AutoSchedule.Dtos.RequestIn;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -102,18 +103,16 @@ namespace AutoSchedule.Controllers
         //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
         public async Task<string> TaskPlanAdd([FromBody]TaskPlanExGuidCode TaskPlanAddIn)
         {
-            string guid = "";
+            string guid = Guid.NewGuid().ToString();
             string code = "";
-            var isExist = await _SqlLiteContext.TaskPlan.AsNoTracking().OrderByDescending(o=>o.GUID).FirstOrDefaultAsync();
+            var isExist = await _SqlLiteContext.TaskPlan.AsNoTracking().OrderByDescending(o=>o.CODE).FirstOrDefaultAsync();
             if (isExist ==null)
             {
-                guid = "100";
-                code = guid;
+                code = "100";
             }
             else
             {
-                guid = (int.Parse(isExist.GUID) + 1).ToString();
-                code = guid;
+                code = (int.Parse(isExist.CODE) + 1).ToString();
             }
             Dtos.Models.TaskPlan TaskPlanAdd = new Dtos.Models.TaskPlan
             {

@@ -47,8 +47,9 @@
                 <ul class="layui-nav layui-nav-tree" lay-filter="test">
 
                     <li class="layui-nav-item layui-nav-itemed">
-                        <a class="" href="javascript:;">选项</a>
+                        <a class="" href="/Home/Index">选项</a>
                         <dl class="layui-nav-child">
+                            <dd><a href="/Home/Index">首页</a></dd>
                             <dd><a href="/DataSource/DataSource">数据源设置</a></dd>
                             <dd><a href="/Organization/Organization">组织机构设置</a></dd>
                             <dd><a href="/SystemKey/SystemKey">系统变量设置</a></dd>
@@ -81,8 +82,13 @@
     <script type="text/html" id="barDemo">
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        <a class="layui-btn layui-btn-xs" lay-event="begin">开启</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop">关闭</a>
     </script>
 
+    <script type="text/html" id="barDemoDetail">
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -158,7 +164,7 @@
                     { field: 'Frequency', title: '执行频率', sort: true },
                     { field: 'TaskPlanType', title: '任务类型', sort: true },
                     { field: 'OrgCode', title: '所属机构', sort: true }
-                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 220 }
                 ]]
             });
 
@@ -176,11 +182,11 @@
                     , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                     , cols: [[
                         { type: 'radio' },
-                        { field: 'guid', title: 'tkDetailGuid', sort: true,hide:true },
+                        { field: 'guid', title: 'tkDetailGuid', sort: true, hide: true },
                         { field: 'dsGuid', title: '编号', sort: true },
                         { field: 'dsName', title: '名称', sort: true },
                         { field: 'dsState', title: '是否启用', sort: true },
-                        { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
+                        { fixed: 'right', title: '操作', toolbar: '#barDemoDetail', width: 178}
                     ]]
                 });
 
@@ -321,7 +327,8 @@
                             }
                         });
                     });
-                } else if (obj.event === 'edit') {
+                }
+                else if (obj.event === 'edit') {
                     layer.open({
                         type: 2,
                         title: '编辑任务计划',
@@ -329,6 +336,30 @@
                         shade: 0.8,
                         area: ['700px', '700px'],
                         content: '/TaskPlan/TaskPlanEdit?GUID=' + data.GUID //iframe的url
+                    });
+                }
+                else if (obj.event === 'begin') {
+                        $.ajax({
+                            url: "/Home/BeginTaskPlan?guid=" + data.GUID,
+                            async: true,
+                            type: "Get",
+                            dataType: "json",
+                            contentType: "application/json;charset=UTF-8",
+                            success: function (dataResult) {
+                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
+                            }
+                        });
+                }
+                else if (obj.event === 'stop') {
+                    $.ajax({
+                        url: "/Home/StopTaskPlan?guid=" + data.GUID,
+                        async: true,
+                        type: "Get",
+                        dataType: "json",
+                        contentType: "application/json;charset=UTF-8",
+                        success: function (dataResult) {
+                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
+                        }
                     });
                 }
             });

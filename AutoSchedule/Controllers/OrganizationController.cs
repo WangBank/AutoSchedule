@@ -185,11 +185,6 @@ namespace AutoSchedule.Controllers
                         conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
                         result = await TestConnect.ConnectMysqlAsync(conString);
                         break;
-                    case "3":
-                        break;
-                    case "4":
-                        break;
-
                     default:
                         break;
                 }
