@@ -24,14 +24,18 @@ namespace AutoSchedule
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<QuartzStartup>();
-            services.AddTransient<HelloJob>();
-            services.AddControllersWithViews().AddRazorRuntimeCompilation();
-            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。
-
-            services.AddSingleton<IJobFactory, IOCJobFactory>();
-            //.AddRazorRuntimeCompilation();
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")));
+            services.AddTransient<HelloJob>();
+            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。
+            services.AddSingleton<IJobFactory, IOCJobFactory>();
+            services.AddSingleton<QuartzStartup>();
+           
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
+           
+
+            
+            //.AddRazorRuntimeCompilation();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

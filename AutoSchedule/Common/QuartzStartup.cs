@@ -38,8 +38,10 @@ namespace AutoSchedule.Common
                 {
                     //2、通过调度工厂获得调度器
                     _scheduler = await _schedulerFactory.GetScheduler();
-                    _scheduler.JobFactory = this._iocJobfactory;//  替换默认工厂
-                                                                //3、开启调度器
+                    _scheduler.JobFactory = this._iocJobfactory;
+                    //  替换默认工厂
+                    //3、开启调度器
+                    _logger.LogInformation("定时任务启动");
                     await _scheduler.Start();
                     //4、创建一个触发器
                     var trigger = TriggerBuilder.Create()
