@@ -71,7 +71,7 @@
         </div>
         <div class="layui-form-item">
             <div class="layui-input-block">
-                <button type="button" class="layui-btn" lay-filter="testConnect" lay-submit="">测试连接</button>
+                <button type="button" class="layui-btn" lay-filter="SqlHelper" lay-submit="">测试连接</button>
                 <button type="button" class="layui-btn" lay-filter="enSure" lay-submit="">确定</button>
                 <button type="reset" class="layui-btn layui-btn-primary">重置</button>
             </div>
@@ -90,11 +90,11 @@
                 , layer = layui.layer;
 
             //测试是否能够连接
-            form.on('submit(testConnect)', function (data) {
+            form.on('submit(SqlHelper)', function (data) {
                 var dataDetail = JSON.stringify(data.field);
                 console.log(dataDetail);
                 $.ajax({
-                    url: "/Organization/OrgTestConnect",
+                    url: "/Organization/OrgSqlHelper",
                     async: true,
                     type: "POST",
                     dataType: "json",

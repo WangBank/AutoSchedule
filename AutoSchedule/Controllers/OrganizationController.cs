@@ -16,7 +16,7 @@ namespace AutoSchedule.Controllers
     {
         SqlLiteContext _SqlLiteContext;
         private readonly ILogger<OrganizationController> _logger;
-
+        string conString = "";
         public OrganizationController(ILogger<OrganizationController> logger, SqlLiteContext SqlLiteContext)
         {
             _SqlLiteContext = SqlLiteContext;
@@ -59,7 +59,10 @@ namespace AutoSchedule.Controllers
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
             }
-            Dtos.Models.Organization organizationAdd = new Dtos.Models.Organization
+            
+            string connecting =  GetConnectString(organizationAddIn);
+
+            Dtos.Models.Organization orgCOn = new Dtos.Models.Organization
             {
                 CODE = organizationAddIn.CODE,
                 NAME = organizationAddIn.NAME,
@@ -67,9 +70,10 @@ namespace AutoSchedule.Controllers
                 DBType = organizationAddIn.DBType,
                 Password = organizationAddIn.Password,
                 ServerName = organizationAddIn.ServerName,
-                UserName = organizationAddIn.UserName
+                UserName = organizationAddIn.UserName,
+                ConnectingString = connecting
             };
-            await _SqlLiteContext.OrgSetting.AddAsync(organizationAdd);
+            await _SqlLiteContext.OrgSetting.AddAsync(orgCOn);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
             if (addresult > 0)
             {
@@ -97,7 +101,9 @@ namespace AutoSchedule.Controllers
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改组织机构失败", code = "-1" });
             }
-            Dtos.Models.Organization organizationadd = new Organization
+            string connecting = GetConnectString(organizationIn);
+
+            Dtos.Models.Organization orgCOn = new Dtos.Models.Organization
             {
                 CODE = organizationIn.CODE,
                 NAME = organizationIn.NAME,
@@ -105,9 +111,10 @@ namespace AutoSchedule.Controllers
                 DBType = organizationIn.DBType,
                 Password = organizationIn.Password,
                 ServerName = organizationIn.ServerName,
-                UserName = organizationIn.UserName
+                UserName = organizationIn.UserName,
+                ConnectingString = connecting
             };
-            await _SqlLiteContext.OrgSetting.AddAsync(organizationadd);
+            await _SqlLiteContext.OrgSetting.AddAsync(orgCOn);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
             if (addresult > 0)
             {
@@ -145,16 +152,60 @@ namespace AutoSchedule.Controllers
             }
         }
 
+        public string GetConnectString(Organization organizationAddIn)
+        {
+
+            try
+            {
+                switch (organizationAddIn.DBType)
+                {
+                    //Oracle 0
+                    //SqlServer  1
+                    //MySql  2
+                    case "0":
+                        //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
+                        conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
+                       
+                        break;
+                    case "1":
+                        //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
+
+                        conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
+                      
+                        break;
+                    case "2":
+                        string name = organizationAddIn.ServerName;
+                        if (!organizationAddIn.ServerName.Contains(':'))
+                        {
+                            name = organizationAddIn.ServerName + ":3306";
+                        }
+                        string[] mysqlIp = name.Split(':');
+                        //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
+                        conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
+                       
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
+                throw;
+            }
+            return conString;
+        }
+
         [HttpPost]
         //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
-        public async Task<string> OrgTestConnect([FromBody]Organization organizationAddIn)
+        public async Task<string> OrgSqlHelper([FromBody]Organization organizationAddIn)
         {
             //判断当前是否有重复
             //if (_SqlLiteContext.OrgSetting.AsNoTracking().Contains(organizationAddIn))
             //{
             //    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
             //}
-            string conString = "";
+            SqlHelper sqlHelper;
             bool result = false;
             try
             {
@@ -166,24 +217,27 @@ namespace AutoSchedule.Controllers
                     case "0":
                         //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
                         conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
-                        result = await TestConnect.ConnectOracleAsync(conString);
+                        sqlHelper = new SqlHelper(conString);
+                        result = await sqlHelper.ConnectOracleAsync();
                         break;
                     case "1":
                         //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
 
                         conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
-                        result = await TestConnect.ConnectSqlServerAsync(conString);
+                        sqlHelper = new SqlHelper(conString);
+                        result = await sqlHelper.ConnectSqlServerAsync();
                         break;
                     case "2":
-                        string name = "";
-                        if (!organizationAddIn.ServerName.Contains(':'))
+                        string name = organizationAddIn.ServerName;
+                        if (!organizationAddIn.ServerName.Contains(":"))
                         {
                             name = organizationAddIn.ServerName + ":3306";
                         }
                         string[] mysqlIp = name.Split(':');
                         //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
                         conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
-                        result = await TestConnect.ConnectMysqlAsync(conString);
+                        sqlHelper = new SqlHelper(conString);
+                        result = await sqlHelper.ConnectMysqlAsync();
                         break;
                     default:
                         break;
@@ -206,6 +260,7 @@ namespace AutoSchedule.Controllers
 
         }
 
-
+        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
+      
     }
 }
