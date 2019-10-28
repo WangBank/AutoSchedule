@@ -3,20 +3,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BankDbHelper
 {
     internal class MySqlHelper : ISqlHelper
     {
-        // Token: 0x06000014 RID: 20 RVA: 0x00002480 File Offset: 0x00000680
         public MySqlHelper(string ConnectionString)
         {
             this._connectionString = ConnectionString;
         }
 
-        // Token: 0x06000015 RID: 21 RVA: 0x000024D0 File Offset: 0x000006D0
         public async Task<bool> TestConnectionAsync()
         {
             MySqlConnection mysqlConnection = new MySqlConnection(this._connectionString);
@@ -34,7 +31,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000016 RID: 22 RVA: 0x00002514 File Offset: 0x00000714
         public async Task<string> ExecSqlAsync(string sql)
         {
             string result;
@@ -68,8 +64,7 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000017 RID: 23 RVA: 0x000025F4 File Offset: 0x000007F4
-        public async Task<string>  ExecSqlAsync(List<ParamSql> lst)
+        public async Task<string> ExecSqlAsync(List<ParamSql> lst)
         {
             string result;
             try
@@ -121,7 +116,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000018 RID: 24 RVA: 0x0000282C File Offset: 0x00000A2C
         public async Task<string> ExecSqlAsync(string sql, List<SqlHelperParameter> lstPara)
         {
             string result;
@@ -151,7 +145,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000019 RID: 25 RVA: 0x00002934 File Offset: 0x00000B34
         public async Task<DataSet> GetDataSetAsync(string sql)
         {
             DataSet result;
@@ -185,7 +178,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600001A RID: 26 RVA: 0x00002A10 File Offset: 0x00000C10
         public async Task<DataTable> GetDataTableAsync(string sql)
         {
             DataTable result;
@@ -219,7 +211,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600001B RID: 27 RVA: 0x00002AF4 File Offset: 0x00000CF4
         public async Task<object> GetValueAsync(string sql)
         {
             object result;
@@ -248,7 +239,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600001C RID: 28 RVA: 0x00002BB0 File Offset: 0x00000DB0
         public async Task<Hashtable> ExecProcAsync(string procName, List<SqlHelperParameter> lstPara)
         {
             Hashtable result;
@@ -297,7 +287,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600001D RID: 29 RVA: 0x00002D98 File Offset: 0x00000F98
         public async Task<string> ExecSqlAsync(ArrayList sqlList)
         {
             string result;
@@ -338,8 +327,7 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600001E RID: 30 RVA: 0x00002EF4 File Offset: 0x000010F4
-        private  MySqlParameter  GetParameter(SqlHelperParameter sqlHelperParameter)
+        private MySqlParameter GetParameter(SqlHelperParameter sqlHelperParameter)
         {
             MySqlParameter mysqlParameter = new MySqlParameter();
             MySqlDbType mysqlDbType = MySqlDbType.VarChar;
@@ -348,15 +336,19 @@ namespace BankDbHelper
                 case ParamsType.Varchar:
                     mysqlDbType = MySqlDbType.VarChar;
                     break;
+
                 case ParamsType.Int:
                     mysqlDbType = MySqlDbType.Int16;
                     break;
+
                 case ParamsType.DateTime:
                     mysqlDbType = MySqlDbType.Date;
                     break;
+
                 case ParamsType.Decimal:
                     mysqlDbType = MySqlDbType.Decimal;
                     break;
+
                 case ParamsType.Blob:
                     mysqlDbType = MySqlDbType.Blob;
                     break;
@@ -369,32 +361,25 @@ namespace BankDbHelper
             return mysqlParameter;
         }
 
-        // Token: 0x0600001F RID: 31 RVA: 0x00002F88 File Offset: 0x00001188
         public async Task DisposeAsync()
         {
-           await this.conn.CloseAsync();
-             this.dap.Dispose();
-             this.ds.Dispose();
+            await this.conn.CloseAsync();
+            this.dap.Dispose();
+            this.ds.Dispose();
             await this.cmd.DisposeAsync();
             await this.conn.DisposeAsync();
         }
 
-        // Token: 0x04000007 RID: 7
         public string _connectionString;
 
-        // Token: 0x04000008 RID: 8
         private MySqlConnection conn = new MySqlConnection();
 
-        // Token: 0x04000009 RID: 9
         private MySqlDataAdapter dap = new MySqlDataAdapter();
 
-        // Token: 0x0400000A RID: 10
         private DataSet ds = new DataSet();
 
-        // Token: 0x0400000B RID: 11
         private MySqlCommand cmd = new MySqlCommand();
 
-        // Token: 0x0400000C RID: 12
         public MySqlParameter Parameter = null;
     }
 }

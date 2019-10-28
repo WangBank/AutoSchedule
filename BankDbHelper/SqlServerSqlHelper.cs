@@ -3,21 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace BankDbHelper
 {
     internal class SqlServerSqlHelper : ISqlHelper
     {
-        // Token: 0x06000045 RID: 69 RVA: 0x00003AAC File Offset: 0x00001CAC
         public SqlServerSqlHelper(string ConnectionString)
         {
             this._connectionString = ConnectionString;
         }
 
-        // Token: 0x06000046 RID: 70 RVA: 0x00003AEC File Offset: 0x00001CEC
         public async Task<bool> TestConnectionAsync()
         {
             SqlConnection sqlConnection = new SqlConnection(this._connectionString);
@@ -35,7 +31,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000047 RID: 71 RVA: 0x00003B30 File Offset: 0x00001D30
         public async Task<string> ExecSqlAsync(string sql)
         {
             string result;
@@ -46,7 +41,7 @@ namespace BankDbHelper
                     bool flag = this.conn.State != ConnectionState.Open;
                     if (flag)
                     {
-                       await this.conn.OpenAsync();
+                        await this.conn.OpenAsync();
                     }
                     this.cmd = new SqlCommand(sql, this.conn);
                     this.cmd.CommandType = CommandType.Text;
@@ -61,7 +56,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000048 RID: 72 RVA: 0x00003BE0 File Offset: 0x00001DE0
         public async Task<string> ExecSqlAsync(List<ParamSql> lst)
         {
             string result;
@@ -88,7 +82,7 @@ namespace BankDbHelper
                             {
                                 this.cmd.Parameters.Add(this.GetParameter(sqlHelperParameter));
                             }
-                           await this.cmd.ExecuteNonQueryAsync();
+                            await this.cmd.ExecuteNonQueryAsync();
                         }
                         await sqlTransaction.CommitAsync();
                         result = string.Empty;
@@ -113,7 +107,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x06000049 RID: 73 RVA: 0x00003E04 File Offset: 0x00002004
         public async Task<string> ExecSqlAsync(string sql, List<SqlHelperParameter> lstPara)
         {
             string result;
@@ -143,7 +136,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600004A RID: 74 RVA: 0x00003F0C File Offset: 0x0000210C
         public async Task<DataSet> GetDataSetAsync(string sql)
         {
             DataSet result;
@@ -169,7 +161,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600004B RID: 75 RVA: 0x00003FBC File Offset: 0x000021BC
         public async Task<DataTable> GetDataTableAsync(string sql)
         {
             DataTable result;
@@ -195,7 +186,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600004C RID: 76 RVA: 0x00004078 File Offset: 0x00002278
         public async Task<object> GetValueAsync(string sql)
         {
             object result;
@@ -213,8 +203,7 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600004D RID: 77 RVA: 0x00004108 File Offset: 0x00002308
-        public async Task<Hashtable>  ExecProcAsync(string procName, List<SqlHelperParameter> lstPara)
+        public async Task<Hashtable> ExecProcAsync(string procName, List<SqlHelperParameter> lstPara)
         {
             Hashtable result;
             using (this.conn = new SqlConnection(this._connectionString))
@@ -251,7 +240,6 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600004E RID: 78 RVA: 0x000042B8 File Offset: 0x000024B8
         public async Task<string> ExecSqlAsync(ArrayList sqlList)
         {
             string result;
@@ -269,7 +257,7 @@ namespace BankDbHelper
                 }
                 else
                 {
-                    SqlTransaction sqlTransaction =  this.conn.BeginTransaction();
+                    SqlTransaction sqlTransaction = this.conn.BeginTransaction();
                     try
                     {
                         this.cmd = new SqlCommand();
@@ -299,8 +287,7 @@ namespace BankDbHelper
             return result;
         }
 
-        // Token: 0x0600004F RID: 79 RVA: 0x00004468 File Offset: 0x00002668
-        private  SqlParameter GetParameter(SqlHelperParameter sqlHelperParameter)
+        private SqlParameter GetParameter(SqlHelperParameter sqlHelperParameter)
         {
             SqlParameter sqlParameter = new SqlParameter();
             DbType dbType = DbType.String;
@@ -309,15 +296,19 @@ namespace BankDbHelper
                 case ParamsType.Varchar:
                     dbType = DbType.String;
                     break;
+
                 case ParamsType.Int:
                     dbType = DbType.Int16;
                     break;
+
                 case ParamsType.DateTime:
                     dbType = DbType.DateTime;
                     break;
+
                 case ParamsType.Decimal:
                     dbType = DbType.Decimal;
                     break;
+
                 case ParamsType.Blob:
                     dbType = DbType.Binary;
                     break;
@@ -330,7 +321,6 @@ namespace BankDbHelper
             return sqlParameter;
         }
 
-        // Token: 0x06000050 RID: 80 RVA: 0x000044F9 File Offset: 0x000026F9
         public async Task DisposeAsync()
         {
             await this.conn.CloseAsync();
@@ -340,19 +330,14 @@ namespace BankDbHelper
             await this.conn.DisposeAsync();
         }
 
-        // Token: 0x04000025 RID: 37
         public string _connectionString;
 
-        // Token: 0x04000026 RID: 38
         private SqlConnection conn = new SqlConnection();
 
-        // Token: 0x04000027 RID: 39
         private SqlDataAdapter dap = new SqlDataAdapter();
 
-        // Token: 0x04000028 RID: 40
         private DataSet ds = new DataSet();
 
-        // Token: 0x04000029 RID: 41
         private SqlCommand cmd = new SqlCommand();
     }
 }

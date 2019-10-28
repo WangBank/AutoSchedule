@@ -10,15 +10,16 @@ using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
 {
-    public class HelloJob : IJob
+    public class AutoTaskJob : IJob
     {
-        private readonly ILogger<HelloJob> _logger;
+        //private readonly ILogger<HelloJob> _logger;
         private readonly SqlLiteContext _SqlLiteContext;
+
         public ExecSqlHelper _SqlHelper;
 
-        public HelloJob(ILogger<HelloJob> logger, SqlLiteContext SqlLiteContext)
+        public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext)
         {
-            _logger = logger;
+            //_logger = logger;
             _SqlLiteContext = SqlLiteContext;
         }
 
@@ -54,6 +55,7 @@ namespace AutoSchedule.Common
                     case "2":
                         _SqlHelper = new ExecSqlHelper(connectString, DBTypeEnum.MySql.ToString());
                         break;
+
                     case "3":
                         _SqlHelper = new ExecSqlHelper(connectString, DBTypeEnum.Sqlite.ToString());
                         break;
@@ -69,7 +71,6 @@ namespace AutoSchedule.Common
                     var dataSource = await _SqlLiteContext.OpenSql.AsNoTracking().FirstAsync(o => o.GUID == taskPlanList[i].OpenSqlGuid);
                     //执行sql语句
                     await _SqlHelper.ExecSqlAsync(dataSource.GroupSqlString);
-                    
                 }
             }
             catch (Exception ex)

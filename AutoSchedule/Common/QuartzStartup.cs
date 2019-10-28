@@ -47,7 +47,7 @@ namespace AutoSchedule.Common
                                     .Build();
 
                     //5、创建任务
-                    jobDetail = JobBuilder.Create<HelloJob>()
+                    jobDetail = JobBuilder.Create<AutoTaskJob>()
                                     .WithIdentity(param[i].ToString(), "group")
                                     .UsingJobData("guid", param[i].ToString())
                                     .Build();

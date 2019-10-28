@@ -25,7 +25,7 @@ namespace AutoSchedule
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")));
-            services.AddTransient<HelloJob>();
+            services.AddTransient<AutoTaskJob>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//×¢²áISchedulerFactoryµÄÊµÀý¡£
             services.AddSingleton<IJobFactory, IOCJobFactory>();
             services.AddSingleton<QuartzStartup>();
