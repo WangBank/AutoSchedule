@@ -13,7 +13,7 @@ namespace AutoSchedule.Controllers
 {
     public class TaskPlanController : Controller
     {
-        SqlLiteContext _SqlLiteContext;
+        private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<TaskPlanController> _logger;
 
         public TaskPlanController(ILogger<TaskPlanController> logger, SqlLiteContext SqlLiteContext)
@@ -21,6 +21,7 @@ namespace AutoSchedule.Controllers
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
         }
+
         public IActionResult TaskPlan()
         {
             return View();
@@ -73,7 +74,6 @@ namespace AutoSchedule.Controllers
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanData { msg = "", count = data.Count, code = 0, data = data });
         }
 
-
         [HttpGet]
         //http://localhost:5000/TaskPlan/TaskPlanDetailResult?guid=100&page=1&limit=10
         public async Task<string> TaskPlanDetailResult(TaskPlanRequest taskPlanRequest)
@@ -87,12 +87,10 @@ namespace AutoSchedule.Controllers
                 dsName = (await _SqlLiteContext.OpenSql.AsNoTracking().FirstAsync(o => o.GUID == item.OpenSqlGuid)).Name;
                 dsState = (await _SqlLiteContext.OpenSql.AsNoTracking().FirstAsync(o => o.GUID == item.OpenSqlGuid)).IsStart;
 
-                data.Add(new TaskPlanDetailModel { dsGuid = item.OpenSqlGuid, dsName = dsName, dsState = dsState,tkDetailGuid = item.GUID });
+                data.Add(new TaskPlanDetailModel { dsGuid = item.OpenSqlGuid, dsName = dsName, dsState = dsState, tkDetailGuid = item.GUID });
             }
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanDetailData { msg = "", count = data.Count, code = 0, data = data });
         }
-
-
 
         public IActionResult TaskPlanAdd()
         {
@@ -105,8 +103,8 @@ namespace AutoSchedule.Controllers
         {
             string guid = Guid.NewGuid().ToString();
             string code = "";
-            var isExist = await _SqlLiteContext.TaskPlan.AsNoTracking().OrderByDescending(o=>o.CODE).FirstOrDefaultAsync();
-            if (isExist ==null)
+            var isExist = await _SqlLiteContext.TaskPlan.AsNoTracking().OrderByDescending(o => o.CODE).FirstOrDefaultAsync();
+            if (isExist == null)
             {
                 code = "100";
             }
@@ -145,7 +143,6 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> TaskPlanEdit([FromBody]TaskPlan TaskPlanIn)
         {
-
             var dsdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.CODE == TaskPlanIn.CODE).FirstOrDefaultAsync();
             _SqlLiteContext.TaskPlan.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() == 0)
@@ -187,14 +184,12 @@ namespace AutoSchedule.Controllers
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-
             }
             else
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除任务计划失败", code = "-1" });
             }
         }
-
 
         public async Task<IActionResult> TaskPlanDetailAdd(string tkguid)
         {
@@ -221,7 +216,6 @@ namespace AutoSchedule.Controllers
                 GUID = guid,
                 OpenSqlGuid = TaskPlanDetailExGuidAddIn.OpenSqlGuid,
                 TaskPlanGuid = TaskPlanDetailExGuidAddIn.TaskPlanGuid
-
             };
             await _SqlLiteContext.TaskPlanRelation.AddAsync(TaskPlanDetailAdd);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
@@ -245,13 +239,11 @@ namespace AutoSchedule.Controllers
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-
             }
             else
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除任务计划明细失败", code = "-1" });
             }
         }
-
     }
 }

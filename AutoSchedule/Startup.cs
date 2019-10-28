@@ -29,13 +29,10 @@ namespace AutoSchedule
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//×¢²áISchedulerFactoryµÄÊµÀý¡£
             services.AddSingleton<IJobFactory, IOCJobFactory>();
             services.AddSingleton<QuartzStartup>();
-           
-            services.AddControllersWithViews().AddRazorRuntimeCompilation();
-           
 
-            
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
             //.AddRazorRuntimeCompilation();
-            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

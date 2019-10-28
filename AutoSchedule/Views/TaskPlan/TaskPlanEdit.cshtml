@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     Layout = null;
 }
 @using AutoSchedule.Dtos.Models;
@@ -79,7 +78,6 @@
             </div>
         </div>
 
-
         <div class="layui-form-item">
             <div class="layui-input-block">
                 <button type="button" class="layui-btn" lay-filter="enSure" lay-submit="">确定</button>
@@ -89,11 +87,11 @@
     </form>
 
     <script type="text/javascript">
-     
+
         $(function () {
             GetOrgList();
             $("#FrequencyType").val("@Model.FrequencyType");
-            
+
         });
         function GetOrgList() {
             $.get("/Organization/OrgResult", function (data) {
@@ -143,6 +141,5 @@
             });
         });
     </script>
-
 </body>
 </html>

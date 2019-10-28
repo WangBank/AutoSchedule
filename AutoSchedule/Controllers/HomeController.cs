@@ -6,15 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using Quartz.Impl;
-using Quartz.Logging;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using LogProvider = Quartz.Logging.LogProvider;
 
@@ -22,10 +16,10 @@ namespace AutoSchedule.Controllers
 {
     public class HomeController : Controller
     {
-        SqlLiteContext _SqlLiteContext;
+        private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<HomeController> _logger;
 
-        QuartzStartup  _quartzStartup;
+        private QuartzStartup _quartzStartup;
 
         public HomeController(ILogger<HomeController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup)
         {
@@ -53,8 +47,8 @@ namespace AutoSchedule.Controllers
                 List<string> guidhssh = new List<string>();
                 if (string.IsNullOrEmpty(guid))
                 {
-                    var tkList  = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID != "").ToListAsync();
-                    
+                    var tkList = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID != "").ToListAsync();
+
                     for (int i = 0; i < tkList.Count; i++)
                     {
                         guidhssh.Add(tkList[i].GUID);
@@ -64,23 +58,20 @@ namespace AutoSchedule.Controllers
                 {
                     guidhssh.Add(guid);
                 }
-               return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = await _quartzStartup.Start(guidhssh), code = "0" });
-
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = await _quartzStartup.Start(guidhssh), code = "0" });
             }
             catch (SchedulerException se)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = se.ToString(), code = "-1" });
             }
-        }           
+        }
 
         //关闭定时任务
         public async Task<string> StopTaskPlan(string guid = "")
         {
             try
             {
-
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = await _quartzStartup.Stop(guid), code = "0" });
-
             }
             catch (SchedulerException se)
             {
@@ -94,6 +85,4 @@ namespace AutoSchedule.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
-
-
 }

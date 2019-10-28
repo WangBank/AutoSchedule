@@ -2,11 +2,11 @@
 using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
+using BankDbHelper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,14 +14,16 @@ namespace AutoSchedule.Controllers
 {
     public class OrganizationController : Controller
     {
-        SqlLiteContext _SqlLiteContext;
+        private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<OrganizationController> _logger;
-        string conString = "";
+        private string conString = "";
+
         public OrganizationController(ILogger<OrganizationController> logger, SqlLiteContext SqlLiteContext)
         {
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
         }
+
         public IActionResult Organization()
         {
             return View();
@@ -43,8 +45,6 @@ namespace AutoSchedule.Controllers
             return System.Text.Json.JsonSerializer.Serialize(new OrganizationData { msg = "", count = data.Count, code = 0, data = data });
         }
 
-
-
         public IActionResult OrgAdd()
         {
             return View();
@@ -59,8 +59,8 @@ namespace AutoSchedule.Controllers
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
             }
-            
-            string connecting =  GetConnectString(organizationAddIn);
+
+            string connecting = GetConnectString(organizationAddIn);
 
             Dtos.Models.Organization orgCOn = new Dtos.Models.Organization
             {
@@ -94,7 +94,6 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> OrgEdit([FromBody]Organization organizationIn)
         {
-
             var dsdelete = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == organizationIn.CODE).FirstOrDefaultAsync();
             _SqlLiteContext.OrgSetting.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() == 0)
@@ -126,7 +125,6 @@ namespace AutoSchedule.Controllers
             }
         }
 
-
         //删除的时候，移除任务计划中相应的code
         [HttpGet]
         public async Task<string> OrgDelete(string orgNum)
@@ -144,7 +142,6 @@ namespace AutoSchedule.Controllers
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-
             }
             else
             {
@@ -154,7 +151,6 @@ namespace AutoSchedule.Controllers
 
         public string GetConnectString(Organization organizationAddIn)
         {
-
             try
             {
                 switch (organizationAddIn.DBType)
@@ -165,14 +161,16 @@ namespace AutoSchedule.Controllers
                     case "0":
                         //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
                         conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
-                       
+
                         break;
+
                     case "1":
                         //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
 
                         conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
-                      
+
                         break;
+
                     case "2":
                         string name = organizationAddIn.ServerName;
                         if (!organizationAddIn.ServerName.Contains(':'))
@@ -182,15 +180,16 @@ namespace AutoSchedule.Controllers
                         string[] mysqlIp = name.Split(':');
                         //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
                         conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
-                       
+
                         break;
+
                     default:
                         break;
                 }
             }
             catch (System.Exception ex)
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！\r\n 错误信息:" + ex.Message, code = "-1" });
                 throw;
             }
             return conString;
@@ -205,7 +204,7 @@ namespace AutoSchedule.Controllers
             //{
             //    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
             //}
-            SqlHelper sqlHelper;
+            ExecSqlHelper sqlHelper;
             bool result = false;
             try
             {
@@ -217,16 +216,18 @@ namespace AutoSchedule.Controllers
                     case "0":
                         //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
                         conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
-                        sqlHelper = new SqlHelper(conString);
-                        result = await sqlHelper.ConnectOracleAsync();
+                        sqlHelper = new ExecSqlHelper(conString, DBTypeEnum.Oracle.ToString());
+                        result = await sqlHelper.TestConnectionAsync();
                         break;
+
                     case "1":
                         //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
 
                         conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
-                        sqlHelper = new SqlHelper(conString);
-                        result = await sqlHelper.ConnectSqlServerAsync();
+                        sqlHelper = new ExecSqlHelper(conString, DBTypeEnum.SqlServer.ToString());
+                        result = await sqlHelper.TestConnectionAsync();
                         break;
+
                     case "2":
                         string name = organizationAddIn.ServerName;
                         if (!organizationAddIn.ServerName.Contains(":"))
@@ -236,16 +237,17 @@ namespace AutoSchedule.Controllers
                         string[] mysqlIp = name.Split(':');
                         //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
                         conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
-                        sqlHelper = new SqlHelper(conString);
-                        result = await sqlHelper.ConnectMysqlAsync();
+                        sqlHelper = new ExecSqlHelper(conString, DBTypeEnum.MySql.ToString());
+                        result = await sqlHelper.TestConnectionAsync();
                         break;
+
                     default:
                         break;
                 }
             }
             catch (System.Exception ex)
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！\r\n 错误信息:" + ex.Message, code = "-1" });
                 throw;
             }
 
@@ -257,10 +259,8 @@ namespace AutoSchedule.Controllers
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
             }
-
         }
 
         //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
-      
     }
 }

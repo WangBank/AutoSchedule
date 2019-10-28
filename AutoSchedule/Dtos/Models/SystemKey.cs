@@ -6,6 +6,7 @@ namespace AutoSchedule.Dtos.Models
     {
         [Key]
         public string KeyName { get; set; }
+
         public string KeyValue { get; set; }
     }
 }

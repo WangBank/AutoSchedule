@@ -25,7 +25,6 @@ namespace AutoSchedule.Dtos.Models
         /// </summary>
         public string Frequency { get; set; }
 
-
         /// <summary>
         /// 时间类型 0 秒 1 分钟 2 小时
         /// </summary>
@@ -50,25 +49,20 @@ namespace AutoSchedule.Dtos.Models
         [Key]
         public string GUID { get; set; }
 
-
         public string TaskPlanGuid { get; set; }
 
         public string OpenSqlGuid { get; set; }
-
     }
 
     public class TaskPlanDetailExGuid
     {
-
         public string TaskPlanGuid { get; set; }
 
         public string OpenSqlGuid { get; set; }
-
     }
 
     public class TaskPlanExGuidCode
     {
-
         /// <summary>
         /// 任务名称
         /// </summary>
@@ -78,7 +72,6 @@ namespace AutoSchedule.Dtos.Models
         /// 时间数
         /// </summary>
         public string Frequency { get; set; }
-
 
         /// <summary>
         /// 时间类型 0 秒 1 分钟 2 小时

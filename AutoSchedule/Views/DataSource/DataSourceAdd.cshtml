@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     Layout = null;
 }
 <!DOCTYPE html>
@@ -11,7 +10,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href="~/css/layui.css" rel="stylesheet" />
-
 </head>
 <body>
 
@@ -112,16 +110,15 @@
                             alert(dataResult.msg);
                         }
                         var index = parent.layer.getFrameIndex(window.name);
-                        setTimeout(function () { parent.layer.close(index) }, 1000); 
-                        setTimeout(function () { parent.location.reload() }, 100); 
+                        setTimeout(function () { parent.layer.close(index) }, 1000);
+                        setTimeout(function () { parent.location.reload() }, 100);
                     }
                 });
                 //window.parent.location.reload();
-               
+
             });
 
         });
     </script>
-
 </body>
 </html>

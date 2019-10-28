@@ -12,7 +12,7 @@ namespace AutoSchedule.Controllers
 {
     public class SystemKeyController : Controller
     {
-        SqlLiteContext _SqlLiteContext;
+        private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<SystemKeyController> _logger;
 
         public SystemKeyController(ILogger<SystemKeyController> logger, SqlLiteContext SqlLiteContext)
@@ -20,6 +20,7 @@ namespace AutoSchedule.Controllers
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
         }
+
         public IActionResult SystemKey()
         {
             return View();
@@ -36,7 +37,6 @@ namespace AutoSchedule.Controllers
             }
             return System.Text.Json.JsonSerializer.Serialize(new SystemKeyData { msg = "", count = data.Count, code = 0, data = data });
         }
-
 
         public IActionResult SystemKeyAdd()
         {
@@ -69,7 +69,6 @@ namespace AutoSchedule.Controllers
             }
         }
 
-
         public async Task<IActionResult> SystemKeyEdit(string KeyName)
         {
             var ds = await _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => o.KeyName == KeyName).FirstOrDefaultAsync();
@@ -79,7 +78,6 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> SystemKeyEdit([FromBody]SystemKey systemKeyAddIn)
         {
-
             var dsdelete = await _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => o.KeyName == systemKeyAddIn.KeyName).FirstOrDefaultAsync();
             _SqlLiteContext.SystemKeys.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() == 0)
@@ -111,7 +109,6 @@ namespace AutoSchedule.Controllers
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-
             }
             else
             {

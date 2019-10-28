@@ -12,7 +12,7 @@ namespace AutoSchedule.Controllers
 {
     public class DataSourceController : Controller
     {
-        SqlLiteContext _SqlLiteContext;
+        private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<DataSourceController> _logger;
 
         public DataSourceController(ILogger<DataSourceController> logger, SqlLiteContext SqlLiteContext)
@@ -23,7 +23,6 @@ namespace AutoSchedule.Controllers
 
         public IActionResult DataSource()
         {
-
             return View();
         }
 
@@ -36,7 +35,6 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> DataSourceEdit([FromBody]DataSource dataSourceAddIn)
         {
-
             var dsdelete = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
             _SqlLiteContext.OpenSql.Remove(dsdelete);
             if (await _SqlLiteContext.SaveChangesAsync() == 0)
@@ -117,7 +115,7 @@ namespace AutoSchedule.Controllers
                     SqlString = item.SqlString,
                     IsStart = item.IsStart,
                     MainKey = item.MainKey,
-                GUID = item.GUID
+                    GUID = item.GUID
                 });
             }
             return System.Text.Json.JsonSerializer.Serialize(new DataSourceData { msg = "", count = data.Count, code = 0, data = data });
@@ -131,7 +129,6 @@ namespace AutoSchedule.Controllers
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-
             }
             else
             {

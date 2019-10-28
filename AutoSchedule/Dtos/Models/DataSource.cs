@@ -6,6 +6,7 @@ namespace AutoSchedule.Dtos.Models
     {
         [Key]
         public string GUID { get; set; }
+
         public string Name { get; set; }
 
         /// <summary>
@@ -23,7 +24,6 @@ namespace AutoSchedule.Dtos.Models
         /// </summary>
         public string AfterSqlString { get; set; }
 
-
         /// <summary>
         /// 失败后执行语句
         /// </summary>
@@ -34,12 +34,10 @@ namespace AutoSchedule.Dtos.Models
         /// </summary>
         public string IsStart { get; set; }
 
-
         /// <summary>
         /// 单据类型  0业务单据
         /// </summary>
         public string FType { get; set; }
-
 
         /// <summary>
         /// 主关键字段

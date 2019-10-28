@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using TaskApi.Common;
 
 namespace TaskApi.Controllers
@@ -15,15 +9,13 @@ namespace TaskApi.Controllers
     public class HandleTaskController : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> Post ()
+        public async Task<IActionResult> Post()
         {
-            return await System.Text.Json.JsonSerializer.SerializeAsync(new ResponseCommon { 
-             code = "0",
-             msg = ""
+            return await System.Text.Json.JsonSerializer.SerializeAsync(new ResponseCommon
+            {
+                code = "0",
+                msg = ""
             });
-        
         }
     }
-
-    
 }

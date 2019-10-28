@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,12 +29,11 @@ namespace AutoSchedule.Common
                     {
                         if (contentType != null)
                             httpContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-                        
+
                         HttpResponseMessage response = await client.PostAsync(strURL, httpContent);
                         return await response.Content.ReadAsStringAsync();
                     }
                 }
-
             }
             catch (Exception)
             {
@@ -51,8 +49,8 @@ namespace AutoSchedule.Common
                 headers.Add("Content-Type", "application/json");
                 headers.Add("x-access-token", xaccesstoken);
                 int timeOut = 30;
-                
-               using (HttpClient client = new HttpClient())
+
+                using (HttpClient client = new HttpClient())
                 {
                     client.Timeout = new TimeSpan(0, 0, timeOut);
                     if (headers != null)
@@ -63,7 +61,6 @@ namespace AutoSchedule.Common
                     string response = await client.GetStringAsync(strURL);
                     return response;
                 }
-
             }
             catch (Exception)
             {

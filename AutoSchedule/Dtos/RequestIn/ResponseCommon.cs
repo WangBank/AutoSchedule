@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace AutoSchedule.Dtos.RequestIn
+﻿namespace AutoSchedule.Dtos.RequestIn
 {
     public class ResponseCommon
     {

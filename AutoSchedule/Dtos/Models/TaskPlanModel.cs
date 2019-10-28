@@ -8,6 +8,7 @@ namespace AutoSchedule.Dtos.Models
         /// guid
         /// </summary>
         public string GUID { get; set; }
+
         /// <summary>
         /// 任务编号
         /// </summary>
@@ -48,7 +49,6 @@ namespace AutoSchedule.Dtos.Models
         public string dsName { get; set; }
         public string dsState { get; set; }
         public string tkDetailGuid { get; set; }
-        
     }
 
     public class TaskPlanDetailData

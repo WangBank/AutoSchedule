@@ -6,6 +6,7 @@ namespace AutoSchedule.Dtos.Models
     {
         [Key]
         public string CODE { get; set; }
+
         public string NAME { get; set; }
         public string DBType { get; set; }
         public string ServerName { get; set; }
@@ -14,7 +15,4 @@ namespace AutoSchedule.Dtos.Models
         public string DataBaseName { get; set; }
         public string ConnectingString { get; set; }
     }
-
-
-
 }

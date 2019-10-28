@@ -79,11 +79,16 @@
             @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
         </div>
     </script>
-    <script type="text/html" id="barDemo">
+    <script type="text/html" id="barDemoTask">
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
         <a class="layui-btn layui-btn-xs" lay-event="begin">开启</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop">关闭</a>
+    </script>
+
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
 
     <script type="text/html" id="barDemoDetail">
@@ -135,7 +140,6 @@
                 ]]
             });
 
-
             //系统变量设置表格
             table.render({
                 elem: '#SystemKey'
@@ -164,10 +168,9 @@
                     { field: 'Frequency', title: '执行频率', sort: true },
                     { field: 'TaskPlanType', title: '任务类型', sort: true },
                     { field: 'OrgCode', title: '所属机构', sort: true }
-                    , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 220 }
+                    , { fixed: 'right', title: '操作', toolbar: '#barDemoTask', width: 220 }
                 ]]
             });
-
 
             //点击任务计划，会显示相应的明细
             table.on('row(TaskPlan)', function (obj) {
@@ -186,7 +189,7 @@
                         { field: 'dsGuid', title: '编号', sort: true },
                         { field: 'dsName', title: '名称', sort: true },
                         { field: 'dsState', title: '是否启用', sort: true },
-                        { fixed: 'right', title: '操作', toolbar: '#barDemoDetail', width: 178}
+                        { fixed: 'right', title: '操作', toolbar: '#barDemoDetail', width: 178 }
                     ]]
                 });
 
@@ -241,7 +244,6 @@
                     });
                 }
             });
-
 
             // 系统变量新增
             table.on('toolbar(SystemKey)', function (obj) {
@@ -339,16 +341,16 @@
                     });
                 }
                 else if (obj.event === 'begin') {
-                        $.ajax({
-                            url: "/Home/BeginTaskPlan?guid=" + data.GUID,
-                            async: true,
-                            type: "Get",
-                            dataType: "json",
-                            contentType: "application/json;charset=UTF-8",
-                            success: function (dataResult) {
-                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
-                            }
-                        });
+                    $.ajax({
+                        url: "/Home/BeginTaskPlan?guid=" + data.GUID,
+                        async: true,
+                        type: "Get",
+                        dataType: "json",
+                        contentType: "application/json;charset=UTF-8",
+                        success: function (dataResult) {
+                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
+                        }
+                    });
                 }
                 else if (obj.event === 'stop') {
                     $.ajax({
@@ -363,7 +365,6 @@
                     });
                 }
             });
-
 
             // 任务计划明细新增
             table.on('toolbar(TaskPlanDetail)', function (obj) {
@@ -461,7 +462,6 @@
                 }
             });
         });
-
     </script>
     <script>
         //JavaScript代码区域
@@ -472,7 +472,3 @@
     </script>
 </body>
 </html>
-
-
-
-

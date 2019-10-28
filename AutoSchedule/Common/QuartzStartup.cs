@@ -1,12 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Quartz;
-using Quartz.Impl;
 using Quartz.Spi;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
@@ -18,7 +14,8 @@ namespace AutoSchedule.Common
         private readonly ISchedulerFactory _schedulerFactory;
         private IScheduler _scheduler;
         private readonly IJobFactory _iocJobfactory;
-        IJobDetail jobDetail;
+        private IJobDetail jobDetail;
+
         public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory)
         {
             this._logger = logger;
@@ -26,11 +23,12 @@ namespace AutoSchedule.Common
             this._schedulerFactory = schedulerFactory;
             this._iocJobfactory = iocJobfactory;
         }
+
         public async Task<string> Start(List<string> param)
         {
             try
             {
-                if (param.Count > 1 && _scheduler!=null)
+                if (param.Count > 1 && _scheduler != null)
                 {
                     await Stop();
                 }
@@ -63,14 +61,13 @@ namespace AutoSchedule.Common
 
                 //return await Task.FromResult("开启定时调度任务" + ";\r\nJobType:" +  jobDetail.JobType + ";\r\nKey:" +  jobDetail.Key + ";\r\nGetType():" + jobDetail.GetType());
                 return await Task.FromResult("开启定时调度任务");
-
             }
             catch (Exception ex)
             {
                 return await Task.FromResult("开启失败，失败原因:" + ex.Message);
             }
-
         }
+
         public async Task<string> Stop(string param = "")
         {
             if (jobKeys.Count == 0)

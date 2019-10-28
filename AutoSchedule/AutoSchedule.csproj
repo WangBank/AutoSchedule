@@ -15,10 +15,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
-    <PackageReference Include="MySql.Data" Version="8.0.17" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" />
     <PackageReference Include="Quartz" Version="3.0.7" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BankDbHelper\BankDbHelper.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,5 +42,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

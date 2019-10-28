@@ -6,8 +6,8 @@ namespace AutoSchedule.Dtos.Data
     {
         public SqlLiteContext(DbContextOptions<SqlLiteContext> options) : base(options)
         {
-
         }
+
         public DbSet<Models.Organization> OrgSetting { get; set; }
         public DbSet<Models.DataSource> OpenSql { get; set; }
 
