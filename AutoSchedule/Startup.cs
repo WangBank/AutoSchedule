@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
@@ -29,15 +31,16 @@ namespace AutoSchedule
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。
             services.AddSingleton<IJobFactory, IOCJobFactory>();
             services.AddSingleton<QuartzStartup>();
-
+            
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
-
             //.AddRazorRuntimeCompilation();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            //使用NLog作为日志记录工具
+            //loggingBuilder.AddNLog("NLog.config");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

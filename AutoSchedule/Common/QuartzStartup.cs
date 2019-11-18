@@ -43,7 +43,7 @@ namespace AutoSchedule.Common
                     await _scheduler.Start();
                     //4、创建一个触发器
                     var trigger = TriggerBuilder.Create()
-                                    .WithSimpleSchedule(x => x.WithIntervalInSeconds(2).RepeatForever())//每两秒执行一次
+                                    .WithSimpleSchedule(x => x.WithIntervalInSeconds(1000).RepeatForever())//每两秒执行一次
                                     .Build();
 
                     //5、创建任务

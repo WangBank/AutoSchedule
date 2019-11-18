@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
@@ -13,9 +18,10 @@ namespace AutoSchedule.Common
             try
             {
                 Dictionary<string, string> headers = new Dictionary<string, string>();
-                headers.Add("Content-Type", "application/json");
-                headers.Add("x-access-token", xaccesstoken);
-                string contentType = null;
+                if (!string.IsNullOrEmpty(xaccesstoken))
+                {
+                    headers.Add("x-access-token", xaccesstoken);
+                }
                 int timeOut = 30;
                 using (HttpClient client = new HttpClient())
                 {
@@ -23,21 +29,22 @@ namespace AutoSchedule.Common
                     if (headers != null)
                     {
                         foreach (var header in headers)
+                        {
                             client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                        }     
                     }
                     using (HttpContent httpContent = new StringContent(paramsStr, Encoding.UTF8))
                     {
-                        if (contentType != null)
-                            httpContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+                            httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-                        HttpResponseMessage response = await client.PostAsync(strURL, httpContent);
+                        var response = await client.PostAsync(strURL, httpContent);
                         return await response.Content.ReadAsStringAsync();
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return "错误";
+                return "错误：" + ex.Message;
             }
         }
 
@@ -67,5 +74,50 @@ namespace AutoSchedule.Common
                 return "错误";
             }
         }
+
+        //public static string DataTableToJson(DataTable table)
+        //{
+        //    var JsonString = new StringBuilder();
+        //    if (table.Rows.Count > 0)
+        //    {
+        //        JsonString.Append("[");
+        //        for (int i = 0; i < table.Rows.Count; i++)
+        //        {
+        //            JsonString.Append("{");
+        //            for (int j = 0; j < table.Columns.Count; j++)
+        //            {
+        //                if (j < table.Columns.Count - 1)
+        //                {
+        //                    JsonString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\",");
+        //                }
+        //                else if (j == table.Columns.Count - 1)
+        //                {
+        //                    JsonString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\"");
+        //                }
+        //            }
+        //            if (i == table.Rows.Count - 1)
+        //            {
+        //                JsonString.Append("}");
+        //            }
+        //            else
+        //            {
+        //                JsonString.Append("},");
+        //            }
+        //        }
+        //        JsonString.Append("]");
+        //    }
+        //    return JsonString.ToString();
+        //}
+
+        //public static string ObjectToJson<T>(T tojson)
+        //{
+        //    //return Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes<T>(tojson
+        //    //    , options: new System.Text.Json.JsonSerializerOptions
+        //    //{
+        //    //    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        //    //})
+        //    //    ).Replace('\\',' ');
+
+        //}
     }
 }

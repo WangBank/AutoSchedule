@@ -174,7 +174,7 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> TaskPlanDelete(string GUID)
         {
-            var orgdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.CODE == GUID).FirstOrDefaultAsync();
+            var orgdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == GUID).FirstOrDefaultAsync();
 
             var tkdetailrembe = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == GUID).ToListAsync();
 
