@@ -13,19 +13,26 @@ using Newtonsoft.Json;
 using BankDbHelper;
 using System.Threading;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AutoSchedule.Common
 {
     public class AutoTaskJob : IJob
     {
-        private readonly ILogger<AutoTaskJob> _logger;
-        private readonly SqlLiteContext _SqlLiteContext;
+        private ILogger<AutoTaskJob> _logger;
+        private SqlLiteContext _SqlLiteContext;
         public ExecSqlHelper _SqlHelper;
         public IConfiguration _Configuration;
-        public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IConfiguration configuration)
+        //public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IConfiguration configuration)
+        //{
+        //    _logger = logger;
+        //    _SqlLiteContext = SqlLiteContext;
+        //    _Configuration = configuration;
+        //    _services = services;
+        //}
+        public AutoTaskJob(ILogger<AutoTaskJob> logger, IConfiguration configuration)
         {
             _logger = logger;
-            _SqlLiteContext = SqlLiteContext;
             _Configuration = configuration;
         }
 
@@ -36,10 +43,8 @@ namespace AutoSchedule.Common
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
                 string jobSays = dataMap.GetString("guid");
-
+                _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
                 var taskPlan = await  _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
-
-                //await Console.Out.WriteLineAsync("任务名称: " + taskPlan.Name + "正在执行！");
                 _logger.LogInformation("任务名称: " + taskPlan.Name + "正在执行！");
                 var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();
                 string orgCode = TaskPlan.OrgCode;
@@ -72,8 +77,9 @@ namespace AutoSchedule.Common
                         break;
                 }
                 _SqlHelper = new ExecSqlHelper(connectString, orgType);
+                
                 //List<DataSource> dataSources = new List<DataSource>();
-                var taskPlanList = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == jobSays).ToListAsync();
+                var taskPlanList = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == jobSays).FirstOrDefaultAsync();
                 string dataJsonData =string.Empty;
                 string dataJsonDataDetail = string.Empty;
                 string taskApiUrl = _Configuration.GetSection("TaskApiUrls").GetSection("TaskApiUrl").Value;
@@ -82,93 +88,94 @@ namespace AutoSchedule.Common
                 string groupSql = string.Empty;
                 string[] sqlStrings;
                 string sqlString = string.Empty;
+                string afterSuccess = string.Empty;
+                string afterFalse = string.Empty;
                 string MainKey = string.Empty;
                 string MainKeyValue = string.Empty;
                 var systemKes =await  _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => o.KeyName != "").ToListAsync();
-                
-                //计划列表
-                for (int i = 0; i < taskPlanList.Count; i++)
+                //计划中的数据源
+                var dataSource = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == taskPlanList.OpenSqlGuid).ToListAsync();
+                for (int j = 0; j < dataSource.Count; j++)
                 {
-                    //计划中的任务
+                    MainKey = dataSource[j].MainKey;
+                    groupSql = dataSource[j].GroupSqlString;
+                    sqlString = dataSource[j].SqlString;
 
-                    var dataSource = await  _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == taskPlanList[i].OpenSqlGuid).ToListAsync();
-                    for (int j = 0; j < dataSource.Count; j++)
+                    foreach (var item in systemKes)
                     {
+                        groupSql = groupSql.Replace($"[{item.KeyName}]", item.KeyValue);
+                        sqlString = sqlString.Replace($"[{item.KeyName}]", item.KeyValue);
+                    }
 
-                        MainKey = dataSource[j].MainKey;
-                        groupSql = dataSource[j].GroupSqlString;
-                        sqlString = dataSource[j].SqlString;
-                        foreach (var item in systemKes)
-                        {
-                            groupSql = groupSql.Replace($"[{item.KeyName}]", item.KeyValue);
-                            sqlString = sqlString.Replace($"[{item.KeyName}]", item.KeyValue);
-                        }
+                    List<Datas> datas = new List<Datas>();
+
+                    if (!groupSql.Contains(MainKey))
+                    {
+                        //主数据源中不包含关键字MainKey
+                        _logger.LogError("主数据源中不包含关键字" + MainKey);
+                    }
+                    else
+                    {
+                        //获取当前任务中分组数据
+                        var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
                         
-                        List<Datas> datas = new List<Datas>();
-                       
-                        if (!groupSql.Contains(MainKey))
+                        //MainKeyValue = dataMaindt.Rows[]
+                        for (int h = 0; h < dataMaindt.Rows.Count; h++)
                         {
-                            //主数据源中不包含关键字MainKey
+                            List<DataTable> dataTables = new List<DataTable>();
+                            DataTable maindetail = dataMaindt.Copy();
+                            MainKeyValue = string.Empty;
+                            MainKeyValue = dataMaindt.Rows[h][MainKey].ToString();
+                            afterSuccess = dataSource[j].AfterSqlString.Replace($"#{MainKey}#", MainKeyValue);
+                            afterFalse = dataSource[j].AfterSqlstring2.Replace($"#{MainKey}#", MainKeyValue);
+                            sqlStrings = sqlString.Replace($"#{MainKey}#", MainKeyValue).Split(";");
+                            _logger.LogInformation("当前执行的任务名称为：" + taskPlan.Name + ",数据源名称为:" + dataSource[j].Name + ",分组数据源为:" + groupSql + "选择数据源为:" + sqlString + "执行成功后返回数据源:" + afterSuccess + "执行错误后返回数据源:" + afterFalse);
+                            dataTables.Clear();
+                            //todo 以;隔开的多条sql语句查询
+                            for (int k = 0; k < sqlStrings.Length; k++)
+                            {
+                                dataTables.Add(await _SqlHelper.GetDataTableAsync(sqlStrings[k]));
+                            }
+
+                            // var dataDetaildt = await _SqlHelper.GetDataTableAsync(sqlString);
+                            var sss = dataMaindt.Rows[h];
+                            maindetail.Rows.Clear();
+                            maindetail.ImportRow(dataMaindt.Rows[h]);
+                            datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
+                        }
+                        paramJson = JsonConvert.SerializeObject(new DoTaskJson
+                        {
+                            OpenSqlGuid = dataSource[j].GUID,
+                            Data = datas
+                        });
+
+                       
+                        string result = await CommonHelper.HttpPostAsync(taskApiUrl, paramJson);
+                        _logger.LogInformation("当前执行的任务名称为：" + taskPlan.Name + ",调用的接口地址是:" + taskApiUrl + "发送的Json字符串为:" + paramJson + ",返回的结果是：" + result);
+                        responseCommon = (ResponseCommon)System.Text.Json.JsonSerializer.Deserialize(result, typeof(ResponseCommon));
+                        //记录日志
+                        if (responseCommon.code == "0")
+                        {
+                            var afterS = await _SqlHelper.ExecSqlAsync(afterSuccess);
+
+                            //记录日志
+                            _logger.LogInformation("当前执行的任务名称为：" + taskPlan.Name + ",数据源名称为:" + dataSource[j].Name + "成功后执行语句为:" + afterSuccess + ",返回结果" + afterS);
                         }
                         else
                         {
-                            //获取当前任务中分组数据
-                            var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
-                            //MainKeyValue = dataMaindt.Rows[]
-                            for (int h = 0; h < dataMaindt.Rows.Count; h++)
-                            {
-                                List<DataTable> dataTables = new List<DataTable>();
-                                DataTable maindetail = dataMaindt.Copy();
-                                MainKeyValue = string.Empty;
-                                MainKeyValue = dataMaindt.Rows[h][MainKey].ToString();
-                                sqlStrings = sqlString.Replace($"#{MainKey}#", MainKeyValue).Split(";");
-                                dataTables.Clear();
-                                //todo 以;隔开的多条sql语句查询
-                                for (int k = 0; k < sqlStrings.Length; k++)
-                                {
-                                    dataTables.Add(await _SqlHelper.GetDataTableAsync(sqlStrings[k]));
-                                }
-                               
-                               // var dataDetaildt = await _SqlHelper.GetDataTableAsync(sqlString);
-                                var sss = dataMaindt.Rows[h];
-                                maindetail.Rows.Clear();
-                                maindetail.ImportRow(dataMaindt.Rows[h]);
-                                datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
-                            }
-                            paramJson = JsonConvert.SerializeObject(new DoTaskJson
-                            {
-                                OpenSqlGuid = dataSource[j].GUID,
-                                Data = datas
-                            });
-
-                            //var ss =  await asyncTesr();
-
-                            string result = await CommonHelper.HttpPostAsync(taskApiUrl, paramJson);
-                            //Console.WriteLine(Thread.CurrentThread.ManagedThreadId.ToString());
+                            var afterF = await _SqlHelper.ExecSqlAsync(afterFalse);
                             //记录日志
-                            responseCommon = (ResponseCommon)System.Text.Json.JsonSerializer.Deserialize(result, typeof(ResponseCommon));
-                            //记录日志
-                            if (responseCommon.code == "0")
-                            {
-                                var afterSuccess = await _SqlHelper.ExecSqlAsync(dataSource[j].AfterSqlString);
-
-                                //记录日志
-                            }
-                            else
-                            {
-                                var afterSuccess = await _SqlHelper.ExecSqlAsync(dataSource[j].AfterSqlstring2);
-                                //记录日志
-                            }
+                            _logger.LogInformation("当前执行的任务名称为：" + taskPlan.Name + ",数据源名称为:" + dataSource[j].Name + "失败后执行语句为:" + afterFalse + ",返回结果" + afterF);
                         }
-                        
                     }
 
                 }
+
             }
             catch (Exception ex)
             {
-                await Console.Out.WriteLineAsync("错误信息" + ex.Message);
-                throw;
+                _logger.LogError("错误信息" + ex.Message + ex.StackTrace);
+                return;
             }
 
         }

@@ -1,4 +1,7 @@
+using System;
+using NLog.Web;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 
 namespace AutoSchedule
@@ -7,7 +10,21 @@ namespace AutoSchedule
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            var logger = NLog.Web.NLogBuilder.ConfigureNLog("NLog.config").GetCurrentClassLogger();
+            try
+            {
+                logger.Debug("初始化主程序");
+                CreateHostBuilder(args).Build().Run();
+            }
+            catch (Exception exception)
+            {
+                logger.Error(exception, "Stopped program because of exception");
+                throw;
+            }
+            finally
+            {
+                NLog.LogManager.Shutdown();
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -15,6 +32,13 @@ namespace AutoSchedule
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                });
+                })
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+                })
+                .UseNLog();
     }
+
 }

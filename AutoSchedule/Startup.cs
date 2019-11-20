@@ -6,11 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using Quartz;
-using Quartz.Impl;
-using Quartz.Spi;
+using System;
 
 namespace AutoSchedule
 {
@@ -26,21 +22,35 @@ namespace AutoSchedule
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")));
-            services.AddTransient<AutoTaskJob>();
-            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。
-            services.AddSingleton<IJobFactory, IOCJobFactory>();
-            services.AddSingleton<QuartzStartup>();
-            
+            services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")), ServiceLifetime.Transient);
+
+            //自定义注册服务
+            services.ConfigServies();
+
+            //自定义服务获取类
+            GetServiceByOther(services);
+
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            //getService(services);
             //.AddRazorRuntimeCompilation();
+        }
+
+        private void GetServiceByOther(IServiceCollection services)
+        {
+            GetContext.ServiceProvider = services.BuildServiceProvider();
+        }
+
+        private void getService(IServiceCollection services)
+        {
+            var ss = services.BuildServiceProvider();
+            var context = (SqlLiteContext)ss.GetService(typeof(SqlLiteContext));
+            var ssss = context.OpenSql.ToListAsync().Result;
+            Console.WriteLine("hhh");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //使用NLog作为日志记录工具
-            //loggingBuilder.AddNLog("NLog.config");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -63,4 +73,5 @@ namespace AutoSchedule
             });
         }
     }
+
 }

@@ -12,8 +12,6 @@ namespace TaskApi.Common
         public List<Datum> Data { get; set; }
     }
 
-    
-    
     public class Datum
     {
         public List<Datamain> DataMain { get; set; }
