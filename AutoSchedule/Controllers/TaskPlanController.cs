@@ -69,7 +69,7 @@ namespace AutoSchedule.Controllers
                 }
 
                 FrequencyName = $"每隔{item.Frequency + FrequencyType}执行一次任务";
-                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName });
+                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName,TaskUrl = item.TaskUrl });
             }
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanData { msg = "", count = data.Count, code = 0, data = data });
         }
@@ -120,7 +120,8 @@ namespace AutoSchedule.Controllers
                 GUID = guid,
                 Name = TaskPlanAddIn.Name,
                 OrgCode = TaskPlanAddIn.OrgCode,
-                TaskPlanType = TaskPlanAddIn.TaskPlanType
+                TaskPlanType = TaskPlanAddIn.TaskPlanType,
+                TaskUrl = TaskPlanAddIn.TaskUrl
             };
             await _SqlLiteContext.TaskPlan.AddAsync(TaskPlanAdd);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
@@ -157,7 +158,8 @@ namespace AutoSchedule.Controllers
                 GUID = TaskPlanIn.GUID,
                 Name = TaskPlanIn.Name,
                 OrgCode = TaskPlanIn.OrgCode,
-                TaskPlanType = TaskPlanIn.TaskPlanType
+                TaskPlanType = TaskPlanIn.TaskPlanType,
+                TaskUrl = TaskPlanIn.TaskUrl
             };
             await _SqlLiteContext.TaskPlan.AddAsync(TaskPlanadd);
             var addresult = await _SqlLiteContext.SaveChangesAsync();

@@ -9,8 +9,6 @@ namespace AutoSchedule.Common
     {
         public static IServiceCollection ConfigServies(this IServiceCollection services)
         {
-            //service.AddTransient<INavigation, NavigationLogic>();
-            //service.AddTransient<IUserInfo, UserInfoLogic>();
 
             services.AddTransient<AutoTaskJob>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。

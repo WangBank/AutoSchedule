@@ -13,18 +13,22 @@ namespace TaskApi.Controllers
         [HttpPost]
         public async Task<string> Post()
         {
+            //DoTaskJson doTaskJson
             //var jObject =  HttpContext.Request.ContentType;
             //return jObject;
-            //if (doTaskJson.OpenSqlGuid == "10009")
-            //{
+            string ctype = Request.ContentType;
+            string body = await Httphelper.GetStreamAsString(Request, Httphelper.GetRequestCharset(ctype));
+            DoTaskJson doTaskJson = JsonConvert.DeserializeObject<DoTaskJson>(body);
+            if (doTaskJson.OpenSqlGuid == "10009")
+            {
 
-            //    return JsonConvert.SerializeObject
-            //    (new ResponseCommon
-            //    {
-            //        code = "0",
-            //        msg = ""
-            //    });
-            //}
+                return JsonConvert.SerializeObject
+                (new ResponseCommon
+                {
+                    code = "0",
+                    msg = ""
+                });
+            }
 
             return JsonConvert.SerializeObject
                 (new ResponseCommon
@@ -33,5 +37,6 @@ namespace TaskApi.Controllers
                     msg = "没有对应计划的处理逻辑"
                 });
         }
+       
     }
 }

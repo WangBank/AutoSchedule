@@ -80,19 +80,19 @@
         </div>
     </script>
     <script type="text/html" id="barDemoTask">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-        <a class="layui-btn layui-btn-xs" lay-event="begin">开启</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop">关闭</a>
+        <input  type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑" />
+        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
+        <input  type="button" class="layui-btn layui-btn-xs" lay-event="begin" value="开启" onload="getTaskPlanState(this)">
+        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop" value="关闭" onload="getTaskPlanState(this)">
     </script>
 
     <script type="text/html" id="barDemo">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        <input  type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑">
+        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
     </script>
 
     <script type="text/html" id="barDemoDetail">
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
     </script>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -167,7 +167,8 @@
                     { field: 'Name', title: '任务名称', sort: true },
                     { field: 'Frequency', title: '执行频率', sort: true },
                     { field: 'TaskPlanType', title: '任务类型', sort: true },
-                    { field: 'OrgCode', title: '所属机构', sort: true }
+                    { field: 'OrgCode', title: '所属机构', sort: true },
+                    { field: 'TaskUrl', title: 'Api地址', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemoTask', width: 220 }
                 ]]
             });
@@ -312,6 +313,7 @@
 
             //任务计划编辑
             table.on('tool(TaskPlan)', function (obj) {
+                console.log(obj);
                 var data = obj.data;
                 if (obj.event === 'del') {
                     layer.confirm('真的删除行么', function (index) {
@@ -348,7 +350,15 @@
                         dataType: "json",
                         contentType: "application/json;charset=UTF-8",
                         success: function (dataResult) {
-                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
+                            //console.log($(obj.tr[0]).find("input"));
+                            if (dataResult.code == '0') {
+                                $($(obj.tr[0]).find("input")[3]).attr("hidden", true);
+                                 $($(obj.tr[0]).find("input")[4]).attr("hidden", false);
+                            //console.log($($(obj.tr[0]).find("input")[3]));
+                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            } else {
+                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            }                    
                         }
                     });
                 }
@@ -360,7 +370,14 @@
                         dataType: "json",
                         contentType: "application/json;charset=UTF-8",
                         success: function (dataResult) {
-                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
+                           if (dataResult.code == '0') {
+                               $($(obj.tr[0]).find("input")[4]).attr("hidden", true);
+                               $($(obj.tr[0]).find("input")[3]).attr("hidden", false);
+                            //console.log($($(obj.tr[0]).find("input")[3]));
+                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            } else {
+                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            }  
                         }
                     });
                 }
@@ -461,14 +478,16 @@
                     });
                 }
             });
+
+            
         });
+        function clickStart(ss) {
+                
+            }
     </script>
     <script>
         //JavaScript代码区域
-        layui.use('element', function () {
-            var element = layui.element;
 
-        });
     </script>
 </body>
 </html>

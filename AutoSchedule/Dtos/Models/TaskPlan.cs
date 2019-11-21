@@ -39,6 +39,11 @@ namespace AutoSchedule.Dtos.Models
         /// 所属机构
         /// </summary>
         public string OrgCode { get; set; }
+
+        /// <summary>
+        /// 任务Url
+        /// </summary>
+        public string TaskUrl { get; set; }
     }
 
     public class TaskPlanDetail
@@ -87,5 +92,10 @@ namespace AutoSchedule.Dtos.Models
         /// 所属机构
         /// </summary>
         public string OrgCode { get; set; }
+
+        /// <summary>
+        /// 任务Url
+        /// </summary>
+        public string TaskUrl { get; set; }
     }
 }
