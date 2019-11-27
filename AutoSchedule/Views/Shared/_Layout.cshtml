@@ -80,19 +80,19 @@
         </div>
     </script>
     <script type="text/html" id="barDemoTask">
-        <input  type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑" />
-        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
-        <input  type="button" class="layui-btn layui-btn-xs" lay-event="begin" value="开启" onload="getTaskPlanState(this)">
-        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop" value="关闭" onload="getTaskPlanState(this)">
+        <input type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑" />
+        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
+        <input type="button" class="layui-btn layui-btn-xs" lay-event="begin" value="开启" >
+        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop" value="关闭" >
     </script>
 
     <script type="text/html" id="barDemo">
-        <input  type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑">
-        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
+        <input type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑">
+        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
     </script>
 
     <script type="text/html" id="barDemoDetail">
-        <input  type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
+        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
     </script>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -313,8 +313,9 @@
 
             //任务计划编辑
             table.on('tool(TaskPlan)', function (obj) {
-                console.log(obj);
+                //console.log(obj);
                 var data = obj.data;
+                
                 if (obj.event === 'del') {
                     layer.confirm('真的删除行么', function (index) {
                         $.ajax({
@@ -358,7 +359,7 @@
                             $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
-                            }                    
+                            }
                         }
                     });
                 }
@@ -377,7 +378,7 @@
                             $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
-                            }  
+                            }
                         }
                     });
                 }
@@ -479,15 +480,38 @@
                 }
             });
 
-            
         });
-        function clickStart(ss) {
-                
-            }
+
+        function getStartState(ss) {
+            console.log(ss);
+            $.ajax({
+                        url: "/Home/GetTaskPlanState?guid=" + data.GUID,
+                        async: true,
+                        type: "Get",
+                        dataType: "json",
+                        contentType: "application/json;charset=UTF-8",
+                        success: function (dataResult) {
+                            //console.log($(obj.tr[0]).find("input"));
+                            if (dataResult.code == '0') {
+                                $($(obj.tr[0]).find("input")[3]).attr("hidden", true);
+                                 $($(obj.tr[0]).find("input")[4]).attr("hidden", false);
+                            //console.log($($(obj.tr[0]).find("input")[3]));
+                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            } else if (dataResult.code == '1') {
+                                 $($(obj.tr[0]).find("input")[4]).attr("hidden", true);
+                               $($(obj.tr[0]).find("input")[3]).attr("hidden", false);
+                            //console.log($($(obj.tr[0]).find("input")[3]));
+                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            }
+                            else {
+                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                            }
+                        }
+                    });
+        }
     </script>
     <script>
         //JavaScript代码区域
-
     </script>
 </body>
 </html>

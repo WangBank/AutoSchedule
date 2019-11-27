@@ -1,19 +1,17 @@
 ﻿using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
+using BankDbHelper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Quartz;
 using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Data;
-using Newtonsoft.Json;
-using BankDbHelper;
-using System.Threading;
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
+using System.Data;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
 {
@@ -22,6 +20,7 @@ namespace AutoSchedule.Common
         private ILogger<AutoTaskJob> _logger;
         private SqlLiteContext _SqlLiteContext;
         public ExecSqlHelper _SqlHelper;
+
         //public IConfiguration _Configuration;
         //public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IConfiguration configuration)
         //{
@@ -39,11 +38,12 @@ namespace AutoSchedule.Common
         {
             try
             {
+                CommonHelper commonHelper = new CommonHelper();
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
                 string jobSays = dataMap.GetString("guid");
                 _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
-                var taskPlan = await  _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
+                var taskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
                 _logger.LogInformation("任务名称: " + taskPlan.Name + "正在执行！");
                 var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();
                 string orgCode = TaskPlan.OrgCode;
@@ -76,10 +76,10 @@ namespace AutoSchedule.Common
                         break;
                 }
                 _SqlHelper = new ExecSqlHelper(connectString, orgType);
-                
+
                 //List<DataSource> dataSources = new List<DataSource>();
                 var taskPlanList = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == jobSays).FirstOrDefaultAsync();
-                string dataJsonData =string.Empty;
+                string dataJsonData = string.Empty;
                 string dataJsonDataDetail = string.Empty;
                 //string taskApiUrl = _Configuration.GetSection("TaskApiUrls").GetSection("TaskApiUrl").Value;
                 string paramJson = string.Empty;
@@ -91,7 +91,7 @@ namespace AutoSchedule.Common
                 string afterFalse = string.Empty;
                 string MainKey = string.Empty;
                 string MainKeyValue = string.Empty;
-                var systemKes =await  _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => o.KeyName != "").ToListAsync();
+                var systemKes = await _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => o.KeyName != "").ToListAsync();
                 //计划中的数据源
                 var dataSource = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == taskPlanList.OpenSqlGuid).ToListAsync();
                 for (int j = 0; j < dataSource.Count; j++)
@@ -117,7 +117,7 @@ namespace AutoSchedule.Common
                     {
                         //获取当前任务中分组数据
                         var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
-                        
+
                         //MainKeyValue = dataMaindt.Rows[]
                         for (int h = 0; h < dataMaindt.Rows.Count; h++)
                         {
@@ -147,7 +147,7 @@ namespace AutoSchedule.Common
                             Data = datas
                         });
 
-                        string result = await CommonHelper.HttpPostAsync(TaskPlan.TaskUrl, paramJson);
+                        string result = await commonHelper.HttpPostAsync(TaskPlan.TaskUrl, paramJson);
                         _logger.LogInformation("任务名称：" + taskPlan.Name + ",接口地址:" + TaskPlan.TaskUrl + "入参Json" + paramJson + ",返回：" + result);
                         responseCommon = (ResponseCommon)System.Text.Json.JsonSerializer.Deserialize(result, typeof(ResponseCommon));
                         //记录日志
@@ -165,23 +165,22 @@ namespace AutoSchedule.Common
                             _logger.LogInformation("任务名称：" + taskPlan.Name + ",数据源:" + dataSource[j].Name + "失败后执行语句为:" + afterFalse + ",返回" + afterF);
                         }
                     }
-
                 }
-
             }
             catch (Exception ex)
             {
                 _logger.LogError("错误信息" + ex.Message + ex.StackTrace);
                 return;
             }
-
         }
-        public async Task<string> asyncTesr() {
-            await Task.Run(() => { 
-                
-                Thread.Sleep(5000); });
+
+        public async Task<string> asyncTesr()
+        {
+            await Task.Run(() =>
+            {
+                Thread.Sleep(5000);
+            });
             return "1";
-        
-        }    
+        }
     }
 }

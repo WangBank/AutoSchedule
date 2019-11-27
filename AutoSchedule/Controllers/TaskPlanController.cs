@@ -69,7 +69,7 @@ namespace AutoSchedule.Controllers
                 }
 
                 FrequencyName = $"每隔{item.Frequency + FrequencyType}执行一次任务";
-                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName,TaskUrl = item.TaskUrl });
+                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName, TaskUrl = item.TaskUrl });
             }
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanData { msg = "", count = data.Count, code = 0, data = data });
         }

@@ -20,11 +20,12 @@ namespace AutoSchedule.Common
         private readonly IJobFactory _iocJobfactory;
         private IJobDetail jobDetail;
         private SqlLiteContext _SqlLiteContext;
-        private Redis rds;
+        public Redis rds;
         private IConfiguration _Configuration;
         private string RedisConnectstring;
         private int RedisDb;
-        public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory,IConfiguration configuration)
+
+        public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory, IConfiguration configuration)
         {
             this._logger = logger;
             //1、声明一个调度工厂
@@ -38,7 +39,7 @@ namespace AutoSchedule.Common
 
         public async Task<string> Start(List<string> param)
         {
-            try 
+            try
             {
                 int Second = 0;
                 if (param.Count > 1 && _scheduler != null)
@@ -49,22 +50,25 @@ namespace AutoSchedule.Common
                 {
                     _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
                     //计算出事件的秒数
-                    var ts = await _SqlLiteContext.TaskPlan.AsNoTracking().FirstOrDefaultAsync(o=>o.GUID == param[i].ToString());
+                    var ts = await _SqlLiteContext.TaskPlan.AsNoTracking().FirstOrDefaultAsync(o => o.GUID == param[i].ToString());
                     switch (ts.FrequencyType)
                     {
                         case "0":
                             Second = int.Parse(ts.Frequency);
                             break;
+
                         case "1":
                             Second = int.Parse(ts.Frequency) * 60;
                             break;
+
                         case "2":
                             Second = int.Parse(ts.Frequency) * 3600;
                             break;
+
                         default:
                             break;
                     }
-                   
+
                     //2、通过调度工厂获得调度器
                     _scheduler = await _schedulerFactory.GetScheduler();
                     _scheduler.JobFactory = this._iocJobfactory;
@@ -84,7 +88,7 @@ namespace AutoSchedule.Common
                                     .Build();
                     if (rds.ContainsKey(param[i].ToString()))
                     {
-                        return await Task.FromResult("已经开启过任务" + ts.Name+  ";不允许重复开启！");
+                        return await Task.FromResult("已经开启过任务" + ts.Name + ";不允许重复开启！");
                     }
                     rds.Set(param[i].ToString(), jobDetail.Key);
 
@@ -92,8 +96,8 @@ namespace AutoSchedule.Common
 
                     await _scheduler.ScheduleJob(jobDetail, trigger);
                 }
-               
-                return await Task.FromResult("开启定时调度任务");
+
+                return await Task.FromResult("0");
             }
             catch (Exception ex)
             {
@@ -105,7 +109,7 @@ namespace AutoSchedule.Common
         public async Task<string> Stop(string param = "")
         {
             var taskPlands = await _SqlLiteContext.TaskPlan.AsNoTracking().ToListAsync();
-            
+
             if (!string.IsNullOrEmpty(param))
             {
                 if (rds.ContainsKey(param))

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using TaskApi.Common;
 
@@ -21,7 +20,6 @@ namespace TaskApi.Controllers
             DoTaskJson doTaskJson = JsonConvert.DeserializeObject<DoTaskJson>(body);
             if (doTaskJson.OpenSqlGuid == "10009")
             {
-
                 return JsonConvert.SerializeObject
                 (new ResponseCommon
                 {
@@ -37,6 +35,5 @@ namespace TaskApi.Controllers
                     msg = "没有对应计划的处理逻辑"
                 });
         }
-       
     }
 }

@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
 using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
 {
     public class CommonHelper
     {
-        public static async Task<string> HttpPostAsync(string strURL, string paramsStr, string xaccesstoken = "")
+        public  async Task<string> HttpPostAsync(string strURL, string paramsStr, string xaccesstoken = "")
         {
             try
             {
@@ -31,11 +27,11 @@ namespace AutoSchedule.Common
                         foreach (var header in headers)
                         {
                             client.DefaultRequestHeaders.Add(header.Key, header.Value);
-                        }     
+                        }
                     }
                     using (HttpContent httpContent = new StringContent(paramsStr, Encoding.UTF8))
                     {
-                            httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                        httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
                         var response = await client.PostAsync(strURL, httpContent);
                         return await response.Content.ReadAsStringAsync();
@@ -48,7 +44,7 @@ namespace AutoSchedule.Common
             }
         }
 
-        public static async Task<string> HttpGetAsync(string strURL, string xaccesstoken = "")
+        public  async Task<string> HttpGetAsync(string strURL, string xaccesstoken = "")
         {
             try
             {

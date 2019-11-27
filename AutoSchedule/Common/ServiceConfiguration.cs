@@ -9,7 +9,6 @@ namespace AutoSchedule.Common
     {
         public static IServiceCollection ConfigServies(this IServiceCollection services)
         {
-
             services.AddTransient<AutoTaskJob>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。
             services.AddSingleton<IJobFactory, IOCJobFactory>();

@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,6 +33,7 @@ namespace TaskApi.Common
             }
             return charset;
         }
+
         public static async Task<string> GetStreamAsString(HttpRequest request, string charset)
         {
             request.EnableBuffering();
@@ -54,7 +53,6 @@ namespace TaskApi.Common
             {
                 return string.Empty;
             }
-
         }
     }
 }

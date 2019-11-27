@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace TaskApi.Common
 {
@@ -10,7 +7,6 @@ namespace TaskApi.Common
     {
         public string OpenSqlGuid { get; set; }
         public List<Datas> Data { get; set; }
-
     }
 
     public class Datas
@@ -18,5 +14,4 @@ namespace TaskApi.Common
         public DataTable DataMain { get; set; }
         public List<DataTable> DataDetail { get; set; }
     }
-
 }

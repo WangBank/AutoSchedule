@@ -58,7 +58,12 @@ namespace AutoSchedule.Controllers
                 {
                     guidhssh.Add(guid);
                 }
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = await _quartzStartup.Start(guidhssh), code = "0" });
+                string msg = await _quartzStartup.Start(guidhssh);
+                if (msg !="0")
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = msg, code = "-1" });
+                }
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg= "定时任务已开启！", code = "0" });
             }
             catch (SchedulerException se)
             {
@@ -83,6 +88,27 @@ namespace AutoSchedule.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        //获得当前定时任务开启状态
+        public async Task<string> GetTaskPlanState(string guid = "")
+        {
+            try
+            {
+                if (_quartzStartup.rds.ContainsKey(guid))
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+                }
+                else
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "1" });
+                }
+            }
+            catch (System.Exception ex)
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = ex.ToString(), code = "-1" });
+            }
+            
         }
     }
 }
