@@ -10,6 +10,7 @@
 
         Decimal,
 
-        Blob
+        Blob,
+        VARCHAR2
     }
 }

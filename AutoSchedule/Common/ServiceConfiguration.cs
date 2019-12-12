@@ -1,19 +1,21 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AutoSchedule.ServiceBuilder;
+using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
+using System;
 
 namespace AutoSchedule.Common
 {
     public static class ServiceConfiguration
     {
-        public static IServiceCollection ConfigServies(this IServiceCollection services)
+        //配置入口
+        public static void AddExtendService(this IServiceCollection services, Action<ExtendServiceBuilder> configure)
         {
-            services.AddTransient<AutoTaskJob>();
-            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();//注册ISchedulerFactory的实例。
-            services.AddSingleton<IJobFactory, IOCJobFactory>();
-            services.AddSingleton<QuartzStartup>();
-            return services;
+            var builder = new ExtendServiceBuilder(services);
+            configure(builder);
         }
     }
+
+   
 }

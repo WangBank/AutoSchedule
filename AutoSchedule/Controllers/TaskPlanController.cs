@@ -1,4 +1,5 @@
-﻿using AutoSchedule.Dtos.Data;
+﻿using AutoSchedule.Common;
+using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +16,12 @@ namespace AutoSchedule.Controllers
     {
         private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<TaskPlanController> _logger;
-
-        public TaskPlanController(ILogger<TaskPlanController> logger, SqlLiteContext SqlLiteContext)
+        private QuartzStartup _quartzStartup;
+        public TaskPlanController(ILogger<TaskPlanController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup)
         {
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
+            _quartzStartup = quartzStartup;
         }
 
         public IActionResult TaskPlan()
@@ -38,6 +40,7 @@ namespace AutoSchedule.Controllers
             string FrequencyType = "";
             foreach (var item in skey)
             {
+                string state = string.Empty;
                 if (string.IsNullOrEmpty(item.OrgCode))
                 {
                     OrgName = "";
@@ -67,10 +70,19 @@ namespace AutoSchedule.Controllers
                 {
                     FrequencyType = "小时";
                 }
-
+                if (_quartzStartup.rds.ContainsKey(item.GUID))
+                {
+                     state = "已开启";
+                }
+                else
+                {
+                     state = "未开启";
+                }
                 FrequencyName = $"每隔{item.Frequency + FrequencyType}执行一次任务";
-                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName, TaskUrl = item.TaskUrl });
+                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName, TaskUrl = item.TaskUrl,State = state});
             }
+
+
             return System.Text.Json.JsonSerializer.Serialize(new TaskPlanData { msg = "", count = data.Count, code = 0, data = data });
         }
 

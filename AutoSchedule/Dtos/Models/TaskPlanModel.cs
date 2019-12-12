@@ -38,6 +38,10 @@ namespace AutoSchedule.Dtos.Models
         /// 任务Url
         /// </summary>
         public string TaskUrl { get; set; }
+        /// <summary>
+        /// 任务状态
+        /// </summary>
+        public string State { get; set; }
     }
 
     public class TaskPlanData

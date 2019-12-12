@@ -7,6 +7,7 @@ using Quartz;
 using Quartz.Spi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
@@ -17,7 +18,7 @@ namespace AutoSchedule.Common
         private ILogger<QuartzStartup> _logger;
         private readonly ISchedulerFactory _schedulerFactory;
         private IScheduler _scheduler;
-        private readonly IJobFactory _iocJobfactory;
+        public readonly IJobFactory _iocJobfactory;
         private IJobDetail jobDetail;
         private SqlLiteContext _SqlLiteContext;
         public Redis rds;
@@ -80,7 +81,6 @@ namespace AutoSchedule.Common
                     var trigger = TriggerBuilder.Create()
                                     .WithSimpleSchedule(x => x.WithIntervalInSeconds(Second).RepeatForever())//每两秒执行一次
                                     .Build();
-
                     //5、创建任务
                     jobDetail = JobBuilder.Create<AutoTaskJob>()
                                     .WithIdentity(param[i].ToString(), "group")
@@ -95,6 +95,8 @@ namespace AutoSchedule.Common
                     //6、将触发器和任务器绑定到调度器中
 
                     await _scheduler.ScheduleJob(jobDetail, trigger);
+
+                    //改变数据库中的状态
                 }
 
                 return await Task.FromResult("0");
@@ -109,14 +111,18 @@ namespace AutoSchedule.Common
         public async Task<string> Stop(string param = "")
         {
             var taskPlands = await _SqlLiteContext.TaskPlan.AsNoTracking().ToListAsync();
-
+            var tk = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == param).FirstOrDefaultAsync();
             if (!string.IsNullOrEmpty(param))
             {
                 if (rds.ContainsKey(param))
                 {
-                    await _scheduler.DeleteJob(rds.Get<JobKey>(param));
-                    rds.Remove(param);
-                    return $"定时任务已结束";
+                    var closeResult = _scheduler.DeleteJob(rds.Get<JobKey>(param));
+                    if (closeResult.Result)
+                    {
+                        rds.Remove(param);
+                        return $"定时任务({ tk.Name})已结束";
+                    }
+                   
                 }
                 else
                 {

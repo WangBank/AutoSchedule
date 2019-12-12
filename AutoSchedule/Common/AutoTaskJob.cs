@@ -29,9 +29,10 @@ namespace AutoSchedule.Common
         //    _Configuration = configuration;
         //    _services = services;
         //}
-        public AutoTaskJob(ILogger<AutoTaskJob> logger)
+        public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext)
         {
             _logger = logger;
+            _SqlLiteContext = SqlLiteContext;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -42,7 +43,8 @@ namespace AutoSchedule.Common
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
                 string jobSays = dataMap.GetString("guid");
-                _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
+                //从asp netcore中重新获取sqlcontext
+               // _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
                 var taskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
                 _logger.LogInformation("任务名称: " + taskPlan.Name + "正在执行！");
                 var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();

@@ -92,7 +92,7 @@ namespace BankDbHelper
 
         public async Task<Hashtable> ExecProcAsync(string procName, List<SqlHelperParameter> lstPara)
         {
-            throw new NotImplementedException();
+           return await Task.FromResult<Hashtable>(new Hashtable());
         }
 
         public async Task<string> ExecSqlAsync(ArrayList sqlList)

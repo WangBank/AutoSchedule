@@ -90,25 +90,5 @@ namespace AutoSchedule.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        //获得当前定时任务开启状态
-        public async Task<string> GetTaskPlanState(string guid = "")
-        {
-            try
-            {
-                if (_quartzStartup.rds.ContainsKey(guid))
-                {
-                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-                }
-                else
-                {
-                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "1" });
-                }
-            }
-            catch (System.Exception ex)
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = ex.ToString(), code = "-1" });
-            }
-            
-        }
     }
 }

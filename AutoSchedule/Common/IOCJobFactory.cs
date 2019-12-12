@@ -19,7 +19,10 @@ namespace AutoSchedule.Common
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
             //return _serviceProvider.GetService(bundle.JobDetail.JobType) as IJob;
-            return _scope.ServiceProvider.GetService(bundle.JobDetail.JobType) as IJob;
+            //从当前scope中获取
+              return _scope.ServiceProvider.GetService(bundle.JobDetail.JobType) as IJob;
+            //从core中默认的调度器中获取
+            //return GetContext.ServiceProvider.GetService(bundle.JobDetail.JobType) as IJob;
         }
 
         public void ReturnJob(IJob job)

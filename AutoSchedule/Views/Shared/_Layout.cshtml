@@ -15,16 +15,6 @@
             <div class="layui-logo">自动传输管理后台</div>
             <!-- 头部区域（可配合layui已有的水平导航） -->
             <ul class="layui-nav layui-layout-left">
-                @*<li class="layui-nav-item"><a href="">新增</a></li>
-                    <li class="layui-nav-item"><a href="">返回</a></li>*@
-                @*<li class="layui-nav-item">
-                        <a href="javascript:;">其它系统</a>
-                        <dl class="layui-nav-child">
-                            <dd><a href="">邮件管理</a></dd>
-                            <dd><a href="">消息管理</a></dd>
-                            <dd><a href="">授权管理</a></dd>
-                        </dl>
-                    </li>*@
             </ul>
             <ul class="layui-nav layui-layout-right">
                 <li class="layui-nav-item">
@@ -80,19 +70,19 @@
         </div>
     </script>
     <script type="text/html" id="barDemoTask">
-        <input type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑" />
-        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
-        <input type="button" class="layui-btn layui-btn-xs" lay-event="begin" value="开启" >
-        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop" value="关闭" >
+        <button class="layui-btn layui-btn-xs" lay-event="edit">编辑</button>
+        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" >删除</button>
+        <button class="layui-btn layui-btn-xs" lay-event="begin" >开启</button>
+        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop" >关闭</button>
     </script>
 
     <script type="text/html" id="barDemo">
-        <input type="button" class="layui-btn layui-btn-xs" lay-event="edit" value="编辑">
-        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
+        <button class="layui-btn layui-btn-xs" lay-event="edit" >编辑</button>
+        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
     </script>
 
     <script type="text/html" id="barDemoDetail">
-        <input type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" value="删除">
+        <button  class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
     </script>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -100,10 +90,15 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/layui.js"></script>
     <script>
+        function renderDone(res) {
+            var table = layui.table;
+            var checkStatus = table.checkStatus('taskDtId')
+            console.log(checkStatus.data);
+             console.log(res);
+        }
         var tkguid = '';
         layui.use('table', function () {
             var table = layui.table;
-
             //数据源设置表格
             table.render({
                 elem: '#dataSource'
@@ -160,6 +155,7 @@
                 , toolbar: '#toolbarDemo'
                 , url: '/TaskPlan/TaskPlanResult'
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                ,id:'taskDtId'
                 , cols: [[
                     { type: 'radio' },
                     { field: 'GUID', title: '任务编号', hide: true, sort: true },
@@ -168,10 +164,16 @@
                     { field: 'Frequency', title: '执行频率', sort: true },
                     { field: 'TaskPlanType', title: '任务类型', sort: true },
                     { field: 'OrgCode', title: '所属机构', sort: true },
-                    { field: 'TaskUrl', title: 'Api地址', sort: true }
-                    , { fixed: 'right', title: '操作', toolbar: '#barDemoTask', width: 220 }
+                    { field: 'TaskUrl', title: 'Api地址', sort: true },
+                    { field: 'State', title: '任务状态', sort: true },
+                    { fixed: 'right', title: '操作', toolbar: '#barDemoTask', width: 220 }
                 ]]
+                ,
+                done: function (res) {
+                    renderDone(res);
+                }
             });
+
 
             //点击任务计划，会显示相应的明细
             table.on('row(TaskPlan)', function (obj) {
@@ -315,7 +317,6 @@
             table.on('tool(TaskPlan)', function (obj) {
                 //console.log(obj);
                 var data = obj.data;
-                
                 if (obj.event === 'del') {
                     layer.confirm('真的删除行么', function (index) {
                         $.ajax({
@@ -353,13 +354,15 @@
                         success: function (dataResult) {
                             //console.log($(obj.tr[0]).find("input"));
                             if (dataResult.code == '0') {
-                                $($(obj.tr[0]).find("input")[3]).attr("hidden", true);
-                                 $($(obj.tr[0]).find("input")[4]).attr("hidden", false);
+                                data.State = '已开启';
+                                //$($(obj.tr[0]).find("button")[2]).attr("hidden", true);
+                                // $($(obj.tr[0]).find("button")[3]).attr("hidden", false);
                             //console.log($($(obj.tr[0]).find("input")[3]));
                             $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             }
+                            table.reload('taskDtId');
                         }
                     });
                 }
@@ -371,14 +374,16 @@
                         dataType: "json",
                         contentType: "application/json;charset=UTF-8",
                         success: function (dataResult) {
-                           if (dataResult.code == '0') {
-                               $($(obj.tr[0]).find("input")[4]).attr("hidden", true);
-                               $($(obj.tr[0]).find("input")[3]).attr("hidden", false);
+                            if (dataResult.code == '0') {
+                               data.State = '未开启';
+                               //$($(obj.tr[0]).find("button")[3]).attr("hidden", true);
+                               //$($(obj.tr[0]).find("button")[2]).attr("hidden", false);
                             //console.log($($(obj.tr[0]).find("input")[3]));
                             $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             }
+                            table.reload('taskDtId');
                         }
                     });
                 }
@@ -482,33 +487,6 @@
 
         });
 
-        function getStartState(ss) {
-            console.log(ss);
-            $.ajax({
-                        url: "/Home/GetTaskPlanState?guid=" + data.GUID,
-                        async: true,
-                        type: "Get",
-                        dataType: "json",
-                        contentType: "application/json;charset=UTF-8",
-                        success: function (dataResult) {
-                            //console.log($(obj.tr[0]).find("input"));
-                            if (dataResult.code == '0') {
-                                $($(obj.tr[0]).find("input")[3]).attr("hidden", true);
-                                 $($(obj.tr[0]).find("input")[4]).attr("hidden", false);
-                            //console.log($($(obj.tr[0]).find("input")[3]));
-                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
-                            } else if (dataResult.code == '1') {
-                                 $($(obj.tr[0]).find("input")[4]).attr("hidden", true);
-                               $($(obj.tr[0]).find("input")[3]).attr("hidden", false);
-                            //console.log($($(obj.tr[0]).find("input")[3]));
-                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
-                            }
-                            else {
-                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
-                            }
-                        }
-                    });
-        }
     </script>
     <script>
         //JavaScript代码区域

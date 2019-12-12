@@ -267,18 +267,18 @@ namespace BankDbHelper
                     this.cmd.Parameters.Add(this.GetParameter(sqlHelperParameter));
                 }
                 await this.cmd.ExecuteNonQueryAsync();
-                foreach (SqlHelperParameter sqlHelperParameter2 in lstPara)
+                foreach (SqlParameter sqlHelperParameter2 in this.cmd.Parameters)
                 {
                     bool flag2 = sqlHelperParameter2.Direction == ParameterDirection.Output || sqlHelperParameter2.Direction == ParameterDirection.InputOutput;
                     if (flag2)
                     {
                         object obj = sqlHelperParameter2.Value;
-                        bool flag3 = (obj == null || obj == DBNull.Value) && sqlHelperParameter2.DataType == ParamsType.Varchar;
+                        bool flag3 = (obj == null || obj == DBNull.Value) && sqlHelperParameter2.DbType == DbType.String;
                         if (flag3)
                         {
                             obj = "";
                         }
-                        hashtable.Add(sqlHelperParameter2.Name, obj);
+                        hashtable.Add(sqlHelperParameter2.ParameterName, obj);
                     }
                 }
                 result = hashtable;
@@ -602,18 +602,18 @@ namespace BankDbHelper
                     this.cmd.Parameters.Add(this.GetParameter(sqlHelperParameter));
                 }
                 this.cmd.ExecuteNonQuery();
-                foreach (SqlHelperParameter sqlHelperParameter2 in lstPara)
+                foreach (SqlParameter sqlHelperParameter2 in this.cmd.Parameters)
                 {
                     bool flag2 = sqlHelperParameter2.Direction == ParameterDirection.Output || sqlHelperParameter2.Direction == ParameterDirection.InputOutput;
                     if (flag2)
                     {
                         object obj = sqlHelperParameter2.Value;
-                        bool flag3 = (obj == null || obj == DBNull.Value) && sqlHelperParameter2.DataType == ParamsType.Varchar;
+                        bool flag3 = (obj == null || obj == DBNull.Value) && sqlHelperParameter2.DbType == DbType.String;
                         if (flag3)
                         {
                             obj = "";
                         }
-                        hashtable.Add(sqlHelperParameter2.Name, obj);
+                        hashtable.Add(sqlHelperParameter2.ParameterName, obj);
                     }
                 }
                 result = hashtable;
@@ -938,18 +938,18 @@ namespace BankDbHelper
                     this.cmd.Parameters.Add(this.GetParameter(sqlHelperParameter));
                 }
                 this.cmd.ExecuteNonQuery();
-                foreach (SqlHelperParameter sqlHelperParameter2 in lstPara)
+                foreach (SqlParameter sqlHelperParameter2 in this.cmd.Parameters)
                 {
                     bool flag2 = sqlHelperParameter2.Direction == ParameterDirection.Output || sqlHelperParameter2.Direction == ParameterDirection.InputOutput;
                     if (flag2)
                     {
                         object obj = sqlHelperParameter2.Value;
-                        bool flag3 = (obj == null || obj == DBNull.Value) && sqlHelperParameter2.DataType == ParamsType.Varchar;
+                        bool flag3 = (obj == null || obj == DBNull.Value) && sqlHelperParameter2.DbType == DbType.String;
                         if (flag3)
                         {
                             obj = "";
                         }
-                        hashtable.Add(sqlHelperParameter2.Name, obj);
+                        hashtable.Add(sqlHelperParameter2.ParameterName, obj);
                     }
                 }
                 result = hashtable;

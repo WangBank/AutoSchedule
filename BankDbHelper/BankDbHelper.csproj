@@ -12,7 +12,6 @@
       <Version>2.19.50</Version>
     </PackageReference>
     <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.112" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
@@ -25,6 +24,10 @@
       <HintPath>dll\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Data" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite" Version="1.0.112" />
   </ItemGroup>
 
   </Project>

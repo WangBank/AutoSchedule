@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NewLife.Caching;
 using System;
 
 namespace AutoSchedule
@@ -23,10 +24,16 @@ namespace AutoSchedule
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")), ServiceLifetime.Transient);
+            //services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")));
 
             //自定义注册服务
-            services.ConfigServies();
-
+            services.AddExtendService(configure =>
+            {
+                configure.UseAutoTaskJob();
+                configure.UseIOCJobFactory();
+                configure.UseISchedulerFactory();
+                configure.UseQuartzStartup();
+            });
             //自定义服务获取类
             GetServiceByOther(services);
 
@@ -40,12 +47,12 @@ namespace AutoSchedule
             GetContext.ServiceProvider = services.BuildServiceProvider();
         }
 
-        private void getService(IServiceCollection services)
+        private void getService()
         {
-            var ss = services.BuildServiceProvider();
-            var context = (SqlLiteContext)ss.GetService(typeof(SqlLiteContext));
-            var ssss = context.OpenSql.ToListAsync().Result;
-            Console.WriteLine("hhh");
+            //启动的时候清空Redis
+            var ss = GetContext.ServiceProvider;
+            var quartzStartup = (QuartzStartup)ss.GetService(typeof(QuartzStartup));
+            quartzStartup.rds.Clear();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +66,10 @@ namespace AutoSchedule
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
+            //清空任务计划Redis缓存
+            getService();
+
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -71,6 +82,7 @@ namespace AutoSchedule
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            
         }
     }
 }
