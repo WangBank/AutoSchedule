@@ -10,21 +10,9 @@ namespace AutoSchedule
     {
         public static void Main(string[] args)
         {
-            var logger = NLog.Web.NLogBuilder.ConfigureNLog("NLog.config").GetCurrentClassLogger();
-            try
-            {
-                logger.Debug("初始化主程序");
-                CreateHostBuilder(args).Build().Run();
-            }
-            catch (Exception exception)
-            {
-                logger.Error(exception, "Stopped program because of exception");
-                throw;
-            }
-            finally
-            {
-                NLog.LogManager.Shutdown();
-            }
+          
+                CreateHostBuilder(args).Build().Start();
+            //Console.WriteLine("what???");
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -37,7 +25,7 @@ namespace AutoSchedule
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
-                    logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+                    logging.SetMinimumLevel(LogLevel.Trace);
                 })
                 .UseNLog();
     }

@@ -2,12 +2,15 @@ using AutoSchedule.Common;
 using AutoSchedule.Dtos.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NewLife.Caching;
 using System;
+using System.Diagnostics;
+using System.Text;
 
 namespace AutoSchedule
 {
@@ -56,7 +59,7 @@ namespace AutoSchedule
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,IHostApplicationLifetime lifetime)
         {
             if (env.IsDevelopment())
             {
@@ -66,6 +69,9 @@ namespace AutoSchedule
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+            //lifetime.ApplicationStarted.Register(UnRegService1);
+            //lifetime.ApplicationStopping.Register(UnRegService);//应用停止后从服务中心注销
+            //app.Run(r => r.Response.WriteAsync("没想到吧",Encoding.GetEncoding("utf-8")));
 
             //清空任务计划Redis缓存
             getService();
@@ -83,6 +89,20 @@ namespace AutoSchedule
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
             
+        }
+
+        private void UnRegService()
+        {
+            ProcessStartInfo processInfo = new ProcessStartInfo();
+            processInfo.FileName = "notepad.exe";
+            Process.Start(processInfo);
+        }
+
+        private void UnRegService1()
+        {
+            ProcessStartInfo processInfo = new ProcessStartInfo();
+            processInfo.FileName = "notepad.exe";
+            Process.Start(processInfo);
         }
     }
 }

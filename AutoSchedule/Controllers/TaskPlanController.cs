@@ -32,7 +32,9 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> TaskPlanResult()
         {
+
             var skey = await _SqlLiteContext.TaskPlan.AsNoTracking().ToListAsync();
+
             List<TaskPlanModel> data = new List<TaskPlanModel>();
             string OrgName = "";
             string TaskPlanName = "";

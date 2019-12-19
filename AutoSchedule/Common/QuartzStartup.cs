@@ -91,8 +91,7 @@ namespace AutoSchedule.Common
                         return await Task.FromResult("已经开启过任务" + ts.Name + ";不允许重复开启！");
                     }
                     rds.Set(param[i].ToString(), jobDetail.Key);
-
-                    //6、将触发器和任务器绑定到调度器中
+                    //6、将触发器和任务器绑定到调度器中 
 
                     await _scheduler.ScheduleJob(jobDetail, trigger);
 
@@ -116,6 +115,7 @@ namespace AutoSchedule.Common
             {
                 if (rds.ContainsKey(param))
                 {
+                    
                     var closeResult = _scheduler.DeleteJob(rds.Get<JobKey>(param));
                     if (closeResult.Result)
                     {
