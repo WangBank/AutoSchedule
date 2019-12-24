@@ -44,6 +44,7 @@
                             <dd><a href="/Organization/Organization">组织机构设置</a></dd>
                             <dd><a href="/SystemKey/SystemKey">系统变量设置</a></dd>
                             <dd><a href="/TaskPlan/TaskPlan">任务计划</a></dd>
+                            <dd><a href="/Logs/Index">计划日志</a></dd>
                         </dl>
                     </li>
                 </ul>
@@ -174,6 +175,27 @@
                 }
             });
 
+            //任务计划日志表格
+            table.render({
+                elem: '#logs'
+                , url: '/Logs/LogsResult'
+                , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                ,id:'taskDtId'
+                , cols: [[
+                    { type: 'radio' },
+                    { field: 'Id', title: '任务编号', hide: true, sort: true },
+                    { field: 'Time', title: '任务编号', sort: true },
+                    { field: 'Application', title: '任务名称', sort: true },
+                    { field: 'Level', title: '执行频率', sort: true },
+                    { field: 'Message', title: '任务类型', sort: true },
+                    { field: 'Logger', title: '所属机构', sort: true },
+                    { field: 'Exception', title: 'Api地址', sort: true }
+                ]]
+                ,
+                done: function (res) {
+                    renderDone(res);
+                }
+            });
 
             //点击任务计划，会显示相应的明细
             table.on('row(TaskPlan)', function (obj) {

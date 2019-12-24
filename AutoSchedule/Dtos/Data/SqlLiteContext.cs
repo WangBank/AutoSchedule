@@ -13,7 +13,7 @@ namespace AutoSchedule.Dtos.Data
 
         public DbSet<Models.SystemKey> SystemKeys { get; set; }
         public DbSet<Models.TaskPlan> TaskPlan { get; set; }
-
+        public DbSet<Models.Logs> Logs { get; set; }
         public DbSet<Models.TaskPlanDetail> TaskPlanRelation { get; set; }
     }
 }
