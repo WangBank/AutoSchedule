@@ -37,8 +37,7 @@ namespace AutoSchedule.Common
 
         public async Task Execute(IJobExecutionContext context)
         {
-            try
-            {
+           
                 CommonHelper commonHelper = new CommonHelper();
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
@@ -46,12 +45,14 @@ namespace AutoSchedule.Common
                 //从asp netcore中重新获取sqlcontext
                // _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
                 var taskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
-                _logger.LogInformation("任务名称: " + taskPlan.Name + "正在执行！");
+                _logger.LogInformation("{TaskName}({EventId}):开始执行！", taskPlan.Name, jobSays);
                 var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();
                 string orgCode = TaskPlan.OrgCode;
                 var OrgSetting = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgCode).FirstOrDefaultAsync();
                 string connectString = OrgSetting.ConnectingString;
                 string orgType = OrgSetting.DBType;
+            try
+            {
                 switch (orgType)
                 {
                     //Oracle 0
@@ -113,7 +114,7 @@ namespace AutoSchedule.Common
                     if (!groupSql.Contains(MainKey))
                     {
                         //主数据源中不包含关键字MainKey
-                        _logger.LogError("主数据源中不包含关键字" + MainKey);
+                        _logger.LogError("{TaskName}({EventId}):\r\n主数据源中不包含关键字{MainKey}", taskPlan.Name, jobSays, MainKey);
                     }
                     else
                     {
@@ -130,13 +131,13 @@ namespace AutoSchedule.Common
                             afterSuccess = dataSource[j].AfterSqlString.Replace($"#{MainKey}#", MainKeyValue);
                             afterFalse = dataSource[j].AfterSqlstring2.Replace($"#{MainKey}#", MainKeyValue);
                             sqlStrings = sqlString.Replace($"#{MainKey}#", MainKeyValue).Split(";");
-                            _logger.LogInformation("任务名称：" + taskPlan.Name + ",数据源:" + dataSource[j].Name + ",分组sql:" + groupSql + "选择sql:" + sqlString + "成功sql:" + afterSuccess + "失败sql:" + afterFalse);
+                            _logger.LogInformation("{TaskName}{EventId}:\r\n数据源:{dataSource[j].Name },\r\n分组sql:{groupSql },\r\n选择sql:{ sqlString },\r\n成功sql:{ afterSuccess },\r\n失败sql:{ afterFalse}", taskPlan.Name, jobSays, dataSource[j].Name, groupSql, sqlString, afterSuccess, afterFalse);
                             dataTables.Clear();
                             for (int k = 0; k < sqlStrings.Length; k++)
                             {
                                 dataTables.Add(await _SqlHelper.GetDataTableAsync(sqlStrings[k]));
                             }
-
+                            
                             // var dataDetaildt = await _SqlHelper.GetDataTableAsync(sqlString);
                             var sss = dataMaindt.Rows[h];
                             maindetail.Rows.Clear();
@@ -150,7 +151,7 @@ namespace AutoSchedule.Common
                         });
 
                         string result = await commonHelper.HttpPostAsync(TaskPlan.TaskUrl, paramJson);
-                        _logger.LogInformation("任务名称：" + taskPlan.Name + ",接口地址:" + TaskPlan.TaskUrl + "入参Json" + paramJson + ",返回：" + result);
+                        _logger.LogInformation("{TaskName}({EventId}):\r\n接口地址:{TaskPlan.TaskUrl},\r\n入参Json{paramJson},\r\n返回：{result}", taskPlan.Name, jobSays, TaskPlan.TaskUrl, paramJson, result);
                         responseCommon = (ResponseCommon)System.Text.Json.JsonSerializer.Deserialize(result, typeof(ResponseCommon));
                         //记录日志
                         if (responseCommon.code == "0")
@@ -158,20 +159,20 @@ namespace AutoSchedule.Common
                             var afterS = await _SqlHelper.ExecSqlAsync(afterSuccess);
 
                             //记录日志
-                            _logger.LogInformation("任务名称：" + taskPlan.Name + ",数据源:" + dataSource[j].Name + "成功后执行语句为:" + afterSuccess + ",返回" + afterS);
+                            _logger.LogInformation("{TaskName}({EventId}):\r\n数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n,返回:{afterS}", taskPlan.Name, jobSays, dataSource[j].Name, afterSuccess, afterS);
                         }
                         else
                         {
                             var afterF = await _SqlHelper.ExecSqlAsync(afterFalse);
                             //记录日志
-                            _logger.LogInformation("任务名称：" + taskPlan.Name + ",数据源:" + dataSource[j].Name + "失败后执行语句为:" + afterFalse + ",返回" + afterF);
+                            _logger.LogInformation("{TaskName}({EventId}):\r\n数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterSuccess}\r\n,返回:{afterS}", taskPlan.Name, jobSays, dataSource[j].Name, afterFalse, afterF);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError("错误信息" + ex.Message + ex.StackTrace);
+                _logger.LogError("{TaskName}({EventId})错误信息:{ex.Message},{ex.StackTrace}", taskPlan.Name, jobSays, ex.Message,ex.StackTrace);
                 return;
             }
         }

@@ -52,6 +52,7 @@
         </div>
         <div class="layui-body">
             <main role="main" class="pb-3">
+               
                 @RenderBody()
             </main>
         </div>
@@ -63,6 +64,9 @@
             @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
         </div>
     </script>
+
+    
+
     <script type="text/html" id="toolbarDemoDetail">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="add">新增任务计划明细</button>
@@ -72,18 +76,18 @@
     </script>
     <script type="text/html" id="barDemoTask">
         <button class="layui-btn layui-btn-xs" lay-event="edit">编辑</button>
-        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" >删除</button>
-        <button class="layui-btn layui-btn-xs" lay-event="begin" >开启</button>
-        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop" >关闭</button>
+        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
+        <button class="layui-btn layui-btn-xs" lay-event="begin">开启</button>
+        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="stop">关闭</button>
     </script>
 
     <script type="text/html" id="barDemo">
-        <button class="layui-btn layui-btn-xs" lay-event="edit" >编辑</button>
+        <button class="layui-btn layui-btn-xs" lay-event="edit">编辑</button>
         <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
     </script>
 
     <script type="text/html" id="barDemoDetail">
-        <button  class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
+        <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
     </script>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -95,7 +99,7 @@
             var table = layui.table;
             var checkStatus = table.checkStatus('taskDtId')
             console.log(checkStatus.data);
-             console.log(res);
+            console.log(res);
         }
         var tkguid = '';
         layui.use('table', function () {
@@ -105,6 +109,7 @@
                 elem: '#dataSource'
                 , url: '/DataSource/DataSourceResult'
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                , id: 'datasourceDtId'
                 , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
                 , cols: [[
                     { type: 'radio' },
@@ -119,6 +124,7 @@
                     { field: 'MainKey', title: '主关键字段', sort: true },
                     { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
+                , page: true
             });
 
             //组织机构表格
@@ -134,6 +140,7 @@
                     { field: 'orgName', title: '名称', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
+                , page: true
             });
 
             //系统变量设置表格
@@ -148,6 +155,7 @@
                     { field: 'KeyValue', title: '关键字值', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
+                , page: true
             });
 
             //任务计划表格
@@ -156,7 +164,7 @@
                 , toolbar: '#toolbarDemo'
                 , url: '/TaskPlan/TaskPlanResult'
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
-                ,id:'taskDtId'
+                , id: 'taskDtId'
                 , cols: [[
                     { type: 'radio' },
                     { field: 'GUID', title: '任务编号', hide: true, sort: true },
@@ -169,8 +177,8 @@
                     { field: 'State', title: '任务状态', sort: true },
                     { fixed: 'right', title: '操作', toolbar: '#barDemoTask', width: 220 }
                 ]]
-                ,
-                done: function (res) {
+                , page: true
+                , done: function (res) {
                     renderDone(res);
                 }
             });
@@ -178,23 +186,41 @@
             //任务计划日志表格
             table.render({
                 elem: '#logs'
+                , toolbar: '#toolbarDemo'
                 , url: '/Logs/LogsResult'
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
-                ,id:'taskDtId'
+                , id: 'taskLogDtId'
                 , cols: [[
-                    { type: 'radio' },
-                    { field: 'Id', title: '任务编号', hide: true, sort: true },
-                    { field: 'Time', title: '任务编号', sort: true },
-                    { field: 'Application', title: '任务名称', sort: true },
-                    { field: 'Level', title: '执行频率', sort: true },
-                    { field: 'Message', title: '任务类型', sort: true },
-                    { field: 'Logger', title: '所属机构', sort: true },
-                    { field: 'Exception', title: 'Api地址', sort: true }
+                    { field: 'EventName', title: '任务名称', hide: false, sort: true, width: 120 },
+                    { field: 'Level', title: '日志等级', sort: true, width: 100 },
+                    { field: 'Message', title: '日志内容', sort: true },
+                    { field: 'Time', title: '时间', sort: true, width: 200 }
                 ]]
-                ,
-                done: function (res) {
+                , page: true
+                , done: function (res) {
                     renderDone(res);
                 }
+            });
+
+            var $ = layui.$, active = {
+                  reload: function(){
+                  var searchReload = $('#searchReload');
+      
+                  //执行重载
+                  table.reload('taskLogDtId', {
+                    page: {
+                      curr: 1 //重新从第 1 页开始
+                    }
+                    ,where: {
+                        value: searchReload.val()
+                    }
+                  }, 'data');
+                  }
+              };
+  
+            $('.searchTable .layui-btn').on('click', function(){
+             var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
             });
 
             //点击任务计划，会显示相应的明细
@@ -216,8 +242,8 @@
                         { field: 'dsState', title: '是否启用', sort: true },
                         { fixed: 'right', title: '操作', toolbar: '#barDemoDetail', width: 178 }
                     ]]
+                    , page: true
                 });
-
                 //标注选中样式
                 obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
             });
@@ -379,8 +405,8 @@
                                 data.State = '已开启';
                                 //$($(obj.tr[0]).find("button")[2]).attr("hidden", true);
                                 // $($(obj.tr[0]).find("button")[3]).attr("hidden", false);
-                            //console.log($($(obj.tr[0]).find("input")[3]));
-                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                                //console.log($($(obj.tr[0]).find("input")[3]));
+                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             }
@@ -397,11 +423,11 @@
                         contentType: "application/json;charset=UTF-8",
                         success: function (dataResult) {
                             if (dataResult.code == '0') {
-                               data.State = '未开启';
-                               //$($(obj.tr[0]).find("button")[3]).attr("hidden", true);
-                               //$($(obj.tr[0]).find("button")[2]).attr("hidden", false);
-                            //console.log($($(obj.tr[0]).find("input")[3]));
-                            $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
+                                data.State = '未开启';
+                                //$($(obj.tr[0]).find("button")[3]).attr("hidden", true);
+                                //$($(obj.tr[0]).find("button")[2]).attr("hidden", false);
+                                //console.log($($(obj.tr[0]).find("input")[3]));
+                                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             }
@@ -511,7 +537,7 @@
 
     </script>
     <script>
-        //JavaScript代码区域
+            //JavaScript代码区域
     </script>
 </body>
 </html>

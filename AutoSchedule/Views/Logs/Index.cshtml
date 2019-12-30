@@ -2,6 +2,12 @@
 @{
     ViewData["Title"] = "Index";
 }
-
-    <table id="logs" lay-filter="logs"></table>
+    <div class="searchTable">
+        按日志等级、日志内容及任务名称:
+        <div class="layui-inline">
+            <input class="layui-input" name="value" id="searchReload" autocomplete="off">
+        </div>
+        <button class="layui-btn" data-type="reload">搜索</button>
+    </div>
+<table id="logs" lay-filter="logs"></table>
 

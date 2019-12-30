@@ -7,13 +7,10 @@ namespace AutoSchedule.Dtos.Models
 {
     public class LogsModel
     {
-        public string Id { get; set; }
         public string Time { get; set; }
-        public string Application { get; set; }
         public string Level { get; set; }
         public string Message { get; set; }
-        public string Logger { get; set; }
-        public string Exception { get; set; }
+        public string EventName { get; set; }
     }
 
     public class LogsModelData

@@ -99,9 +99,10 @@ namespace AutoSchedule.Controllers
         }
 
         [HttpGet]
-        public async Task<string> DataSourceResult()
+        public async Task<string> DataSourceResult(int page, int limit)
         {
-            var dts = await _SqlLiteContext.OpenSql.AsNoTracking().OrderBy(o => o.GUID).ToListAsync();
+            var skeyAll = _SqlLiteContext.OpenSql.AsNoTracking();
+            var dts = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
             List<DataSourceModel> data = new List<DataSourceModel>();
             foreach (var item in dts)
             {
@@ -118,7 +119,7 @@ namespace AutoSchedule.Controllers
                     GUID = item.GUID
                 });
             }
-            return System.Text.Json.JsonSerializer.Serialize(new DataSourceData { msg = "", count = data.Count, code = 0, data = data });
+            return System.Text.Json.JsonSerializer.Serialize(new DataSourceData { msg = "", count = skeyAll.Count(), code = 0, data = data });
         }
 
         [HttpGet]

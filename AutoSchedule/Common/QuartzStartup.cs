@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NewLife.Caching;
+using NLog;
 using Quartz;
 using Quartz.Spi;
 using System;
@@ -75,7 +76,7 @@ namespace AutoSchedule.Common
                     _scheduler.JobFactory = this._iocJobfactory;
                     //  替换默认工厂
                     //3、开启调度器
-                    _logger.LogInformation("定时任务启动");
+                    _logger.LogInformation("定时任务({EventId})启动", param[i].ToString());
                     await _scheduler.Start();
                     //4、创建一个触发器
                     var trigger = TriggerBuilder.Create()
@@ -88,7 +89,7 @@ namespace AutoSchedule.Common
                                     .Build();
                     if (rds.ContainsKey(param[i].ToString()))
                     {
-                        return await Task.FromResult("已经开启过任务" + ts.Name + ";不允许重复开启！");
+                        return await Task.FromResult($"已经开启过任务{ts.Name}不允许重复开启！");
                     }
                     rds.Set(param[i].ToString(), jobDetail.Key);
                     //6、将触发器和任务器绑定到调度器中 
@@ -102,8 +103,8 @@ namespace AutoSchedule.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError("开启失败，失败原因:" + ex.Message);
-                return await Task.FromResult("开启失败，失败原因:" + ex.Message);
+                _logger.LogError($"开启失败，失败原因:{ex.Message}");
+                return await Task.FromResult($"开启失败，失败原因:{ex.Message}");
             }
         }
 

@@ -15,6 +15,6 @@ namespace AutoSchedule.Dtos.Models
         public string Level { get; set; }
         public string Message { get; set; }
         public string Logger { get; set; }
-        public string Exception { get; set; }
+        public string EventId { get; set; }
     }
 }

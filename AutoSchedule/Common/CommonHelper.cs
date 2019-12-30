@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace AutoSchedule.Common
 {
@@ -115,5 +117,31 @@ namespace AutoSchedule.Common
         //    //    ).Replace('\\',' ');
 
         //}
+
+        public  Dictionary<string, string> GetQueryMap(string queryString, string charset)
+        {
+            Dictionary<string, string> queryMap = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(queryString))
+            {
+                queryString = queryString.Substring(1); // 忽略?号
+                string[] parameters = queryString.Split('&');
+                foreach (string parameter in parameters)
+                {
+                    string[] kv = parameter.Split('=');
+                    if (kv.Length == 2)
+                    {
+                        string key = HttpUtility.UrlDecode(kv[0], Encoding.GetEncoding(charset));
+                        string value = HttpUtility.UrlDecode(kv[1], Encoding.GetEncoding(charset));
+                        queryMap.Add(key, value);
+                    }
+                    else if (kv.Length == 1)
+                    {
+                        string key = HttpUtility.UrlDecode(kv[0], Encoding.GetEncoding(charset));
+                        queryMap.Add(key, "");
+                    }
+                }
+            }
+            return queryMap;
+        }
     }
 }

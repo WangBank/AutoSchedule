@@ -34,15 +34,16 @@ namespace AutoSchedule.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<string> OrgResult()
+        public async Task<string> OrgResult(int page, int limit)
         {
-            var org = await _SqlLiteContext.OrgSetting.AsNoTracking().OrderBy(o => o.CODE).ToListAsync();
+            var skeyAll = _SqlLiteContext.OrgSetting.AsNoTracking();
+            var org = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
             List<OrganizationModel> data = new List<OrganizationModel>();
             foreach (var item in org)
             {
                 data.Add(new OrganizationModel { orgName = item.NAME, orgNum = item.CODE });
             }
-            return System.Text.Json.JsonSerializer.Serialize(new OrganizationData { msg = "", count = data.Count, code = 0, data = data });
+            return System.Text.Json.JsonSerializer.Serialize(new OrganizationData { msg = "", count = skeyAll.Count(), code = 0, data = data });
         }
 
         public IActionResult OrgAdd()

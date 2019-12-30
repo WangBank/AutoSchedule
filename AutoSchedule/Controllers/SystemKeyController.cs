@@ -27,15 +27,16 @@ namespace AutoSchedule.Controllers
         }
 
         [HttpGet]
-        public async Task<string> SystemKeyResult()
+        public async Task<string> SystemKeyResult(int page, int limit)
         {
-            var skey = await _SqlLiteContext.SystemKeys.AsNoTracking().ToListAsync();
+            var skeyAll = _SqlLiteContext.SystemKeys.AsNoTracking();
+            var skey = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
             List<SystemKeyModel> data = new List<SystemKeyModel>();
             foreach (var item in skey)
             {
                 data.Add(new SystemKeyModel { KeyName = item.KeyName, KeyValue = item.KeyValue });
             }
-            return System.Text.Json.JsonSerializer.Serialize(new SystemKeyData { msg = "", count = data.Count, code = 0, data = data });
+            return System.Text.Json.JsonSerializer.Serialize(new SystemKeyData { msg = "", count = skeyAll.Count(), code = 0, data = data });
         }
 
         public IActionResult SystemKeyAdd()

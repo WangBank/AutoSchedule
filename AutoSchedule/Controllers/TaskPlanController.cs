@@ -30,10 +30,10 @@ namespace AutoSchedule.Controllers
         }
 
         [HttpGet]
-        public async Task<string> TaskPlanResult()
+        public async Task<string> TaskPlanResult(int page, int limit)
         {
-
-            var skey = await _SqlLiteContext.TaskPlan.AsNoTracking().ToListAsync();
+            var skeyAll = _SqlLiteContext.TaskPlan.AsNoTracking();
+            var skey = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
 
             List<TaskPlanModel> data = new List<TaskPlanModel>();
             string OrgName = "";
@@ -85,7 +85,7 @@ namespace AutoSchedule.Controllers
             }
 
 
-            return System.Text.Json.JsonSerializer.Serialize(new TaskPlanData { msg = "", count = data.Count, code = 0, data = data });
+            return System.Text.Json.JsonSerializer.Serialize(new TaskPlanData { msg = "", count = skeyAll.Count(), code = 0, data = data });
         }
 
         [HttpGet]
