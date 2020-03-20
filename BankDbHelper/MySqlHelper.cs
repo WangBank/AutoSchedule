@@ -64,6 +64,11 @@ namespace BankDbHelper
             {
                 result = false;
             }
+            finally
+            {
+                mysqlConnection.Dispose();
+
+            }
             return result;
         }
 
@@ -91,11 +96,7 @@ namespace BankDbHelper
             }
             finally
             {
-                bool flag2 = this.cmd != null;
-                if (flag2)
-                {
-                    await this.cmd.DisposeAsync();
-                }
+               await this.cmd.DisposeAsync();
             }
             return result;
         }
@@ -103,51 +104,43 @@ namespace BankDbHelper
         public async Task<string> ExecSqlAsync(List<ParamSql> lst)
         {
             string result;
+
+            this.conn = new MySqlConnection(this._connectionString);
+            bool flag = this.conn.State != ConnectionState.Open;
+            if (flag)
+            {
+                await this.conn.OpenAsync();
+            }
+            MySqlTransaction mysqlTransaction = this.conn.BeginTransaction();
             try
             {
-                using (this.conn = new MySqlConnection(this._connectionString))
+                this.cmd = new MySqlCommand();
+                this.cmd.CommandType = CommandType.Text;
+                this.cmd.Connection = this.conn;
+                this.cmd.Transaction = mysqlTransaction;
+                foreach (ParamSql paramSql in lst)
                 {
-                    bool flag = this.conn.State != ConnectionState.Open;
-                    if (flag)
+                    this.cmd.CommandText = paramSql.Sql;
+                    foreach (SqlHelperParameter sqlHelperParameter in paramSql.Params)
                     {
-                        await this.conn.OpenAsync();
+                        this.cmd.Parameters.Add(this.GetParameter(sqlHelperParameter));
                     }
-                    MySqlTransaction mysqlTransaction = this.conn.BeginTransaction();
-                    try
-                    {
-                        this.cmd = new MySqlCommand();
-                        this.cmd.CommandType = CommandType.Text;
-                        this.cmd.Connection = this.conn;
-                        this.cmd.Transaction = mysqlTransaction;
-                        foreach (ParamSql paramSql in lst)
-                        {
-                            this.cmd.CommandText = paramSql.Sql;
-                            foreach (SqlHelperParameter sqlHelperParameter in paramSql.Params)
-                            {
-                                this.cmd.Parameters.Add(this.GetParameter(sqlHelperParameter));
-                            }
-                            await this.cmd.ExecuteNonQueryAsync();
-                            this.cmd.Parameters.Clear();
-                        }
-                        await mysqlTransaction.CommitAsync();
-                        result = string.Empty;
-                    }
-                    catch (Exception ex)
-                    {
-                        await mysqlTransaction.RollbackAsync();
-                        result = ex.Message;
-                    }
-                    finally
-                    {
-                        await mysqlTransaction.DisposeAsync();
-                        await this.cmd.DisposeAsync();
-                        await this.conn.CloseAsync();
-                    }
+                    await this.cmd.ExecuteNonQueryAsync();
+                    this.cmd.Parameters.Clear();
                 }
+                await mysqlTransaction.CommitAsync();
+                result = string.Empty;
             }
-            catch (Exception ex2)
+            catch (Exception ex)
             {
-                result = ex2.Message;
+                await mysqlTransaction.RollbackAsync();
+                result = ex.Message;
+            }
+            finally
+            {
+                await mysqlTransaction.DisposeAsync();
+                await this.cmd.DisposeAsync();
+                await this.conn.CloseAsync();
             }
             return result;
         }
@@ -366,8 +359,6 @@ namespace BankDbHelper
         public async Task DisposeAsync()
         {
             await this.conn.CloseAsync();
-            this.dap.Dispose();
-            this.ds.Dispose();
             await this.cmd.DisposeAsync();
             await this.conn.DisposeAsync();
         }
@@ -741,8 +732,6 @@ namespace BankDbHelper
         public void Dispose()
         {
             this.conn.Close();
-            this.dap.Dispose();
-            this.ds.Dispose();
             this.cmd.Dispose();
             this.conn.Dispose();
         }

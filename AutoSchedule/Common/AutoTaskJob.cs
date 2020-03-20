@@ -2,6 +2,7 @@
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
 using BankDbHelper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +22,7 @@ namespace AutoSchedule.Common
         private ILogger<AutoTaskJob> _logger;
         private SqlLiteContext _SqlLiteContext;
         public ExecSqlHelper _SqlHelper;
-
+        public IHttpClientFactory _httpClientFactory;
         //public IConfiguration _Configuration;
         //public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IConfiguration configuration)
         //{
@@ -29,50 +31,53 @@ namespace AutoSchedule.Common
         //    _Configuration = configuration;
         //    _services = services;
         //}
-        public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext)
+        public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _SqlLiteContext = SqlLiteContext;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-           
-                CommonHelper commonHelper = new CommonHelper();
+
+            _logger.LogError("zzzz");
+            CommonHelper commonHelper = new CommonHelper();
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
                 string jobSays = dataMap.GetString("guid");
                 //从asp netcore中重新获取sqlcontext
                // _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
                 var taskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
-                _logger.LogInformation("{TaskName}({EventId}):开始执行！", taskPlan.Name, jobSays);
+                _logger.LogDebug("{TaskName}({EventId}):开始执行！", taskPlan.Name, jobSays);
                 var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();
                 string orgCode = TaskPlan.OrgCode;
                 var OrgSetting = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgCode).FirstOrDefaultAsync();
                 string connectString = OrgSetting.ConnectingString;
-                string orgType = OrgSetting.DBType;
+                string orgType = string.Empty;
+            var client = _httpClientFactory.CreateClient();
             try
             {
-                switch (orgType)
+                switch (OrgSetting.DBType)
                 {
                     //Oracle 0
                     //SqlServer  1
                     //MySql  2
                     //Sqlite  3
                     case "0":
-                        _SqlHelper = new ExecSqlHelper(connectString, DBTypeEnum.Oracle.ToString());
+                        orgType = DBTypeEnum.Oracle.ToString();
                         break;
 
                     case "1":
-                        _SqlHelper = new ExecSqlHelper(connectString, DBTypeEnum.SqlServer.ToString());
+                        orgType = DBTypeEnum.SqlServer.ToString();
                         break;
 
                     case "2":
-                        _SqlHelper = new ExecSqlHelper(connectString, DBTypeEnum.MySql.ToString());
+                        orgType = DBTypeEnum.MySql.ToString();
                         break;
 
                     case "3":
-                        _SqlHelper = new ExecSqlHelper(connectString, DBTypeEnum.Sqlite.ToString());
+                        orgType = DBTypeEnum.Sqlite.ToString();
                         break;
 
                     default:
@@ -150,7 +155,7 @@ namespace AutoSchedule.Common
                             Data = datas
                         });
 
-                        string result = await commonHelper.HttpPostAsync(TaskPlan.TaskUrl, paramJson);
+                        string result = await commonHelper.HttpPostAsync(TaskPlan.TaskUrl, paramJson,client);
                         _logger.LogInformation("{TaskName}({EventId}):\r\n接口地址:{TaskPlan.TaskUrl},\r\n入参Json{paramJson},\r\n返回：{result}", taskPlan.Name, jobSays, TaskPlan.TaskUrl, paramJson, result);
                         responseCommon = (ResponseCommon)System.Text.Json.JsonSerializer.Deserialize(result, typeof(ResponseCommon));
                         //记录日志
@@ -170,10 +175,15 @@ namespace AutoSchedule.Common
                     }
                 }
             }
+
             catch (Exception ex)
             {
                 _logger.LogError("{TaskName}({EventId})错误信息:{ex.Message},{ex.StackTrace}", taskPlan.Name, jobSays, ex.Message,ex.StackTrace);
                 return;
+            }
+            finally
+            {
+               await _SqlHelper.DisposeAsync();
             }
         }
 

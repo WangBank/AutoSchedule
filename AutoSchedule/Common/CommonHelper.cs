@@ -11,7 +11,7 @@ namespace AutoSchedule.Common
 {
     public class CommonHelper
     {
-        public  async Task<string> HttpPostAsync(string strURL, string paramsStr, string xaccesstoken = "")
+        public async Task<string> HttpPostAsync(string strURL, string paramsStr, HttpClient client,string xaccesstoken = "" )
         {
             try
             {
@@ -21,23 +21,20 @@ namespace AutoSchedule.Common
                     headers.Add("x-access-token", xaccesstoken);
                 }
                 int timeOut = 30;
-                using (HttpClient client = new HttpClient())
+                client.Timeout = new TimeSpan(0, 0, timeOut);
+                if (headers != null)
                 {
-                    client.Timeout = new TimeSpan(0, 0, timeOut);
-                    if (headers != null)
+                    foreach (var header in headers)
                     {
-                        foreach (var header in headers)
-                        {
-                            client.DefaultRequestHeaders.Add(header.Key, header.Value);
-                        }
+                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
                     }
-                    using (HttpContent httpContent = new StringContent(paramsStr, Encoding.UTF8))
-                    {
-                        httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                }
+                using (HttpContent httpContent = new StringContent(paramsStr, Encoding.UTF8))
+                {
+                    httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-                        var response = await client.PostAsync(strURL, httpContent);
-                        return await response.Content.ReadAsStringAsync();
-                    }
+                    var response = await client.PostAsync(strURL, httpContent);
+                    return await response.Content.ReadAsStringAsync();
                 }
             }
             catch (Exception ex)
@@ -46,7 +43,7 @@ namespace AutoSchedule.Common
             }
         }
 
-        public  async Task<string> HttpGetAsync(string strURL, string xaccesstoken = "")
+        public async Task<string> HttpGetAsync(string strURL, string xaccesstoken = "")
         {
             try
             {
@@ -73,52 +70,8 @@ namespace AutoSchedule.Common
             }
         }
 
-        //public static string DataTableToJson(DataTable table)
-        //{
-        //    var JsonString = new StringBuilder();
-        //    if (table.Rows.Count > 0)
-        //    {
-        //        JsonString.Append("[");
-        //        for (int i = 0; i < table.Rows.Count; i++)
-        //        {
-        //            JsonString.Append("{");
-        //            for (int j = 0; j < table.Columns.Count; j++)
-        //            {
-        //                if (j < table.Columns.Count - 1)
-        //                {
-        //                    JsonString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\",");
-        //                }
-        //                else if (j == table.Columns.Count - 1)
-        //                {
-        //                    JsonString.Append("\"" + table.Columns[j].ColumnName.ToString() + "\":" + "\"" + table.Rows[i][j].ToString() + "\"");
-        //                }
-        //            }
-        //            if (i == table.Rows.Count - 1)
-        //            {
-        //                JsonString.Append("}");
-        //            }
-        //            else
-        //            {
-        //                JsonString.Append("},");
-        //            }
-        //        }
-        //        JsonString.Append("]");
-        //    }
-        //    return JsonString.ToString();
-        //}
 
-        //public static string ObjectToJson<T>(T tojson)
-        //{
-        //    //return Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes<T>(tojson
-        //    //    , options: new System.Text.Json.JsonSerializerOptions
-        //    //{
-        //    //    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        //    //})
-        //    //    ).Replace('\\',' ');
-
-        //}
-
-        public  Dictionary<string, string> GetQueryMap(string queryString, string charset)
+        public Dictionary<string, string> GetQueryMap(string queryString, string charset)
         {
             Dictionary<string, string> queryMap = new Dictionary<string, string>();
             if (!string.IsNullOrEmpty(queryString))

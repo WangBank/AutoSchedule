@@ -10,8 +10,7 @@ namespace AutoSchedule
     {
         public static void Main(string[] args)
         {
-          
-                CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).Build().Run();
             //Console.WriteLine("what???");
         }
 
@@ -23,6 +22,7 @@ namespace AutoSchedule
                 })
 
                 .ConfigureLogging(logging =>
+
                 {
                     logging.ClearProviders();
                     logging.SetMinimumLevel(LogLevel.Trace);

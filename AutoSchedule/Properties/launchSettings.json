@@ -17,7 +17,8 @@
     },
     "AutoSchedule": {
       "commandName": "Project",
-      "launchUrl": "http://localhost:5000",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5001",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

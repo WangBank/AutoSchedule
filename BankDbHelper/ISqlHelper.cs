@@ -1,11 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
 namespace BankDbHelper
 {
-    public interface ISqlHelper
+    public interface ISqlHelper: IDisposable
     {
 #if NS21
 
@@ -30,7 +31,6 @@ namespace BankDbHelper
         Task<string> ExecSqlAsync(string sql, List<SqlHelperParameter> lstPara);
 
         Task<string> ExecSqlAsync(List<ParamSql> lst);
-
         Task DisposeAsync();
 
 #else
@@ -58,6 +58,5 @@ namespace BankDbHelper
 
         string ExecSql(List<ParamSql> lst);
 
-        void Dispose();
     }
 }

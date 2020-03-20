@@ -1,0 +1,36 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script type="text/javascript">
+        var content = "";
+        window.onload = function () {
+            var url = window.location.href;
+
+            var array = url.split("#");
+            if (array.length > 1) {
+                content = array[1];
+            }
+            var search = window.location.search;
+            if (search) {
+                search = search.substr(1);
+                var paras = search.split("&");
+                paras.forEach(element => {
+                    content += element;
+                    content += ";"
+                });
+            }
+            document.getElementById("content").innerHTML = content;
+        }
+    </script>
+</head>
+<body>
+    <div id="content"></div>
+</body>
+</html>

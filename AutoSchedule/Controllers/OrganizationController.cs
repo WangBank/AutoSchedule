@@ -200,56 +200,56 @@ namespace AutoSchedule.Controllers
         //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
         public async Task<string> OrgSqlHelper([FromBody]Organization organizationAddIn)
         {
-            //判断当前是否有重复
-            //if (_SqlLiteContext.OrgSetting.AsNoTracking().Contains(organizationAddIn))
-            //{
-            //    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "已有重复的项，请检查后重试", code = "-1" });
-            //}
             ExecSqlHelper sqlHelper;
             bool result = false;
+            string DBType = string.Empty;
+            switch (organizationAddIn.DBType)
+            {
+                //Oracle 0
+                //SqlServer  1
+                //MySql  2
+                case "0":
+                    //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
+                    conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
+                    DBType = DBTypeEnum.Oracle.ToString();
+                    break;
+
+                case "1":
+                    //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
+
+                    conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
+                    DBType = DBTypeEnum.SqlServer.ToString();
+                    break;
+
+                case "2":
+                    string name = organizationAddIn.ServerName;
+                    if (!organizationAddIn.ServerName.Contains(":"))
+                    {
+                        name = organizationAddIn.ServerName + ":3306";
+                    }
+                    string[] mysqlIp = name.Split(':');
+                    //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
+                    conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
+                    DBType = DBTypeEnum.MySql.ToString();
+                    break;
+
+                default:
+                    break;
+            }
+
+            sqlHelper = new ExecSqlHelper(conString, DBType);
             try
             {
-                switch (organizationAddIn.DBType)
-                {
-                    //Oracle 0
-                    //SqlServer  1
-                    //MySql  2
-                    case "0":
-                        //User Id=dbo;Password=romens;Data Source=192.168.100.9:1521/NewStddata;
-                        conString = $"User Id={organizationAddIn.UserName};Password={organizationAddIn.Password};Data Source={organizationAddIn.ServerName}/{organizationAddIn.DataBaseName};";
-                        sqlHelper = new ExecSqlHelper(conString, DBTypeEnum.Oracle.ToString());
-                        result = await sqlHelper.TestConnectionAsync();
-                        break;
-
-                    case "1":
-                        //"data source=*.*.*.*;initial catalog=mcudata;user id=sa;password=sa;"
-
-                        conString = $"data source={organizationAddIn.ServerName.Replace(":", ",")};initial catalog={organizationAddIn.DataBaseName};user id={organizationAddIn.UserName};password={organizationAddIn.Password}";
-                        sqlHelper = new ExecSqlHelper(conString, DBTypeEnum.SqlServer.ToString());
-                        result = await sqlHelper.TestConnectionAsync();
-                        break;
-
-                    case "2":
-                        string name = organizationAddIn.ServerName;
-                        if (!organizationAddIn.ServerName.Contains(":"))
-                        {
-                            name = organizationAddIn.ServerName + ":3306";
-                        }
-                        string[] mysqlIp = name.Split(':');
-                        //server=192.168.5.7;port=3306;database=beta-user;uid=root;pwd=Wq-.1997315421;CharSet=utf8
-                        conString = $"server={mysqlIp[0]};port={mysqlIp[1]};database={organizationAddIn.DataBaseName};uid={organizationAddIn.UserName};pwd={organizationAddIn.Password};CharSet=utf8";
-                        sqlHelper = new ExecSqlHelper(conString, DBTypeEnum.MySql.ToString());
-                        result = await sqlHelper.TestConnectionAsync();
-                        break;
-
-                    default:
-                        break;
-                }
+                result = await sqlHelper.TestConnectionAsync();
             }
             catch (System.Exception ex)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！\r\n 错误信息:" + ex.Message, code = "-1" });
                 throw;
+            }
+            finally
+            {
+               await sqlHelper.DisposeAsync();
             }
 
             if (result)
@@ -261,7 +261,5 @@ namespace AutoSchedule.Controllers
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "测试连接失败，请检查填入的信息后重试！", code = "-1" });
             }
         }
-
-        //string FType, string GUID, string Name, string IsStart, string MainKey, string GroupSqlString, string SqlString, string AfterSqlString, string AfterSqlstring2
     }
 }

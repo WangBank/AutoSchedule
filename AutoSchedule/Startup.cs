@@ -28,7 +28,7 @@ namespace AutoSchedule
         {
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")), ServiceLifetime.Transient);
             //services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(Configuration.GetConnectionString("SqlLite")));
-
+            services.AddHttpClient();
             //自定义注册服务
             services.AddExtendService(configure =>
             {
@@ -39,7 +39,7 @@ namespace AutoSchedule
             });
             //自定义服务获取类
             GetServiceByOther(services);
-
+            //Microsoft.VisualStudio.Web.CodeGeneration.Design
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             //getService(services);
             //.AddRazorRuntimeCompilation();

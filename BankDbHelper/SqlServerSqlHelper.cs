@@ -336,8 +336,6 @@ namespace BankDbHelper
         public async Task DisposeAsync()
         {
             await this.conn.CloseAsync();
-            this.dap.Dispose();
-            this.ds.Dispose();
             await this.cmd.DisposeAsync();
             await this.conn.DisposeAsync();
         }
@@ -671,8 +669,6 @@ namespace BankDbHelper
         public void Dispose()
         {
             this.conn.Close();
-            this.dap.Dispose();
-            this.ds.Dispose();
             this.cmd.Dispose();
             this.conn.Dispose();
         }
