@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
 using System;
+using System.Diagnostics;
 
 namespace AutoSchedule
 {
@@ -10,8 +11,8 @@ namespace AutoSchedule
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
-            //Console.WriteLine("what???");
+            Console.WriteLine("ss");
+                CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -25,7 +26,7 @@ namespace AutoSchedule
 
                 {
                     logging.ClearProviders();
-                    logging.SetMinimumLevel(LogLevel.Trace);
+                    logging.SetMinimumLevel(LogLevel.Information);
                 })
                 .UseNLog();
     }

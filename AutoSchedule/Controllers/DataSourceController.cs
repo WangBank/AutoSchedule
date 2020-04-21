@@ -35,25 +35,16 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> DataSourceEdit([FromBody]DataSource dataSourceAddIn)
         {
-            var dsdelete = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
-            _SqlLiteContext.OpenSql.Remove(dsdelete);
-            if (await _SqlLiteContext.SaveChangesAsync() == 0)
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改数据源失败", code = "-1" });
-            }
-            Dtos.Models.DataSource dataSource = new DataSource
-            {
-                GUID = dataSourceAddIn.GUID,
-                AfterSqlString = dataSourceAddIn.AfterSqlString,
-                AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2,
-                FType = dataSourceAddIn.FType,
-                GroupSqlString = dataSourceAddIn.GroupSqlString,
-                IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ? "0" : "1",
-                MainKey = dataSourceAddIn.MainKey,
-                SqlString = dataSourceAddIn.SqlString,
-                Name = dataSourceAddIn.Name
-            };
-            await _SqlLiteContext.OpenSql.AddAsync(dataSource);
+            var dsUpdate = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
+            dsUpdate.AfterSqlString = dataSourceAddIn.AfterSqlString;
+            dsUpdate.AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2;
+            dsUpdate.FType = dataSourceAddIn.FType;
+            dsUpdate.GroupSqlString = dataSourceAddIn.GroupSqlString;
+            dsUpdate.IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ? "0" : "1";
+            dsUpdate.MainKey = dataSourceAddIn.MainKey;
+            dsUpdate.SqlString = dataSourceAddIn.SqlString;
+            dsUpdate.Name = dataSourceAddIn.Name;
+            _SqlLiteContext.OpenSql.Update(dsUpdate);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
             if (addresult > 0)
             {
@@ -102,7 +93,17 @@ namespace AutoSchedule.Controllers
         public async Task<string> DataSourceResult(int page, int limit)
         {
             var skeyAll = _SqlLiteContext.OpenSql.AsNoTracking();
-            var dts = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
+            List<DataSource> dts;
+            if (page ==0 ||
+                
+                limit ==0)
+            {
+                dts = await skeyAll.ToListAsync();
+            }
+            else
+            {
+                dts = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
+            }
             List<DataSourceModel> data = new List<DataSourceModel>();
             foreach (var item in dts)
             {

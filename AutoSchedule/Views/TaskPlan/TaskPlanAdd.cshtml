@@ -23,15 +23,6 @@
     <form class="layui-form">
 
         <div class="layui-form-item">
-            <label class="layui-form-label">任务类型</label>
-            <div class="layui-input-block">
-                <select name="TaskPlanType" lay-filter="TaskPlanType">
-                    <option value="0" selected>上传</option>
-                    <option value="1">下载</option>
-                </select>
-            </div>
-        </div>
-        <div class="layui-form-item">
             <label class="layui-form-label">所属机构</label>
             <div class="layui-input-block">
                 <select name="OrgCode" lay-filter="OrgCode" id="selectOrg">
@@ -63,11 +54,22 @@
         </div>
 
         <div class="layui-form-item">
-            <label class="layui-form-label">Api地址</label>
+            <label class="layui-form-label">数据接受类型</label>
             <div class="layui-input-block">
-                <input type="text" name="TaskUrl" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
+                <select name="WorkType" lay-filter="WorkType">
+                    <option value="0" selected>发送数据到dll</option>
+                    <option value="1" selected="">发送数据到api</option>
+                </select>
             </div>
         </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">Dll名称或Api地址</label>
+            <div class="layui-input-block">
+                <input type="text" name="DllOrUrl" lay-verify="required" autocomplete="off" placeholder="" class="layui-input">
+            </div>
+        </div>
+
 
         <div class="layui-form-item">
             <div class="layui-input-block">

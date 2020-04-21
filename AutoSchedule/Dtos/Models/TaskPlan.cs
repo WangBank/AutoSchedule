@@ -30,10 +30,6 @@ namespace AutoSchedule.Dtos.Models
         /// </summary>
         public string FrequencyType { get; set; }
 
-        /// <summary>
-        /// 任务类型 0 上传 1下载
-        /// </summary>
-        public string TaskPlanType { get; set; }
 
         /// <summary>
         /// 所属机构
@@ -43,7 +39,20 @@ namespace AutoSchedule.Dtos.Models
         /// <summary>
         /// 任务Url
         /// </summary>
-        public string TaskUrl { get; set; }
+        public string DllOrUrl { get; set; }
+
+        /// <summary>
+        /// 数据接受类型 0：发送数据到dll   1 ：发送数据到api
+        /// </summary>
+        public string WorkType { get; set; }
+
+
+        /// <summary>
+        /// 运行状态
+        /// </summary>
+        public string Status { get; set; }
+
+
     }
 
     public class TaskPlanDetail
@@ -83,10 +92,6 @@ namespace AutoSchedule.Dtos.Models
         /// </summary>
         public string FrequencyType { get; set; }
 
-        /// <summary>
-        /// 任务类型 0 上传 1下载
-        /// </summary>
-        public string TaskPlanType { get; set; }
 
         /// <summary>
         /// 所属机构
@@ -96,6 +101,16 @@ namespace AutoSchedule.Dtos.Models
         /// <summary>
         /// 任务Url
         /// </summary>
-        public string TaskUrl { get; set; }
+        public string DllOrUrl { get; set; }
+
+        /// <summary>
+        /// 数据接受类型 0：发送数据到dll   1 ：发送数据到api
+        /// </summary>
+        public string WorkType { get; set; }
+
+        /// <summary>
+        /// 运行状态
+        /// </summary>
+        public string Status { get; set; }
     }
 }

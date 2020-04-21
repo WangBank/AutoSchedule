@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 using Identity4Center.BaseConfig;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -57,6 +60,44 @@ namespace Identity4Center
             //访问wwwroot目录静态文件
             app.UseStaticFiles();
             app.UseMvcWithDefaultRoute();
+            //app.UseEndpoints(endpoints =>
+            //{
+            //    endpoints.MapControllers();
+            //    //foreach (var item in SystemData.GetApiInfos())
+            //    //{
+            //    //    endpoints.MapDynamicControllerRoute<OpenApiTransformer>(item.Url);
+            //    //}
+            //    endpoints.MapDynamicControllerRoute<OpenApiTransformer>("{**slug}");
+            //    //{**slug}
+            //});
         }
     }
+    /// <summary>
+    /// 实现动态路由
+    /// </summary>
+    public class OpenApiTransformer : DynamicRouteValueTransformer
+    {
+        public OpenApiTransformer()
+        {
+
+        }
+
+        public override async ValueTask<RouteValueDictionary> TransformAsync(HttpContext httpContext
+        , RouteValueDictionary values)
+        {
+
+            RouteValueDictionary keyValuePairs = new RouteValueDictionary();
+            
+//读数据
+            if ("" == null)
+            {
+                return await Task.FromResult(values);
+            }
+            keyValuePairs.Add("controller", "Controller name");
+            keyValuePairs.Add("action","ActionName");
+            keyValuePairs.Add("namespace", "ApiTest");
+            return await Task.FromResult(keyValuePairs);
+        }
+    }
+
 }

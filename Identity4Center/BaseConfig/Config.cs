@@ -135,7 +135,7 @@ namespace Identity4Center.BaseConfig
                 //允许将token通过浏览器传递
                 AllowAccessTokensViaBrowser = true
             });
-
+            
 
             //授权码模式
             clients.Add(new Client

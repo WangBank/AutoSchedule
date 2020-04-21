@@ -67,6 +67,11 @@ namespace BankDbHelper
             return result;
         }
 
+        /// <summary>
+        /// exec sql,return error message
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <returns></returns>
         public async Task<string> ExecSqlAsync(string sql)
         {
             string result;

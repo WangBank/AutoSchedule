@@ -34,16 +34,24 @@ namespace AutoSchedule.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<string> OrgResult(int page, int limit)
+        public async Task<OrganizationData> OrgResult(int page, int limit)
         {
             var skeyAll = _SqlLiteContext.OrgSetting.AsNoTracking();
-            var org = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
+            List<Organization> org;
+            if (page == 0 && limit == 0)
+            {
+                org = await skeyAll.ToListAsync();
+            }
+            else
+            {
+                org = await skeyAll.Skip((page - 1) * limit).Take(limit).ToListAsync();
+            }
             List<OrganizationModel> data = new List<OrganizationModel>();
             foreach (var item in org)
             {
                 data.Add(new OrganizationModel { orgName = item.NAME, orgNum = item.CODE });
             }
-            return System.Text.Json.JsonSerializer.Serialize(new OrganizationData { msg = "", count = skeyAll.Count(), code = 0, data = data });
+            return new OrganizationData { msg = "", count = skeyAll.Count(), code = 0, data = data };
         }
 
         public IActionResult OrgAdd()
@@ -95,26 +103,16 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> OrgEdit([FromBody]Organization organizationIn)
         {
-            var dsdelete = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == organizationIn.CODE).FirstOrDefaultAsync();
-            _SqlLiteContext.OrgSetting.Remove(dsdelete);
-            if (await _SqlLiteContext.SaveChangesAsync() == 0)
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改组织机构失败", code = "-1" });
-            }
+            var dsUpdate = await _SqlLiteContext.OrgSetting.Where(o => o.CODE == organizationIn.CODE).FirstOrDefaultAsync();
             string connecting = GetConnectString(organizationIn);
-
-            Dtos.Models.Organization orgCOn = new Dtos.Models.Organization
-            {
-                CODE = organizationIn.CODE,
-                NAME = organizationIn.NAME,
-                DataBaseName = organizationIn.DataBaseName,
-                DBType = organizationIn.DBType,
-                Password = organizationIn.Password,
-                ServerName = organizationIn.ServerName,
-                UserName = organizationIn.UserName,
-                ConnectingString = connecting
-            };
-            await _SqlLiteContext.OrgSetting.AddAsync(orgCOn);
+            dsUpdate.NAME = organizationIn.NAME;
+            dsUpdate.DataBaseName = organizationIn.DataBaseName;
+            dsUpdate.DBType = organizationIn.DBType;
+            dsUpdate.Password = organizationIn.Password;
+            dsUpdate.ServerName = organizationIn.ServerName;
+            dsUpdate.UserName = organizationIn.UserName;
+            dsUpdate.ConnectingString = connecting;
+            _SqlLiteContext.OrgSetting.Update(dsUpdate);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
             if (addresult > 0)
             {

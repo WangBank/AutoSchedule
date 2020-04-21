@@ -9,23 +9,13 @@
         <button class="layui-btn layui-btn-lg layui-btn-radius layui-btn-normal" id="begin">开启以上定时任务</button>
         <button class="layui-btn layui-btn-lg layui-btn-radius layui-btn-danger" id="stop">停止以上定时任务</button>
     </div>
+    
     <div class="alert"></div>
 </div>
 <script src="~/layui.js"></script>
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script type="text/javascript">
-    $("#begin").click(beginPlan);
-     function beginPlan() {
-         $.get("/Home/BeginTaskPlan?guid=", function (dataResult) {
-             $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
-            }, "json");
-        }
-    $("#stop").click(stopPlan);
-     function stopPlan() {
-         $.get("/Home/StopTaskPlan", function (dataResult) {
-             $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
-            },"json");
-        }
+    
 </script>
 <style type="text/css">
 

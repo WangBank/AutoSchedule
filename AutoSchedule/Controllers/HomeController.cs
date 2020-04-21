@@ -23,7 +23,7 @@ namespace AutoSchedule.Controllers
 
         public HomeController(ILogger<HomeController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup)
         {
-            LogProvider.SetCurrentLogProvider(new AutoSchedule.Common.LogProvider());
+            //LogProvider.SetCurrentLogProvider(new AutoSchedule.Common.LogProvider());
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
             _quartzStartup = quartzStartup;
@@ -83,6 +83,8 @@ namespace AutoSchedule.Controllers
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = se.ToString(), code = "-1" });
             }
         }
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

@@ -96,5 +96,6 @@ namespace AutoSchedule.Common
             }
             return queryMap;
         }
+       
     }
 }

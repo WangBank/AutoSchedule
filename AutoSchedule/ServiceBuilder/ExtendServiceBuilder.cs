@@ -29,7 +29,8 @@ namespace AutoSchedule.ServiceBuilder
 
         public void UseAutoTaskJob()
         {
-            _services.AddTransient<AutoTaskJob>();
+            _services.AddScoped<AutoTaskJob>();
+            _services.AddScoped<AutoTaskJobDll>();
         }
 
         public void UseISchedulerFactory()

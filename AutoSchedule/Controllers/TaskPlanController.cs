@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace AutoSchedule.Controllers
@@ -37,9 +38,9 @@ namespace AutoSchedule.Controllers
 
             List<TaskPlanModel> data = new List<TaskPlanModel>();
             string OrgName = "";
-            string TaskPlanName = "";
             string FrequencyName = "";
             string FrequencyType = "";
+            string WorkType = string.Empty;
             foreach (var item in skey)
             {
                 string state = string.Empty;
@@ -50,14 +51,6 @@ namespace AutoSchedule.Controllers
                 else
                 {
                     OrgName = (await _SqlLiteContext.OrgSetting.AsNoTracking().FirstAsync(o => o.CODE == item.OrgCode)).NAME;
-                }
-                if (item.TaskPlanType == "0")
-                {
-                    TaskPlanName = "上传";
-                }
-                else if (item.TaskPlanType == "1")
-                {
-                    TaskPlanName = "下载";
                 }
 
                 if (item.FrequencyType == "0")
@@ -72,16 +65,46 @@ namespace AutoSchedule.Controllers
                 {
                     FrequencyType = "小时";
                 }
-                if (_quartzStartup.rds.ContainsKey(item.GUID))
+
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                     state = "已开启";
+
+                    if (_quartzStartup.rds.ContainsKey(item.GUID))
+                    {
+                        state = "已开启";
+                    }
+                    else
+                    {
+                        state = "未开启";
+                    }
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    if (item.Status == "1")
+                    {
+                        state = "已开启";
+                    }
+                    else
+                    {
+                        state = "未开启";
+                    }
+                }
+
+                
+                
+
+                if (item.WorkType == "0")
+                {
+                    WorkType = "发送数据到dll";
                 }
                 else
                 {
-                     state = "未开启";
+                    WorkType = "发送数据到api";
                 }
+
                 FrequencyName = $"每隔{item.Frequency + FrequencyType}执行一次任务";
-                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, TaskPlanType = TaskPlanName, Frequency = FrequencyName, TaskUrl = item.TaskUrl,State = state});
+                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, Frequency = FrequencyName, DllOrUrl = item.DllOrUrl,State = state,WorkType = WorkType });
             }
 
 
@@ -134,8 +157,8 @@ namespace AutoSchedule.Controllers
                 GUID = guid,
                 Name = TaskPlanAddIn.Name,
                 OrgCode = TaskPlanAddIn.OrgCode,
-                TaskPlanType = TaskPlanAddIn.TaskPlanType,
-                TaskUrl = TaskPlanAddIn.TaskUrl
+                DllOrUrl = TaskPlanAddIn.DllOrUrl,
+                WorkType = TaskPlanAddIn.WorkType
             };
             await _SqlLiteContext.TaskPlan.AddAsync(TaskPlanAdd);
             var addresult = await _SqlLiteContext.SaveChangesAsync();
@@ -158,28 +181,18 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> TaskPlanEdit([FromBody]TaskPlan TaskPlanIn)
         {
-            var dsdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.CODE == TaskPlanIn.CODE).FirstOrDefaultAsync();
-            _SqlLiteContext.TaskPlan.Remove(dsdelete);
-            if (await _SqlLiteContext.SaveChangesAsync() == 0)
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改任务计划失败", code = "-1" });
-            }
-            Dtos.Models.TaskPlan TaskPlanadd = new TaskPlan
-            {
-                CODE = TaskPlanIn.CODE,
-                Frequency = TaskPlanIn.Frequency,
-                FrequencyType = TaskPlanIn.FrequencyType,
-                GUID = TaskPlanIn.GUID,
-                Name = TaskPlanIn.Name,
-                OrgCode = TaskPlanIn.OrgCode,
-                TaskPlanType = TaskPlanIn.TaskPlanType,
-                TaskUrl = TaskPlanIn.TaskUrl
-            };
-            await _SqlLiteContext.TaskPlan.AddAsync(TaskPlanadd);
-            var addresult = await _SqlLiteContext.SaveChangesAsync();
+            var dsuptate = await _SqlLiteContext.TaskPlan.Where(o => o.CODE == TaskPlanIn.CODE).FirstOrDefaultAsync();
+            dsuptate.Frequency = TaskPlanIn.Frequency;
+            dsuptate.FrequencyType = TaskPlanIn.FrequencyType;
+            dsuptate.Name = TaskPlanIn.Name;
+            dsuptate.OrgCode = TaskPlanIn.OrgCode;
+            dsuptate.DllOrUrl = TaskPlanIn.DllOrUrl;
+            dsuptate.WorkType = TaskPlanIn.WorkType;
+            _SqlLiteContext.TaskPlan.Update(dsuptate);
+           var addresult = await _SqlLiteContext.SaveChangesAsync();
             if (addresult > 0)
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "修改任务计划成功", code = "0" });
             }
             else
             {

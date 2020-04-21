@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>D:\Projects\DotnetCore\AutoSchedule\AutoSchedule\TaskDlls\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>D:\Projects\DotnetCore\AutoSchedule\AutoSchedule\TaskDlls\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BankDbHelper">
+      <HintPath>dll\BankDbHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcuteInterface">
+      <HintPath>dll\ExcuteInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="LopSdk">
+      <HintPath>dll\LopSdk.dll</HintPath>
+    </Reference>
+    <Reference Include="LopSdk.Api">
+      <HintPath>dll\LopSdk.Api.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenApiSDK">
+      <HintPath>dll\OpenApiSDK.dll</HintPath>
+    </Reference>
+    <Reference Include="Oracle.ManagedDataAccess">
+      <HintPath>dll\Oracle.ManagedDataAccess.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
