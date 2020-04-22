@@ -11,7 +11,7 @@ namespace AutoSchedule.Dtos.MessageModel
     {
         [Column(IsIdentity = true, IsPrimary = true)]
         public string GUID { get; set; }
-        public string STATUS { get; set; }
+        public string ERPSTATUE { get; set; }
         public string DELIVERYORDERCODE { get; set; }
         public string OPERATETIME { get; set; }
         public string OPERATEUSER { get; set; }

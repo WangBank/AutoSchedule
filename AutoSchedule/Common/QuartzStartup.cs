@@ -115,39 +115,35 @@ namespace AutoSchedule.Common
             string messageName = e.message.msgName;
             try
             {
-                _logger.LogInformation("{EventId}:\r\n{result}", "入库完成回传", JsonConvert.SerializeObject(e));
+                
+              
                 switch (messageName)
                 {
                     case "stockInFeedbackMsg":
                         StockInFeedbackMsg(e);
                         break;
-
                     case "stockOutFeedbackMsg":
                         StockOutFeedbackMsg(e);
                         break;
-
                     case "stockOutStatusFeedbackMsg":
-                       
                         StockOutStatusFeedbackMsg(e);
                         break;
                     case "stockOutCompleteConfirmFeedbackMsg":
-                       
                         StockOutCompleteConfirmFeedbackMsg(e);
                         break;
                     case "checkStockFeedbackMsg":
-                        //盘点结果回传
                         CheckStockFeedbackMsg(e);
                         break;
                     case "rtwCompleteFeedbackMsg":
-                        //退货入库单完成回传
+                        
                         RtwCompleteFeedbackMsg(e);
                         break;
                     case "orderCancelFeedbackMsg":
-                        //单据取消异步回传
+                        
                         OrderCancelFeedbackMsg(e);
                         break;
                     case "rtsCompleteFeedbackMsg":
-                        //退供应商订单完成信息回传
+                        
                         RtsCompleteFeedbackMsg(e);
                         break;
 
@@ -168,11 +164,12 @@ namespace AutoSchedule.Common
         /// <param name="e"></param>
         private void StockInFeedbackMsg(JdEventArgs e)
         {
+            _logger.LogInformation("{EventId}:\r\n{result}", "入库完成回传", JsonConvert.SerializeObject(e));
             string billguid = Guid.NewGuid().ToString("N");
             var stock = JsonConvert.DeserializeObject<StockInFeedbackMsg>(e.message.msgPayload);
             var insertMainCount = _fsql.Insert<STOCKINFEEDBACK_XH_JDWMS>().AppendData(new STOCKINFEEDBACK_XH_JDWMS
             {
-                STATUE = "0",
+                ERPSTATUE = "0",
                 CLPSORDERCODE = stock.entryOrder.clpsOrderCode,
                 BILLNO = stock.entryOrder.entryOrderCode,
                 CONFIRMTYPE = stock.entryOrder.confirmType,
@@ -274,24 +271,335 @@ namespace AutoSchedule.Common
         }
 
 
+        /// <summary>
+        /// 退供应商订单完成信息回传
+        /// </summary>
+        /// <param name="e"></param>
         private void RtsCompleteFeedbackMsg(JdEventArgs e)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation("{EventId}:\r\n{result}", "退供应商订单回传", JsonConvert.SerializeObject(e));
+            string billguid = Guid.NewGuid().ToString("N");
+            var stock = JsonConvert.DeserializeObject<RtsCompleteFeedbackMsg>(e.message.msgPayload);
+            var insertMainCount = _fsql.Insert<RTSBACK_XH_JDWMS>().AppendData(new RTSBACK_XH_JDWMS
+            {
+                ERPSTATUE = "0",
+                DELIVERYMODE = stock.rtsOrderModel.deliveryMode,
+                ORDERCREATETIME = stock.rtsOrderModel.orderCreateTime,
+                RTSORDERCODE = stock.rtsOrderModel.rtsOrderCode,
+                RTSORDERID = stock.rtsOrderModel.rtsOrderId,
+                RTSTYPE = stock.rtsOrderModel.rtsType,
+                GUID = billguid,
+                SUPPLIERNAME = stock.rtsOrderModel.supplierName,
+                OWNERNO = stock.rtsOrderModel.ownerNo,
+                REMARK = stock.rtsOrderModel.remark,
+                SUPPLIERNO = stock.rtsOrderModel.supplierNo,
+                WAREHOUSENO = stock.rtsOrderModel.warehouseNo
+            }).ExecuteAffrows();
+
+            if (insertMainCount != 0)
+            {
+                List<RTSBACKDETAIL_XH_JDWMS> rtwbacks = new List<RTSBACKDETAIL_XH_JDWMS>();
+
+                foreach (var item in stock.rtsItemModelList)
+                {
+                    rtwbacks.Add(new RTSBACKDETAIL_XH_JDWMS
+                    {
+                        ACTUALOUTQTY = item.actualOutQty,
+                        ACTUALQTY = item.actualQty,
+                        EXPIREDATE = item.expireDate,
+                        ITEMCODE = item.itemCode,
+                        ORDERSOURCECODE = item.orderSourceCode,
+                        OWNERCODE = item.ownerCode,
+                        BATCHCODE = item.batchCode,
+                        SUBSOURCECODE = item.subSourceCode,
+                        INVENTORYTYPE = item.inventoryType,
+                        PLANOUTQTY = item.planOutQty,
+                        PRODUCECODE = item.produceCode,
+                        PRODUCTDATE = item.productDate,
+                        QRCODE = item.qrCode,
+                        GUID = Guid.NewGuid().ToString("N"),
+                        ITEMID = item.itemId,
+                        MAINGUID = billguid,
+                        ORDERLINENO = item.orderLineNo,
+                        PLANQTY = item.planQty
+                    });
+                }
+
+                var insertDetailCount = _fsql.Insert(rtwbacks).ExecuteAffrows();
+                if (insertDetailCount == stock.rtsItemModelList.Count)
+                {
+                    //调用存储过程WMS_JDWMS_RTSBACK
+                    var BILLGUID = new OracleParameter
+                    {
+                        ParameterName = "BILLGUID",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Input,
+                        Value = billguid,
+                        Size = 50
+                    };
+
+                    var RETURNMSG = new OracleParameter
+                    {
+                        ParameterName = "RETURNMSG",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 50
+                    };
+
+                    var RETURNVALUE = new OracleParameter
+                    {
+                        ParameterName = "RETURNVALUE",
+                        OracleDbType = OracleDbType.Decimal,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 10
+                    };
+
+                    _fsql.Ado.ExecuteNonQuery(CommandType.StoredProcedure, "WMS_JDWMS_RTSBACK", BILLGUID, RETURNMSG, RETURNVALUE);
+                    if (RETURNVALUE.Value.ToString() != "0")
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "退供应商订单保存数据,执行存储过程错误", RETURNMSG.Value);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "退供应商订单保存数据, 执行存储过程WMS_JDWMS_RTSBACK,返回:", RETURNMSG.Value);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("{EventId}:\r\n{result}", "退供应商订单保存数据错误:", JsonConvert.SerializeObject(e));
+                }
+            }
+            else
+            {
+                _logger.LogInformation("{EventId}:\r\n{result}", "退供应商订单回传保存主表错误", JsonConvert.SerializeObject(e));
+            }
         }
 
+        /// <summary>
+        /// 单据取消异步回传
+        /// </summary>
+        /// <param name="e"></param>
         private void OrderCancelFeedbackMsg(JdEventArgs e)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation("{EventId}:\r\n{result}", "单据取消异步回传", JsonConvert.SerializeObject(e));
+            string billguid = Guid.NewGuid().ToString("N");
+            var stock = JsonConvert.DeserializeObject<OrderCancelFeedbackMsg>(e.message.msgPayload);
+            var insertMainCount = _fsql.Insert<ORDERCANCELBACK_XH_JDWMS>().AppendData(new ORDERCANCELBACK_XH_JDWMS
+            {
+                ERPSTATUE = "0",
+                ORDERTYPE = stock.orderType,
+                FAILUREREASON = stock.failureReason,
+                MESSAGE = stock.message,
+                ORDERCODE = stock.orderCode,
+                ORDERID = stock.orderId,
+                STATUS = stock.status,
+                GUID = billguid
+            }).ExecuteAffrows();
+
         }
 
+        /// <summary>
+        /// 退货入库单完成回传
+        /// </summary>
+        /// <param name="e"></param>
         private void RtwCompleteFeedbackMsg(JdEventArgs e)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation("{EventId}:\r\n{result}", "退货入库回传", JsonConvert.SerializeObject(e));
+            string billguid = Guid.NewGuid().ToString("N");
+            var stock = JsonConvert.DeserializeObject<RtwCompleteFeedbackMsg>(e.message.msgPayload);
+            var insertMainCount = _fsql.Insert<RTWBACK_XH_JDWMS>().AppendData(new RTWBACK_XH_JDWMS
+            {
+                ERPSTATUE = "0",
+                BIZTYPE = stock.rtwOrderModel.bizType,
+                EXPRESSCODE = stock.rtwOrderModel.expressCode,
+                LOGISTICSCODE = stock.rtwOrderModel.logisticsCode,
+                LOGISTICSNAME = stock.rtwOrderModel.logisticsName,
+                ORDERCONFIRMTIME = stock.rtwOrderModel.orderConfirmTime,
+                GUID = billguid,
+                OUTBIZCODE = stock.rtwOrderModel.outBizCode,
+                OWNERNO = stock.rtwOrderModel.ownerNo,
+                REMARK = stock.rtwOrderModel.remark,
+                ORDERTYPE = stock.rtwOrderModel.orderType,
+                RETURNREASON = stock.rtwOrderModel.returnReason,
+                RTWORDERCODE = stock.rtwOrderModel.rtwOrderCode,
+                RTWORDERID = stock.rtwOrderModel.rtwOrderId,
+                RTWSTATUS = stock.rtwOrderModel.rtwStatus,
+                WAREHOUSECODE = stock.rtwOrderModel.warehouseCode
+            }).ExecuteAffrows();
+
+            if (insertMainCount != 0)
+            {
+                List<RTWBACKDETAIL_XH_JDWMS> rtwbacks = new List<RTWBACKDETAIL_XH_JDWMS>();
+
+                foreach (var item in stock.rtwOrderItemList)
+                {
+                    rtwbacks.Add(new RTWBACKDETAIL_XH_JDWMS
+                    {
+                        ACTUALOUTQTY = item.actualOutQty,
+                        ACTUALQTY = item.actualQty,
+                        EXPIREDATE = item.expireDate,
+                        ITEMCODE = item.itemCode,
+                        ORDERSOURCECODE = item.orderSourceCode,
+                        OWNERCODE = item.ownerCode,
+                        BATCHCODE = item.batchCode,
+                        SUBSOURCECODE = item.subSourceCode,
+                        INVENTORYTYPE = item.inventoryType,
+                        PLANOUTQTY = item.planOutQty,
+                        PRODUCECODE = item.produceCode,
+                        PRODUCTDATE = item.productDate,
+                        QRCODE = item.qrCode,
+                        GUID = Guid.NewGuid().ToString("N"),
+                        ITEMID = item.itemId,
+                        MAINGUID = billguid,
+                        ORDERLINENO = item.orderLineNo,
+                        PLANQTY = item.planQty
+                    });
+                }
+
+                var insertDetailCount = _fsql.Insert(rtwbacks).ExecuteAffrows();
+                if (insertDetailCount == stock.rtwOrderItemList.Count)
+                {
+                    //调用存储过程WMS_JDWMS_RTWBACK
+                    var BILLGUID = new OracleParameter
+                    {
+                        ParameterName = "BILLGUID",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Input,
+                        Value = billguid,
+                        Size = 50
+                    };
+
+                    var RETURNMSG = new OracleParameter
+                    {
+                        ParameterName = "RETURNMSG",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 50
+                    };
+
+                    var RETURNVALUE = new OracleParameter
+                    {
+                        ParameterName = "RETURNVALUE",
+                        OracleDbType = OracleDbType.Decimal,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 10
+                    };
+
+                    _fsql.Ado.ExecuteNonQuery(CommandType.StoredProcedure, "WMS_JDWMS_RTWBACK", BILLGUID, RETURNMSG, RETURNVALUE);
+                    if (RETURNVALUE.Value.ToString() != "0")
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "退货入库回传保存数据,执行存储过程错误", RETURNMSG.Value);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "退货入库回传保存数据,执行存储过程WMS_JDWMS_STOCKOUT,返回:", RETURNMSG.Value);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("{EventId}:\r\n{result}", "退货入库回传保存数据错误:", JsonConvert.SerializeObject(e));
+                }
+            }
+            else
+            {
+                _logger.LogInformation("{EventId}:\r\n{result}", "退货入库回传保存主表错误", JsonConvert.SerializeObject(e));
+            }
         }
 
+        /// <summary>
+        /// 盘点结果回传
+        /// </summary>
+        /// <param name="e"></param>
         private void CheckStockFeedbackMsg(JdEventArgs e)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation("{EventId}:\r\n{result}", "盘点结果回传", JsonConvert.SerializeObject(e));
+            string billguid = Guid.NewGuid().ToString("N");
+            var stockCheck = JsonConvert.DeserializeObject<CheckStockFeedbackMsg>(e.message.msgPayload);
+            var insertMainCount = _fsql.Insert<CHECKSTOCKBACK_XH_JDWMS>().AppendData(new CHECKSTOCKBACK_XH_JDWMS
+            {
+                ERPSTATUE = "0",
+                CHECKORDERCODE = stockCheck.checkOrderCode,
+                CHECKORDERID = stockCheck.checkOrderId,
+                CHECKTIME = stockCheck.checkTime,
+                OUTBIZCODE = stockCheck.outBizCode,
+                OWNERCODE = stockCheck.ownerCode,
+                GUID = billguid,
+                REMARK = stockCheck.remark,
+                WAREHOUSECODE = stockCheck.warehouseCode
+            }).ExecuteAffrows();
+
+            if (insertMainCount != 0)
+            {
+                List<CHECKSTOCKBACKDETAIL_XH_JDWMS> checkStocks = new List<CHECKSTOCKBACKDETAIL_XH_JDWMS>();
+
+                foreach (var item in stockCheck.checkStockItemList)
+                {
+                    checkStocks.Add(new CHECKSTOCKBACKDETAIL_XH_JDWMS
+                    {
+                        GUID = Guid.NewGuid().ToString("N"),
+                        ITEMID = item.itemId,
+                        INVENTORYTYPE = item.inventoryType,
+                        ITEMCODE = item.itemCode,
+                        MAINGUID = billguid,
+                        QUANTITY = item.quantity,
+                        QUANTITYVALUE = item.quantityValue
+                    });
+                }
+
+                var insertDetailCount = _fsql.Insert(checkStocks).ExecuteAffrows();
+                if (insertDetailCount == stockCheck.checkStockItemList.Count)
+                {
+                    //调用存储过程WMS_JDWMS_CHECKSTOCK
+                    var BILLGUID = new OracleParameter
+                    {
+                        ParameterName = "BILLGUID",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Input,
+                        Value = billguid,
+                        Size = 50
+                    };
+
+                    var RETURNMSG = new OracleParameter
+                    {
+                        ParameterName = "RETURNMSG",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 50
+                    };
+
+                    var RETURNVALUE = new OracleParameter
+                    {
+                        ParameterName = "RETURNVALUE",
+                        OracleDbType = OracleDbType.Decimal,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 10
+                    };
+
+                    _fsql.Ado.ExecuteNonQuery(CommandType.StoredProcedure, "WMS_JDWMS_CHECKSTOCK", BILLGUID, RETURNMSG, RETURNVALUE);
+                    if (RETURNVALUE.Value.ToString() != "0")
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "盘点结果回传保存数据,执行存储过程错误", RETURNMSG.Value);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "盘点结果回传保存数据,执行存储过程WMS_JDWMS_CHECKSTOCK,返回:", RETURNMSG.Value);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("{EventId}:\r\n{result}", "盘点结果回传保存数据错误:", JsonConvert.SerializeObject(e));
+                }
+            }
+            else
+            {
+                _logger.LogInformation("{EventId}:\r\n{result}", "盘点结果回传保存主表错误", JsonConvert.SerializeObject(e));
+            }
         }
 
         /// <summary>
@@ -300,11 +608,12 @@ namespace AutoSchedule.Common
         /// <param name="e"></param>
         private void StockOutCompleteConfirmFeedbackMsg(JdEventArgs e)
         {
+            _logger.LogInformation("{EventId}:\r\n{result}", "出库单配送完成回传", JsonConvert.SerializeObject(e));
             string billguid = Guid.NewGuid().ToString("N");
             var stock = JsonConvert.DeserializeObject<stockOutCompleteConfirmBackMsg>(e.message.msgPayload);
             var insertMainCount = _fsql.Insert<STOCKOUTCOMPLETE_XH_JDWMS>().AppendData(new STOCKOUTCOMPLETE_XH_JDWMS
             {
-                STATUS = stock.status,
+                ERPSTATUE = stock.status,
                 DELIVERYORDERCODE = stock.deliveryOrderCode,
                 DELIVERYORDERID = stock.deliveryOrderId,
                 OPERATEUSER = stock.operateUser,
@@ -417,14 +726,13 @@ namespace AutoSchedule.Common
         /// <param name="e"></param>
         private void StockOutStatusFeedbackMsg(JdEventArgs e)
         {
-            
+            _logger.LogInformation("{EventId}:\r\n{result}", "销售订单状态回传", JsonConvert.SerializeObject(e));
             var stockOutStatus = JsonConvert.DeserializeObject<StockOutStatusbackMsg>(e.message.msgPayload);
 
             var countUpdate = _fsql.Update<STOCKOUTFEEDBACK_XH_JDWMS>()
               .Set(a => a.OUTSTATUE, stockOutStatus.soStatus)
               .Where(a => a.DELIVERYORDERID == stockOutStatus.deliveryOrderId)
               .ExecuteAffrows();
-           _logger.LogInformation("{EventId}:\r\n{result}", "销售订单状态回传更新状态", JsonConvert.SerializeObject(e));
         }
 
         /// <summary>
@@ -433,11 +741,12 @@ namespace AutoSchedule.Common
         /// <param name="e"></param>
         private void StockOutFeedbackMsg(JdEventArgs e)
         {
-            string billguid = Guid.NewGuid().ToString();
+            _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传", JsonConvert.SerializeObject(e));
+            string billguid = Guid.NewGuid().ToString("N");
             var stock = JsonConvert.DeserializeObject<StockOutFeedbackMsg>(e.message.msgPayload);
             var insertMainCount = _fsql.Insert<STOCKOUTFEEDBACK_XH_JDWMS>().AppendData(new STOCKOUTFEEDBACK_XH_JDWMS
             {
-                STATUE = "0",
+                ERPSTATUE = "0",
                 DELIVERYORDERCODE = stock.entryOrder.deliveryOrderCode,
                 DELIVERYDATE = stock.entryOrder.deliveryDate,
                 CONFIRMTYPE = stock.entryOrder.confirmType,
@@ -452,7 +761,7 @@ namespace AutoSchedule.Common
                 SALEPLATFORMSOURCECODE = stock.entryOrder.salePlatformOrderCode,
                 SELLERNO = stock.entryOrder.sellerNo,
                 SHOPNO = stock.entryOrder.shopNo,
-                WAREHOUSECODE = stock.entryOrder.warehouseCode,
+                WAREHOUSECODE = stock.entryOrder.warehouseCode
             }).ExecuteAffrows();
 
             if (insertMainCount != 0)
@@ -469,7 +778,12 @@ namespace AutoSchedule.Common
                         ITEMCODE = item.itemCode,
                         ORDERSOURCECODE = item.orderSourceCode,
                         OWNERCODE = item.ownerCode,
-                        SHOPGOODSNO = item.shopGoodsNo
+                        SHOPGOODSNO = item.shopGoodsNo,
+                        GUID = Guid.NewGuid().ToString("N"),
+                        ITEMID = item.itemId,
+                        MAINGUID  =billguid ,
+                        ORDERLINENO = item.orderLineNo,
+                        PLANQTY = item.planQty
                     });
                 }
 

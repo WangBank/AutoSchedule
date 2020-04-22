@@ -20,7 +20,7 @@ namespace AutoSchedule.Dtos.MessageModel
         public string OPERATETIME { get; set; }
         public string CONFIRMTYPE { get; set; }
         public string CREATEUSER { get; set; }
-        public string STATUE { get; set; }
+        public string ERPSTATUE { get; set; }
     }
 
 

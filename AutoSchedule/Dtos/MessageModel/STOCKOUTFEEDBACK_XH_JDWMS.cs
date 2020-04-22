@@ -25,7 +25,7 @@ namespace AutoSchedule.Dtos.MessageModel
         public string OPERATORCODE { get; set; }
         public string OPERATORNAME { get; set; }
         public string OPERATETIME { get; set; }
-        public string STATUE { get; set; }
+        public string ERPSTATUE { get; set; }
         public string OUTSTATUE { get; set; }
     }
 }
