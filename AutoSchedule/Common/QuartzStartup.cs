@@ -131,7 +131,7 @@ namespace AutoSchedule.Common
                         StockOutStatusFeedbackMsg(e);
                         break;
                     case "stockOutCompleteConfirmFeedbackMsg":
-                        //出库单配送完成回传
+                       
                         StockOutCompleteConfirmFeedbackMsg(e);
                         break;
                     case "checkStockFeedbackMsg":
@@ -168,7 +168,7 @@ namespace AutoSchedule.Common
         /// <param name="e"></param>
         private void StockInFeedbackMsg(JdEventArgs e)
         {
-            string billguid = Guid.NewGuid().ToString();
+            string billguid = Guid.NewGuid().ToString("N");
             var stock = JsonConvert.DeserializeObject<StockInFeedbackMsg>(e.message.msgPayload);
             var insertMainCount = _fsql.Insert<STOCKINFEEDBACK_XH_JDWMS>().AppendData(new STOCKINFEEDBACK_XH_JDWMS
             {
@@ -273,10 +273,7 @@ namespace AutoSchedule.Common
             }
         }
 
-        /// <summary>
-        /// 出库完成回传
-        /// </summary>
-        /// <param name="e"></param>
+
         private void RtsCompleteFeedbackMsg(JdEventArgs e)
         {
             throw new NotImplementedException();
@@ -297,9 +294,121 @@ namespace AutoSchedule.Common
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// 出库单配送完成回传，在表中保存拒收信息和接受信息，调一下配送完成存储过程
+        /// </summary>
+        /// <param name="e"></param>
         private void StockOutCompleteConfirmFeedbackMsg(JdEventArgs e)
         {
-            throw new NotImplementedException();
+            string billguid = Guid.NewGuid().ToString("N");
+            var stock = JsonConvert.DeserializeObject<stockOutCompleteConfirmBackMsg>(e.message.msgPayload);
+            var insertMainCount = _fsql.Insert<STOCKOUTCOMPLETE_XH_JDWMS>().AppendData(new STOCKOUTCOMPLETE_XH_JDWMS
+            {
+                STATUS = stock.status,
+                DELIVERYORDERCODE = stock.deliveryOrderCode,
+                DELIVERYORDERID = stock.deliveryOrderId,
+                OPERATEUSER = stock.operateUser,
+                WMSSTATUS = "0",
+                GUID = billguid,
+                OPERATETIME = stock.operateTime
+            }).ExecuteAffrows();
+
+            if (insertMainCount != 0)
+            {
+                List<STOCKOUTPAYMETHOD_XH_JDWMS> paymethods = new List<STOCKOUTPAYMETHOD_XH_JDWMS>();
+                List<STOCKOUTCOMDETAIL_XH_JDWMS> details = new List<STOCKOUTCOMDETAIL_XH_JDWMS>();
+
+                foreach (var item in stock.payMethodList)
+                {
+                    paymethods.Add(new STOCKOUTPAYMETHOD_XH_JDWMS { 
+                        AMOUNT = item.amount,
+                        GUID = Guid.NewGuid().ToString("N"),
+                        MAINGUID =billguid ,
+                        METHOD = item.method
+                    });
+                }
+
+                foreach (var item in stock.rejectGoodsItemList)
+                {
+                    details.Add(new STOCKOUTCOMDETAIL_XH_JDWMS
+                    {
+                        ITEMCODE = item.itemCode,
+                        GUID = Guid.NewGuid().ToString("N"),
+                        ITEMID = item.itemId,
+                        ITEMNAME = item.itemName,
+                        MAINGUID =billguid ,
+                        QUANTITY = item.quantity,
+                        TYPE = "1"
+                    });
+                }
+
+                foreach (var item in stock.receiveGoodsItemList)
+                {
+                    details.Add(new STOCKOUTCOMDETAIL_XH_JDWMS
+                    {
+                        ITEMCODE = item.itemCode,
+                        GUID = Guid.NewGuid().ToString("N"),
+                        ITEMID = item.itemId,
+                        ITEMNAME = item.itemName,
+                        MAINGUID = billguid,
+                        QUANTITY = item.quantity,
+                        TYPE = "0"
+                    });
+                }
+
+
+                var insertDetailCount = _fsql.Insert(details).ExecuteAffrows();
+                var insertPMCount = _fsql.Insert(paymethods).ExecuteAffrows();
+                if (insertDetailCount+ insertPMCount == stock.receiveGoodsItemList.Count+ stock.rejectGoodsItemList.Count + stock.payMethodList.Count)
+                {
+                    //调用存储过程WMS_JDWMS_STOCKINRETURN
+
+                    var BILLGUID = new OracleParameter
+                    {
+                        ParameterName = "BILLGUID",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Input,
+                        Value = billguid,
+                        Size = 50
+                    };
+
+                    var RETURNMSG = new OracleParameter
+                    {
+                        ParameterName = "RETURNMSG",
+                        OracleDbType = OracleDbType.Varchar2,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 50
+                    };
+
+                    var RETURNVALUE = new OracleParameter
+                    {
+                        ParameterName = "RETURNVALUE",
+                        OracleDbType = OracleDbType.Decimal,
+                        Direction = ParameterDirection.Output,
+                        Value = "",
+                        Size = 10
+                    };
+
+                    _fsql.Ado.ExecuteNonQuery(CommandType.StoredProcedure, "WMS_JDWMS_STOCKOUTCOM", BILLGUID, RETURNMSG, RETURNVALUE);
+                    if (RETURNVALUE.Value.ToString() != "0")
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "出库单配送完成回传,执行存储过程错误", RETURNMSG.Value);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("{EventId}:\r\n{result}", "出库单配送完成回传,执行存储过程WMS_JDWMS_STOCKOUTCOM,返回:", RETURNMSG.Value);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("{EventId}:\r\n{result}", "出库单配送完成回传保存数据错误:", JsonConvert.SerializeObject(e));
+                }
+            }
+            else
+            {
+                _logger.LogInformation("{EventId}:\r\n{result}", "出库单配送完成回传保存主表错误", JsonConvert.SerializeObject(e));
+            }
         }
 
         /// <summary>

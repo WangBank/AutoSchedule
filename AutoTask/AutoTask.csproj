@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>D:\Projects\DotnetCore\AutoSchedule\AutoSchedule\TaskDlls\</OutputPath>
+    <OutputPath>D:\Projects\DotnetCore\AutoSchedule\CommonDll\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -19,22 +19,25 @@
 
   <ItemGroup>
     <Reference Include="BankDbHelper">
-      <HintPath>dll\BankDbHelper.dll</HintPath>
+      <HintPath>..\CommonDll\netstandard2.1\BankDbHelper.dll</HintPath>
     </Reference>
     <Reference Include="ExcuteInterface">
-      <HintPath>dll\ExcuteInterface.dll</HintPath>
+      <HintPath>..\CommonDll\ExcuteInterface.dll</HintPath>
     </Reference>
     <Reference Include="LopSdk">
-      <HintPath>dll\LopSdk.dll</HintPath>
+      <HintPath>..\CommonDll\LopSdk.dll</HintPath>
     </Reference>
     <Reference Include="LopSdk.Api">
-      <HintPath>dll\LopSdk.Api.dll</HintPath>
+      <HintPath>..\CommonDll\LopSdk.Api.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\CommonDll\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="OpenApiSDK">
-      <HintPath>dll\OpenApiSDK.dll</HintPath>
+      <HintPath>..\CommonDll\OpenApiSDK.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.ManagedDataAccess">
-      <HintPath>dll\Oracle.ManagedDataAccess.dll</HintPath>
+      <HintPath>..\CommonDll\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
   </ItemGroup>
 

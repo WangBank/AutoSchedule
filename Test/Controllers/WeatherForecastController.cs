@@ -34,7 +34,7 @@ namespace Test.Controllers
             var rng = new Random();
 
             int count = _fsql.Update<入库完成回传类>("2b37b7a4-42d6-46f2-996e-29aa1959be97")
-                        .Set(a => a.CREATEUSER, "邱继续")
+                        .Set(a => a.CREATEUSER,Guid.NewGuid().ToString("N"))
                         .Where(a => a.BILLNO == "0")
                         .ExecuteAffrows();
 
