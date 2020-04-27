@@ -15,9 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcuteInterface", "ExcuteIn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoSchedule", "AutoSchedule\AutoSchedule.csproj", "{96537CE0-5320-4336-ADC0-D705AE3E1FF1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{042DDE00-647B-4287-A733-789978EC5FA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{042DDE00-647B-4287-A733-789978EC5FA9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoTask", "AutoTask\AutoTask.csproj", "{A27C6CDA-88A7-4F91-B45C-627AF308BAC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{D865AA18-8EF1-4F66-BABC-A8817F2A7F04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{A27C6CDA-88A7-4F91-B45C-627AF308BAC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A27C6CDA-88A7-4F91-B45C-627AF308BAC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A27C6CDA-88A7-4F91-B45C-627AF308BAC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D865AA18-8EF1-4F66-BABC-A8817F2A7F04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D865AA18-8EF1-4F66-BABC-A8817F2A7F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D865AA18-8EF1-4F66-BABC-A8817F2A7F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D865AA18-8EF1-4F66-BABC-A8817F2A7F04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -22,7 +22,7 @@
                 search = search.substr(1);
                 var paras = search.split("&");
                 paras.forEach(element => {
-                    content += element;
+                    content += '\r\n'+element;
                     content += ";"
                 });
             }

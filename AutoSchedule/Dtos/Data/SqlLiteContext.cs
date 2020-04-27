@@ -15,5 +15,11 @@ namespace AutoSchedule.Dtos.Data
         public DbSet<Models.TaskPlan> TaskPlan { get; set; }
         public DbSet<Models.Logs> Logs { get; set; }
         public DbSet<Models.TaskPlanDetail> TaskPlanRelation { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            optionsBuilder.EnableSensitiveDataLogging();
+        }
     }
 }

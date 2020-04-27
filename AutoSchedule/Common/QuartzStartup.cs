@@ -77,10 +77,13 @@ namespace AutoSchedule.Common
                     {
                         if (client == null)
                         {
-                            client = new JdMessageClient(appKey, appSecret, groupName);
-                            client.OnMessage += OnMessageHandler;
-                            Console.WriteLine("监听京东Wms，WebSocket连接成功!");
-                            client.Connect(wss_url);
+                            if (_Configuration.GetConnectionString("WebSocketStatus") == "1")
+                            {
+                                client = new JdMessageClient(appKey, appSecret, groupName);
+                                client.OnMessage += OnMessageHandler;
+                                Console.WriteLine("监听京东Wms，WebSocket连接成功!");
+                                client.Connect(wss_url);
+                            } 
                         }
                     }
                 }
@@ -115,8 +118,6 @@ namespace AutoSchedule.Common
             string messageName = e.message.msgName;
             try
             {
-                
-              
                 switch (messageName)
                 {
                     case "stockInFeedbackMsg":
@@ -148,6 +149,7 @@ namespace AutoSchedule.Common
                         break;
 
                     default:
+                        _logger.LogInformation("{EventId}:\r\n{result}", "消息回传未定义", JsonConvert.SerializeObject(e));
                         break;
                 }
             }
@@ -159,7 +161,7 @@ namespace AutoSchedule.Common
 
         }
         /// <summary>
-        /// 入库完成回传
+        /// 入库完成回传 √
         /// </summary>
         /// <param name="e"></param>
         private void StockInFeedbackMsg(JdEventArgs e)
@@ -721,22 +723,23 @@ namespace AutoSchedule.Common
         }
 
         /// <summary>
-        /// 销售订单状态回传
+        /// 销售订单状态回传  √
         /// </summary>
         /// <param name="e"></param>
         private void StockOutStatusFeedbackMsg(JdEventArgs e)
         {
+            //{"status":100153,"deliveryOrderCode":"202004240001","operateTime":"2020-04-26 11:12:04","operateUser":"orderAccept","deliveryOrderId":"CSL8816306781203","warehouseCode":"800001573","vmiType":false,"ownerCode":"CBU8816093026319"}
             _logger.LogInformation("{EventId}:\r\n{result}", "销售订单状态回传", JsonConvert.SerializeObject(e));
             var stockOutStatus = JsonConvert.DeserializeObject<StockOutStatusbackMsg>(e.message.msgPayload);
 
             var countUpdate = _fsql.Update<STOCKOUTFEEDBACK_XH_JDWMS>()
-              .Set(a => a.OUTSTATUE, stockOutStatus.soStatus)
+              .Set(a => a.OUTSTATUE, stockOutStatus.status)
               .Where(a => a.DELIVERYORDERID == stockOutStatus.deliveryOrderId)
               .ExecuteAffrows();
         }
 
         /// <summary>
-        /// 出库完成回传 
+        /// 出库完成回传   √
         /// </summary>
         /// <param name="e"></param>
         private void StockOutFeedbackMsg(JdEventArgs e)
@@ -747,21 +750,23 @@ namespace AutoSchedule.Common
             var insertMainCount = _fsql.Insert<STOCKOUTFEEDBACK_XH_JDWMS>().AppendData(new STOCKOUTFEEDBACK_XH_JDWMS
             {
                 ERPSTATUE = "0",
-                DELIVERYORDERCODE = stock.entryOrder.deliveryOrderCode,
-                DELIVERYDATE = stock.entryOrder.deliveryDate,
-                CONFIRMTYPE = stock.entryOrder.confirmType,
-                DELIVERYORDERID = stock.entryOrder.deliveryOrderId,
-                DEPTNO = stock.entryOrder.deptNo,
+                DELIVERYORDERCODE = stock.deliveryOrder.deliveryOrderCode,
+                DELIVERYDATE = stock.deliveryOrder.deliveryDate,
+                CONFIRMTYPE = stock.deliveryOrder.confirmType,
+                DELIVERYORDERID = stock.deliveryOrder.deliveryOrderId,
+                DEPTNO = stock.deliveryOrder.deptNo,
                 GUID = billguid,
-                OPERATETIME = stock.entryOrder.operateTime,
-                OPERATORCODE = stock.entryOrder.operatorCode,
-                OPERATORNAME = stock.entryOrder.operatorName,
-                ORDERTYPE = stock.entryOrder.orderType,
-                SALEPLATFORMORDERCODE = stock.entryOrder.salePlatformOrderCode,
-                SALEPLATFORMSOURCECODE = stock.entryOrder.salePlatformOrderCode,
-                SELLERNO = stock.entryOrder.sellerNo,
-                SHOPNO = stock.entryOrder.shopNo,
-                WAREHOUSECODE = stock.entryOrder.warehouseCode
+                OPERATETIME = stock.deliveryOrder.operateTime,
+                OPERATORCODE = stock.deliveryOrder.operatorCode,
+                OPERATORNAME = stock.deliveryOrder.operatorName,
+                ORDERTYPE = stock.deliveryOrder.orderType,
+                RECEIVENAME = stock.deliveryOrder.receiverInfo.Name,
+                RECEIVEMOBILE = stock.deliveryOrder.receiverInfo.Mobile,
+                ORDERCONFIRMTIME = stock.deliveryOrder.orderConfirmTime,
+                SELLERNO = stock.deliveryOrder.sellerNo,
+                SHOPNO = stock.deliveryOrder.shopNo,
+                WAREHOUSECODE = stock.deliveryOrder.warehouseCode,
+                RECEIVEADDR = stock.deliveryOrder.receiverInfo.DetailAddress
             }).ExecuteAffrows();
 
             if (insertMainCount != 0)
@@ -783,13 +788,24 @@ namespace AutoSchedule.Common
                         ITEMID = item.itemId,
                         MAINGUID  =billguid ,
                         ORDERLINENO = item.orderLineNo,
-                        PLANQTY = item.planQty
+                        PLANQTY = item.planQty,
+                        PLANOUTQTY = item.planOutQty
+                    });
+                }
+                List<STOCKOUTBACKLOT_XH_JDWMS> lotlist = new List<STOCKOUTBACKLOT_XH_JDWMS>();
+                foreach (var item in stock.lotInfoList)
+                {
+                    lotlist.Add(new STOCKOUTBACKLOT_XH_JDWMS { 
+                        GOODSNO = item.goodsNo,
+                        BATCHQTY = item.batchQty,
+                        GUID = Guid.NewGuid().ToString("N"), 
+                        MAINGUID = billguid,
+                        ORDERLINE = item.orderLine
                     });
                 }
 
                 var insertDetailCount = _fsql.Insert(stockoutList).ExecuteAffrows();
-                if (insertDetailCount == stock.orderLines.Count)
-                {
+                insertDetailCount = _fsql.Insert(lotlist).ExecuteAffrows();
                     //调用存储过程WMS_JDWMS_STOCKINRETURN
                     var BILLGUID = new OracleParameter
                     {
@@ -827,11 +843,7 @@ namespace AutoSchedule.Common
                     {
                         _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传保存数据,执行存储过程WMS_JDWMS_STOCKOUT,返回:", RETURNMSG.Value);
                     }
-                }
-                else
-                {
-                    _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传保存数据错误:", JsonConvert.SerializeObject(e));
-                }
+
             }
             else
             {
@@ -889,11 +901,9 @@ namespace AutoSchedule.Common
                     await _scheduler.Start();
                     //4、创建一个触发器
                     var trigger = TriggerBuilder.Create()
-                                    .WithSimpleSchedule(x => x.WithIntervalInSeconds(Second).RepeatForever())//每两秒执行一次
+                                    .WithSimpleSchedule(x => x.WithIntervalInSeconds(Second).RepeatForever())
                                     .Build();
                     //5、创建任务 0是dll 模式 1是api模式
-
-
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
                         if (rds.ContainsKey(param[i].ToString()))
@@ -950,14 +960,11 @@ namespace AutoSchedule.Common
                         }
 
                     }
-
                     //6、将触发器和任务器绑定到调度器中 
 
                     await _scheduler.ScheduleJob(jobDetail, trigger);
 
-                    //改变数据库中的状态
                 }
-                // _scheduler.ListenerManager.AddJobListener(commonJobListener, GroupMatcher<JobKey>.AnyGroup());
                 return await Task.FromResult("0");
             }
             catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
+using AutoSchedule.TaskDlls;
 using BankDbHelper;
 using ExcuteInterface;
 using Microsoft.AspNetCore.Http;
@@ -31,14 +32,7 @@ namespace AutoSchedule.Common
         private SqlLiteContext _SqlLiteContext;
         public ExecSqlHelper _SqlHelper;
         public IHttpClientFactory _httpClientFactory;
-        //public IConfiguration _Configuration;
-        //public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IConfiguration configuration)
-        //{
-        //    _logger = logger;
-        //    _SqlLiteContext = SqlLiteContext;
-        //    _Configuration = configuration;
-        //    _services = services;
-        //}
+       
         public AutoTaskJobDll(ILogger<AutoTaskJobDll> logger, SqlLiteContext SqlLiteContext, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
@@ -125,9 +119,7 @@ namespace AutoSchedule.Common
                 {
                     dllPath = "TaskDlls\\" +TaskPlan.DllOrUrl.Split(',')[0];
                 }
-                Assembly assembly = Assembly.LoadFrom(dllPath);
-                Type type = assembly.GetType(TaskPlan.DllOrUrl.Split(',')[1]);
-                object obj = Activator.CreateInstance(type);
+                object obj = ReflectorDllHelper.ReturnObjType(dllPath, TaskPlan.DllOrUrl);
                 IUpJob upJob = obj as IUpJob;
                 for (int j = 0; j < dataSource.Count; j++)
                 {
@@ -147,13 +139,17 @@ namespace AutoSchedule.Common
                     {
                         //主数据源中不包含关键字MainKey
                         _logger.LogError("{EventId}:\r\n主数据源中不包含关键字{MainKey}", taskPlan.Name, MainKey);
-                       
+                        return;
                     }
                     else
                     {
                         //获取当前任务中分组数据 ,主表
                         var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
-
+                        if (dataMaindt.Rows.Count==0)
+                        {
+                            _logger.LogError("{EventId}:\r\n查询无数据：{groupSql}", taskPlan.Name, groupSql);
+                            return;
+                        }
                         //MainKeyValue = dataMaindt.Rows[]
                         for (int h = 0; h < dataMaindt.Rows.Count; h++)
                         {

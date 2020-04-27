@@ -32,7 +32,6 @@ namespace AutoSchedule.Common
                 using (HttpContent httpContent = new StringContent(paramsStr, Encoding.UTF8))
                 {
                     httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
                     var response = await client.PostAsync(strURL, httpContent);
                     return await response.Content.ReadAsStringAsync();
                 }

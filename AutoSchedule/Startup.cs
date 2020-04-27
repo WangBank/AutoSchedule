@@ -12,6 +12,7 @@ using NewLife.Caching;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -48,7 +49,7 @@ namespace AutoSchedule
             {
                 SqlLiteConn = Configuration.GetConnectionString("SqlLiteWin");
             }
-            services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(SqlLiteConn), ServiceLifetime.Transient);
+            services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(SqlLiteConn), ServiceLifetime.Scoped);
             services.AddSingleton<IFreeSql>(Fsql);
             services.AddHttpClient();
             //自定义注册服务
@@ -112,8 +113,6 @@ namespace AutoSchedule
             //清空任务计划Redis缓存
             getService();
 
-            
-
             app.UseRouting();
 
             app.UseAuthorization();
@@ -130,12 +129,21 @@ namespace AutoSchedule
         private void  UnRegService()
         {
             var ss = GetContext.ServiceProvider;
-
+            //string filePath;
+          
+            //filePath = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)?AppDomain.CurrentDomain.BaseDirectory + "\\LogFile": AppDomain.CurrentDomain.BaseDirectory + "/LogFile";
+            //if (Directory.Exists(filePath) == false)
+            //{
+            //    Directory.CreateDirectory(filePath);
+            //}
 
             var sqlliteContext = (SqlLiteContext)ss.GetService(typeof(SqlLiteContext));
             var result = sqlliteContext.Database.ExecuteSqlRaw("UPDATE TaskPlan  SET Status = '0' where Status = '1'");
             result = sqlliteContext.Database.ExecuteSqlRaw($"DELETE FROM Logs WHERE EventId is null or EventId=''");
             sqlliteContext.SaveChanges();
+            Console.WriteLine("网站启动成功,请勿关闭此窗口!");
+            Console.WriteLine($"请访问:localhost:{Configuration.GetSection("urls").Value.Split(':')[2]} 进行下一步配置!");
+            Console.WriteLine($"祝您生活愉快");
         }
 
         private void UnRegService1()

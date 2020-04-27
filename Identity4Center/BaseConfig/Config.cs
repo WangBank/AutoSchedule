@@ -25,9 +25,9 @@ namespace Identity4Center.BaseConfig
                     Password = "apiUserPassword",
                     Claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.Role, "admin"),
-                        new Claim(ClaimTypes.Name, "王振"),
-                         new Claim("lol", "峡谷之巅最强压缩"),
+                        new Claim(ClaimTypes.Role, "Admin"),
+                        new Claim(ClaimTypes.Name, "王银行"),
+                        new Claim("lol", "峡谷之巅最强压缩"),
                         new Claim("权限模块", "OAth2.0")
                     }
                 }
@@ -162,6 +162,7 @@ namespace Identity4Center.BaseConfig
                 AllowedScopes = { 
                     "UserApi",
                     IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
                     "FamilyInfo"
                 },
                 AllowOfflineAccess = true,

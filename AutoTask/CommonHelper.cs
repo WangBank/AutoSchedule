@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 namespace AutoTask
@@ -9,6 +10,11 @@ namespace AutoTask
         public static string SqlDataBankToString(this object bankData)
         {
             return bankData == DBNull.Value ? "" : bankData.ToString();
+        }
+
+        public static string DataRowGetStringValue(this DataRow bankData, string key)
+        {
+            return bankData.Table.Columns.Contains(key)? bankData[key].SqlDataBankToString() :  "" ;
         }
         public static int SqlDataBankToInt(this object bankData)
         {

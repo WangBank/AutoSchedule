@@ -9,13 +9,9 @@ namespace AutoTask.Model
     //http://open.wdgj.com/OpenApiDoc/ApiInfo.html?OpenAPIID=70031&dictID=89
     public class WdgjGoodsModel
     {
-        public GoodsDatalist datalist { get; set; }
+        public List<GoodsDatainfo> datalist { get; set; }
     }
-    public class GoodsDatalist
-    {
-        public List<GoodsDatainfo> datainfo { get; set; }
-    }
-
+   
     public class GoodsDatainfo
     {
         public string goodsid { get; set; }
@@ -109,7 +105,7 @@ namespace AutoTask.Model
     {
         public string returncode { get; set; }
 
-        public string eturninfo { get; set; }
+        public string returninfo { get; set; }
         public List<GoodsDatainfo> datalist { get; set; }
     }
     #endregion
@@ -118,11 +114,7 @@ namespace AutoTask.Model
 
     public class WdgjSupplierModel
     {
-        public SupplierDatalist datalist { get; set; }
-    }
-    public class SupplierDatalist
-    {
-        public List<SupplierDatainfo> datainfo { get; set; }
+        public List<SupplierDatainfo> datalist { get; set; }
     }
 
     public class SupplierDatainfo
@@ -161,7 +153,7 @@ namespace AutoTask.Model
     {
         public string returncode { get; set; }
 
-        public string eturninfo { get; set; }
+        public string returninfo { get; set; }
         public List<SupplierDatainfo> datalist { get; set; }
     }
 }

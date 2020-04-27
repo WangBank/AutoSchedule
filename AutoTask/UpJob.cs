@@ -2,38 +2,53 @@
 using BankDbHelper;
 using ExcuteInterface;
 using Jdwl.Api;
+using Newtonsoft.Json;
 using OpenApiSDK;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace AutoTask
 {
     public class UpJob : IUpJob
     {
-        static string serverUrl;
-        static string accessToken;
-        static string appKey;
-        static string appSecret;
-        static string Pin;
+       
         public string ExecJob(JobPara jobPara, List<Datas> dsData, out string result)
         {
             string allResult = string.Empty;
             BankDbHelper.SqlHelper sqlHelper = new BankDbHelper.SqlHelper(jobPara.dbType, jobPara.connString);
-            serverUrl = dsData[0].DataMain.Rows[0]["serverUrl"].SqlDataBankToString();
-            accessToken = dsData[0].DataMain.Rows[0]["accessToken"].SqlDataBankToString();
-            appKey = dsData[0].DataMain.Rows[0]["appKey"].SqlDataBankToString();
-            appSecret = dsData[0].DataMain.Rows[0]["appSecret"].SqlDataBankToString();
-            Pin = dsData[0].DataMain.Rows[0]["Pin"].SqlDataBankToString();
-            IJdClient client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
             List<SqlHelperParameter> lstPara = new List<SqlHelperParameter>();
             result = "0";
+            IJdClient client;
+            string serverUrl = dsData[0].DataMain.Rows[0].DataRowGetStringValue("serverUrl");
+            string accessToken = dsData[0].DataMain.Rows[0].DataRowGetStringValue("accessToken");
+            string appKey = dsData[0].DataMain.Rows[0].DataRowGetStringValue("appKey");
+            string appSecret = dsData[0].DataMain.Rows[0].DataRowGetStringValue("appSecret");
+            string Pin = dsData[0].DataMain.Rows[0].DataRowGetStringValue("Pin");
+
+            string wdgj_appkey = dsData[0].DataMain.Rows[0].DataRowGetStringValue("wdgj_appkey");
+            string wdgj_appsecret = dsData[0].DataMain.Rows[0].DataRowGetStringValue("wdgj_appsecret");
+            string wdgj_accesstoken = dsData[0].DataMain.Rows[0].DataRowGetStringValue("wdgj_accesstoken");
+            string wdgj_apiurl = dsData[0].DataMain.Rows[0].DataRowGetStringValue("wdgj_apiurl");
             #region base info  sync
             //send supplier info to jdwms
             if (jobPara.jobCode == "10001")
             {
                 try
                 {
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
+
+
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         var request = new Jdwl.Api.Request.Clps.ClpsSynchronizeSupplierLopRequest
@@ -69,10 +84,10 @@ namespace AutoTask
 
                         //{"response":{"content":{"clpsSupplierNo":"CMS4418046522447","code":"1","flag":"success","isvSupplierNo":"00002","message":"成功"}, "code":0}}
                         var response = client.Execute(request);
-                        // CommonHelper.Log($"入参:\r\n{fastJSON.JSON.ToJSON(request)}\r\n 返回数据:\r\n:{fastJSON.JSON.ToJSON(response)}", "推送供应商信息");
+                        // CommonHelper.Log($"入参:\r\n{JsonConvert.SerializeObject(request)}\r\n 返回数据:\r\n:{JsonConvert.SerializeObject(response)}", "推送供应商信息");
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        SupplierResponseBody returnValue = fastJSON.JSON.ToObject<SupplierResponseBody>(response.Body);
+                        SupplierResponseBody returnValue = JsonConvert.DeserializeObject<SupplierResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
 
@@ -95,7 +110,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n推送供应商信息失败，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n推送供应商信息失败，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -119,6 +134,18 @@ namespace AutoTask
             {
                 try
                 {
+                   
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         var OutPackUoms = new List<Jdwl.Api.Domain.Clps.ClpsOpenGwService.OutPackUom>();
@@ -147,15 +174,15 @@ namespace AutoTask
                             Pin = Pin,
                             SingleItemRequest = new Jdwl.Api.Domain.Clps.ClpsOpenGwService.SingleItemRequest
                             {
-                                ActionType = "add",
+                                ActionType = dsData[i].DataMain.Rows[0]["actionType"].SqlDataBankToString(),
                                 WarehouseCode = dsData[i].DataMain.Rows[0]["warehouseNo"].SqlDataBankToString(),
                                 OwnerCode = dsData[i].DataMain.Rows[0]["ownerCode"].SqlDataBankToString(),
                                 Item = new Jdwl.Api.Domain.Clps.ClpsOpenGwService.Item
                                 {
                                     ItemCode = dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString(),
-                                    ItemId = "",
+                                    ItemId = dsData[i].DataMain.Rows[0]["ItemId"].SqlDataBankToString(),
                                     GoodsNumFloat = 0,
-                                    ShopNos = "",
+                                    ShopNos = dsData[i].DataMain.Rows[0]["shopNos"].SqlDataBankToString(),
                                     SupplierCode = "",
                                     SupplierName = "",
                                     GoodsCode = "",
@@ -275,32 +302,35 @@ namespace AutoTask
                             }
                         };
 
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
                         var response = client.Execute(request);
 
                         //{"response":{"content":{"clpsGoodsCode":"CMG4418274978871","code":"1","flag":"success","itemCode":"00000002","message":"商品同步成功"}, "code":0}}
                         //如果请求执行正确,从这里获取强类型返回值
-                        SingelResponseBody returnValue = fastJSON.JSON.ToObject<SingelResponseBody>(response.Body);
+                        SingelResponseBody returnValue = JsonConvert.DeserializeObject<SingelResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
-
-                            lstPara.Clear();
-                            lstPara.Add(new SqlHelperParameter { Size = 100, DataType = ParamsType.VARCHAR2, Direction = System.Data.ParameterDirection.Input, Name = "CLPSGOODSCODE", Value = returnValue.response.content.clpsGoodsCode });
-                            lstPara.Add(new SqlHelperParameter { Size = 100, DataType = ParamsType.VARCHAR2, Direction = System.Data.ParameterDirection.Input, Name = "HH", Value = dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString() });
-                            var insertresult = sqlHelper.ExecSql($"insert into YW_KCK_XH_JDWMS(CLPSGOODSCODE,HH,SYNCDATE) values(:CLPSGOODSCODE,:HH,sysdate)", lstPara);
-                            if (string.IsNullOrEmpty(insertresult))
+                            if (dsData[i].DataMain.Rows[0]["actionType"].SqlDataBankToString()=="add")
                             {
-                                allResult = allResult + $"\r\n推送商品信息{dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString()}成功";
+                                lstPara.Clear();
+                                lstPara.Add(new SqlHelperParameter { Size = 100, DataType = ParamsType.VARCHAR2, Direction = System.Data.ParameterDirection.Input, Name = "CLPSGOODSCODE", Value = returnValue.response.content.clpsGoodsCode });
+                                lstPara.Add(new SqlHelperParameter { Size = 100, DataType = ParamsType.VARCHAR2, Direction = System.Data.ParameterDirection.Input, Name = "HH", Value = dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString() });
+                                var insertresult = sqlHelper.ExecSql($"insert into YW_KCK_XH_JDWMS(CLPSGOODSCODE,HH,SYNCDATE) values(:CLPSGOODSCODE,:HH,sysdate)", lstPara);
+                                if (string.IsNullOrEmpty(insertresult))
+                                {
+                                    allResult = allResult + $"\r\n推送商品信息{dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString()}成功";
+                                }
+                                else
+                                {
+                                    allResult = allResult + $"\r\n推送商品信息{dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString()}失败,原因:{insertresult}";
+                                }
                             }
-                            else
-                            {
-                                allResult = allResult + $"\r\n推送商品信息{dsData[i].DataMain.Rows[0]["HH"].SqlDataBankToString()}失败,原因:{insertresult}";
-                            }
+                           
                         }
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n推送商品信息，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n推送商品信息，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -325,6 +355,18 @@ namespace AutoTask
 
                 try
                 {
+                    
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         var request = new Jdwl.Api.Request.Clps.ClpsSynchronizeShopLopRequest
@@ -358,10 +400,10 @@ namespace AutoTask
 
                         //{"response":{"content":{"code":"1","flag":"success","isvShopNo":"0001","message":"成功","shopNo":"CSP0020000045959"}, "code":0}}
                         var response = client.Execute(request);
-                        // CommonHelper.Log($"入参:\r\n{fastJSON.JSON.ToJSON(request)}\r\n 返回数据:\r\n:{fastJSON.JSON.ToJSON(response)}", "推送供应商信息");
+                        // CommonHelper.Log($"入参:\r\n{JsonConvert.SerializeObject(request)}\r\n 返回数据:\r\n:{JsonConvert.SerializeObject(response)}", "推送供应商信息");
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        ShopResponseBody returnValue = fastJSON.JSON.ToObject<ShopResponseBody>(response.Body);
+                        ShopResponseBody returnValue = JsonConvert.DeserializeObject<ShopResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
 
@@ -382,7 +424,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n推送店铺信息失败，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n推送店铺信息失败，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -407,6 +449,18 @@ namespace AutoTask
             {
                 try
                 {
+                  
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     //dsData[i].DataDetail[0] the i is detail what developer defined
                     for (int i = 0; i < dsData.Count; i++)
                     {
@@ -439,12 +493,12 @@ namespace AutoTask
                                 OrderLines = OrderLines
                             }
                         };
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
                         //{"response":{"content":{"code":"1","createTime":"2020-04-03 13:40:51","entryOrderCode":"CPL4418047893011","flag":"success","message":"成功"}, "code":0}}
                         var response = client.Execute(request);
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        OrderResponseBody returnValue = fastJSON.JSON.ToObject<OrderResponseBody>(response.Body);
+                        OrderResponseBody returnValue = JsonConvert.DeserializeObject<OrderResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
                             lstPara.Clear();
@@ -463,7 +517,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n推送采购订单信息失败，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n推送采购订单信息失败，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -487,6 +541,17 @@ namespace AutoTask
             {
                 try
                 {
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         string billno = dsData[i].DataMain.Rows[0]["BILLNO"].SqlDataBankToString();
@@ -504,7 +569,7 @@ namespace AutoTask
                         var response = client.Execute(request);
                         //{ "response":{ "content":{ "code":"1","entryOrder":{ "clpsOrderCode":"CPL4418047893011","createTime":"2020-04-03 13:40","createUser":"romensfzl","entryOrderCode":"201709250002","ownerCode":"CBU8816093026319","poOrderStatus":"20","supplierCode":"CMS4418046522447","warehouseCode":"800001801"},"flag":"success","message":"成功","poBoxModels":[],"serialNumberList":[],"totalLines":0}, "code":0}}
                         //如果请求执行正确,从这里获取强类型返回值
-                        OrderQueryResponseBody returnValue = fastJSON.JSON.ToObject<OrderQueryResponseBody>(response.Body);
+                        OrderQueryResponseBody returnValue = JsonConvert.DeserializeObject<OrderQueryResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
 
@@ -521,7 +586,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n查询采购订单信息失败，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n查询采购订单信息失败，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -546,6 +611,18 @@ namespace AutoTask
             {
                 try
                 {
+                    
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     //dsData[i].DataDetail[0] 这个第i个是根据数据源中写的
                     for (int i = 0; i < dsData.Count; i++)
                     {
@@ -579,12 +656,12 @@ namespace AutoTask
                                 RtsOrderItemList = RtsOrderItemList
                             }
                         };
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
                         //{"response":{"content":{"clpsRtsNo":"CBS4418046753361","code":"1","flag":"success","message":"成功"}, "code":0}}
                         var response = client.Execute(request);
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        RtsOrderResponseBody returnValue = fastJSON.JSON.ToObject<RtsOrderResponseBody>(response.Body);
+                        RtsOrderResponseBody returnValue = JsonConvert.DeserializeObject<RtsOrderResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
                             lstPara.Clear();
@@ -603,7 +680,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n推送退供应商订单失败，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n推送退供应商订单失败，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -627,6 +704,17 @@ namespace AutoTask
             {
                 try
                 {
+                 
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         string billno = dsData[i].DataMain.Rows[0]["CLPSRTSNO"].SqlDataBankToString();
@@ -639,13 +727,13 @@ namespace AutoTask
                                 OwnerNo = dsData[i].DataMain.Rows[0]["ownerCode"].SqlDataBankToString()
                             }
                         };
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
 
                         //{"response":{"content":{"code":"1","flag":"success","message":"成功","rtsResults":[{"deliveryMode":"1","isvRtsCode":"201909090001","operatorTime":"2020-04-07 17:05:31","operatorUser":"romensfzl","ownerNo":"CBU8816093026319","receiverInfo":{"email":"数据为null","mobile":"0578-5082404","name":"宋志强测试供应商"},"rtsCode":"CBS4418046753361","rtsDetailList":[{"goodsStatus":"1","itemId":"CMG4418288906048","itemName":"布洛伪麻胶囊(得尔)","itemNo":"00000007","planOutQty":5.0,"planQty":5}],"rtsOrderStatus":"100","serialNumberList":[],"source":"9","supplierNo":"CMS4418046523757","warehouseNo":"800001573"}],"totalLine":1}, "code":0}}
                         var response = client.Execute(request);
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        RtsOrderQueryResponseBody returnValue = fastJSON.JSON.ToObject<RtsOrderQueryResponseBody>(response.Body);
+                        RtsOrderQueryResponseBody returnValue = JsonConvert.DeserializeObject<RtsOrderQueryResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
                             //save rtsorderstatus to STOCKRETURNAPPROVE_XH_JDWMS table
@@ -662,7 +750,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n查询退供应商订单失败，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n查询退供应商订单失败，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -686,6 +774,18 @@ namespace AutoTask
             {
                 try
                 {
+                   
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         var request = new Jdwl.Api.Request.Clps.ClpsQueryStockLopRequest
@@ -700,14 +800,14 @@ namespace AutoTask
                                 PageSize = 1
                             }
                         };
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
 
 
                         //{"response":{"content":{"code":"1","flag":"success","message":"成功","totalLines":1,"warehouseStockModelList":[{"goodsName":"耳聋左慈丸","goodsNo":"CMG4418287716460","ownerName":"GXW测试货主勿动","ownerNo":"CBU8816093026319","sellerGoodsSign":"00000001","stockStatus":"1","stockType":"1","totalNum":2000,"totalNumValue":2000.0,"usableNum":2000,"usableNumValue":2000.0,"warehouseName":"GXWj接口测试仓","warehouseNo":"800001801"}]}, "code":0}}
                         var response = client.Execute(request);
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        QueryStockResponseBody returnValue = fastJSON.JSON.ToObject<QueryStockResponseBody>(response.Body);
+                        QueryStockResponseBody returnValue = JsonConvert.DeserializeObject<QueryStockResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
                             //save rtsorderstatus to STOCKRETURNAPPROVE_XH_JDWMS table
@@ -724,7 +824,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n查询库存信息，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n查询库存信息，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -748,6 +848,18 @@ namespace AutoTask
             {
                 try
                 {
+                   
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         var OrderLines = new List<Jdwl.Api.Domain.Clps.ClpsOpenGwService.PoItemModel>();
@@ -786,12 +898,12 @@ namespace AutoTask
                                 OrderLines = OrderLines
                             }
                         };
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
                         //{"response":{"content":{"code":"1","createTime":"2020-04-09 14:11:02","entryOrderCode":"CPL4418047912171","flag":"success","message":"成功"}, "code":0}}
                         var response = client.Execute(request);
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        OrderResponseBody returnValue = fastJSON.JSON.ToObject<OrderResponseBody>(response.Body);
+                        OrderResponseBody returnValue = JsonConvert.DeserializeObject<OrderResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
                             //save rtsorderstatus to STOCKRETURNAPPROVE_XH_JDWMS table
@@ -808,7 +920,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n仓库调拨单，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n仓库调拨单，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -832,6 +944,18 @@ namespace AutoTask
             {
                 try
                 {
+                   
+                   
+                    if (string.IsNullOrEmpty(serverUrl) || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(appKey) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(Pin))
+                    {
+                        result = "数据源中缺少serverUrl、accessToken、appKey、appSecret、Pin!";
+                        return result;
+
+                    }
+                    else
+                    {
+                        client = new DefaultJdClient(serverUrl, accessToken, appKey, appSecret);
+                    }
                     for (int i = 0; i < dsData.Count; i++)
                     {
                         var request = new Jdwl.Api.Request.Clps.ClpsClpsOrderCancelLopRequest
@@ -845,12 +969,12 @@ namespace AutoTask
                                 OrderType = dsData[i].DataMain.Rows[0]["ORDERTYPE"].SqlDataBankToString()
                             }
                         };
-                        var jsonrequest = fastJSON.JSON.ToJSON(request);
+                        var jsonrequest = JsonConvert.SerializeObject(request);
                         //{"response":{"content":{"code":"1","createTime":"2020-04-09 14:11:02","entryOrderCode":"CPL4418047912171","flag":"success","message":"成功"}, "code":0}}
                         var response = client.Execute(request);
 
                         //如果请求执行正确,从这里获取强类型返回值
-                        OrderResponseBody returnValue = fastJSON.JSON.ToObject<OrderResponseBody>(response.Body);
+                        OrderResponseBody returnValue = JsonConvert.DeserializeObject<OrderResponseBody>(response.Body);
                         if (returnValue.response.code == 0)
                         {
                             //save rtsorderstatus to STOCKRETURNAPPROVE_XH_JDWMS table
@@ -867,7 +991,7 @@ namespace AutoTask
                         //响应的原始报文,如果请求失败,从这里获取错误消息代码
                         else
                         {
-                            allResult = allResult + $"\r\n异常订单关闭，入参:{fastJSON.JSON.ToJSON(request)},\r\n返回:{fastJSON.JSON.ToJSON(response)}";
+                            allResult = allResult + $"\r\n异常订单关闭，入参:{JsonConvert.SerializeObject(request)},\r\n返回:{JsonConvert.SerializeObject(response)}";
                         }
 
                     }
@@ -886,20 +1010,17 @@ namespace AutoTask
 
             }
 
-            //wdgj goods 未调试 数据源取已经同步至wms中的hh
+            //wdgj goods 数据源取已经同步至wms中的hh
             if (jobPara.jobCode == "10011")
             {
                 try
                 {
-                    string appkey = dsData[0].DataMain.Rows[0]["wdgj_appkey"].SqlDataBankToString();
-                    string appsecret = dsData[0].DataMain.Rows[0]["wdgj_appsecret"].SqlDataBankToString();
-                    string accesstoken = dsData[0].DataMain.Rows[0]["wdgj_accesstoken"].SqlDataBankToString();
-                    string apiurl = dsData[0].DataMain.Rows[0]["wdgj_apiurl"].SqlDataBankToString();
+                  
                     OpenApi wdgjOpenApi = new OpenApi
                     {
-                        Appkey = appkey,
-                        AppSecret = appsecret,
-                        AccessToken = accesstoken,
+                        Appkey = wdgj_appkey,
+                        AppSecret = wdgj_appsecret,
+                        AccessToken = wdgj_accesstoken,
                         Timestamp = ((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000).ToString(),
                         Method = "wdgj.goods.create",
                         Format = "json",
@@ -934,21 +1055,17 @@ namespace AutoTask
 
                     WdgjGoodsModel wdgjGoodsModel = new WdgjGoodsModel
                     {
-                        datalist = new GoodsDatalist
-                        {
-                            datainfo = datainfo
-                        }
+                        datalist = datainfo
                     };
-
-                    ArrayList updateSqls = new ArrayList();
-                    string createGoodsJson = fastJSON.JSON.ToJSON(wdgjGoodsModel);
+                    
+                    string createGoodsJson = JsonConvert.SerializeObject(wdgjGoodsModel, new JsonSerializerSettings { NullValueHandling=NullValueHandling.Ignore});
                     wdgjOpenApi.AppParam.content = createGoodsJson;
                     string postresult = wdgjOpenApi.HttpPostString();
-                    WdgjGoodsResponse wdgjGoodsResponse = fastJSON.JSON.ToObject<WdgjGoodsResponse>(postresult);
-                    if (wdgjGoodsResponse.datalist.Count >= 0)
+                    WdgjGoodsResponse wdgjGoodsResponse = JsonConvert.DeserializeObject<WdgjGoodsResponse>(postresult);
+                    allResult = allResult + $"\r\n推送商品信息到笛佛,接口返回信息:{postresult}";
+                    if (wdgjGoodsResponse.datalist?.Count > 0)
                     {
                         string falsehhs = "";
-                        string successhhs = "";
                         for (int i = 0; i < wdgjGoodsResponse.datalist.Count; i++)
                         {
                             if (falsehhs == "")
@@ -959,30 +1076,11 @@ namespace AutoTask
                             {
                                 falsehhs = falsehhs + $",'{wdgjGoodsResponse.datalist[i].goodsno}'";
                             } 
-                            // remove the error hh
                             arrayList.Remove(wdgjGoodsResponse.datalist[i].goodsno);
                         }
-
-                        // success hh
-                        for (int i = 0; i < arrayList.Count; i++)
-                        {
-                            if (successhhs == "")
-                            {
-                                successhhs = $"'{arrayList[i]}'";
-                            }
-                            else
-                            {
-                                successhhs = successhhs + $",'{arrayList[i]}'";
-                            }
-                        }
-
-                        string falseupdate = $"update yw_kck_xh_jdwms set ISWDGJ = '2' where hh in({falsehhs})";
-                        string successupdate = $"update yw_kck_xh_jdwms set ISWDGJ = '1' where hh in({successhhs})";
-                        updateSqls.Add(falseupdate);
-                        updateSqls.Add(successupdate);
-                        // update yw_kck_xh_jdwms table ISWDGJ = '1'
-                        var updateresult = sqlHelper.ExecSql(updateSqls);
-                        allResult = allResult  +$"\r\n推送商品信息到笛佛,更新sql语句:{falseupdate}\r\n{successupdate},返回信息:{updateresult}";
+                        string falseupdate = $"update yw_kck_xh_jdwms set ISWDGJ = '2' where hh in ({falsehhs})";
+                        var updateresult = sqlHelper.ExecSql(falseupdate);
+                        allResult = allResult  +$"\r\n推送商品信息到笛佛,更新sql语句:{falseupdate}\r\n,返回信息:{updateresult}";
                     }
 
                     if (wdgjGoodsResponse.returncode == "0")
@@ -999,7 +1097,7 @@ namespace AutoTask
                                 successhhs = successhhs + $",'{arrayList[i]}'";
                             }
                         }
-                        string successupdate = $"update yw_kck_xh_jdwms set ISWDGJ = '1' where hh in({successhhs})";
+                        string successupdate = $"update yw_kck_xh_jdwms set ISWDGJ = '1' where hh in ({successhhs})";
                         var updateresult = sqlHelper.ExecSql(successupdate);
                         allResult = allResult + $"\r\n推送商品信息到笛佛,更新sql语句:{successupdate},返回信息:{updateresult}";
                         
@@ -1008,7 +1106,7 @@ namespace AutoTask
                 }
                 catch (Exception ex)
                 {
-                    result = "推送商品信息到笛佛" + ex.Message;
+                    result = $"推送商品信息到笛佛{ ex.Message}";
                     return result;
                 }
                 finally
@@ -1023,15 +1121,11 @@ namespace AutoTask
             {
                 try
                 {
-                    string appkey = dsData[0].DataMain.Rows[0]["wdgj_appkey"].SqlDataBankToString();
-                    string appsecret = dsData[0].DataMain.Rows[0]["wdgj_appsecret"].SqlDataBankToString();
-                    string accesstoken = dsData[0].DataMain.Rows[0]["wdgj_accesstoken"].SqlDataBankToString();
-                    string apiurl = dsData[0].DataMain.Rows[0]["wdgj_apiurl"].SqlDataBankToString();
                     OpenApi wdgjOpenApi = new OpenApi
                     {
-                        Appkey = appkey,
-                        AppSecret = appsecret,
-                        AccessToken = accesstoken,
+                        Appkey = wdgj_appkey,
+                        AppSecret = wdgj_appsecret,
+                        AccessToken = wdgj_accesstoken,
                         Timestamp = ((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000).ToString(),
                         Method = "wdgj.prover.create",
                         Format = "json",
@@ -1053,20 +1147,17 @@ namespace AutoTask
                    
                     WdgjSupplierModel wdgjSupplier = new WdgjSupplierModel
                     {
-                        datalist  = new SupplierDatalist { 
-                            datainfo = supplierDatainfos
-                        }
+                        datalist  = supplierDatainfos
                     };
-                    string createSuppliersJson = fastJSON.JSON.ToJSON(wdgjSupplier);
+                    string createSuppliersJson = JsonConvert.SerializeObject(wdgjSupplier, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                     wdgjOpenApi.AppParam.content = createSuppliersJson;
-                    ArrayList updateSqls = new ArrayList();
 
                     string postresult = wdgjOpenApi.HttpPostString();
-                    WdgjSupplierResponse supplierResponse = fastJSON.JSON.ToObject<WdgjSupplierResponse>(postresult);
-                    if (supplierResponse.datalist.Count >= 0)
+                    WdgjSupplierResponse supplierResponse = JsonConvert.DeserializeObject<WdgjSupplierResponse>(postresult);
+                    allResult = allResult + $"\r\n推送供应商信息到笛佛,接口返回信息:{postresult}";
+                    if (supplierResponse.datalist?.Count > 0)
                     {
                         string falsehhs = "";
-                        string successhhs = "";
                         for (int i = 0; i < supplierResponse.datalist.Count; i++)
                         {
                             if (falsehhs == "")
@@ -1081,26 +1172,9 @@ namespace AutoTask
                             arrayList.Remove(supplierResponse.datalist[i].providerno);
                         }
 
-                        // success hh
-                        for (int i = 0; i < arrayList.Count; i++)
-                        {
-                            if (successhhs == "")
-                            {
-                                successhhs = $"'{arrayList[i]}'";
-                            }
-                            else
-                            {
-                                successhhs = successhhs + $",'{arrayList[i]}'";
-                            }
-                        }
-
                         string falseupdate = $"update GL_SUPER_XH_JDWMS set ISWDGJ = '2' where TJBH in({falsehhs})";
-                        string successupdate = $"update GL_SUPER_XH_JDWMS set ISWDGJ = '1' where TJBH in({successhhs})";
-                        updateSqls.Add(falseupdate);
-                        updateSqls.Add(successupdate);
-                        // update yw_kck_xh_jdwms table ISWDGJ = '1'
-                        var updateresult = sqlHelper.ExecSql(updateSqls);
-                        allResult = allResult + $"\r\n推送商品信息到笛佛,更新sql语句:{falseupdate}\r\n{successupdate},返回信息:{updateresult}";
+                        var updateresult = sqlHelper.ExecSql(falseupdate);
+                        allResult = allResult + $"\r\n推送供应商信息到笛佛,更新sql语句:{falseupdate}\r\n,返回信息:{updateresult}";
                     }
 
                     if (supplierResponse.returncode == "0")
@@ -1127,7 +1201,7 @@ namespace AutoTask
                 catch (Exception ex)
                 {
 
-                    result = "推送供应商信息到笛佛" + ex.Message;
+                    result = $"推送供应商信息到笛佛{ex.Message}";
                     return result;
                 }
                 finally

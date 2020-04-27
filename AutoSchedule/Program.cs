@@ -11,8 +11,7 @@ namespace AutoSchedule
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("ss");
-                CreateHostBuilder(args).Build().Run();
+             CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

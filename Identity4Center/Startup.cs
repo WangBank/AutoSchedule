@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Identity4Center.BaseConfig;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,17 +30,25 @@ namespace Identity4Center
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
+           // string SqlLiteConn = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)? Configuration.GetConnectionString("SqlLiteLinux") : Configuration.GetConnectionString("SqlLiteWin");
+            var migrationAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+            string connectionString = @"Data Source=(LocalDb)\MSSQLLocalDB;database=IdentityServer4.Quickstart.EntityFramework-3.0.0;trusted_connection=yes;";
+
             var builder = services.AddIdentityServer()
               .AddDeveloperSigningCredential()
+
               //身份信息授权资源
-              .AddInMemoryIdentityResources(Config.GetIdentityResources())
-              //API访问授权资源
-              .AddInMemoryApiResources(Config.GetApiResources())
-              //添加客户端
-              .AddInMemoryClients(Config.GetClients())
-               //添加用户
-              .AddTestUsers(Config.GetUsers());
-           
+              //.AddInMemoryIdentityResources(Config.GetIdentityResources())
+              ////API访问授权资源
+              //.AddInMemoryApiResources(Config.GetApiResources())
+              ////添加客户端
+              //.AddInMemoryClients(Config.GetClients())
+              // //添加用户
+              //.AddTestUsers(Config.GetUsers())
+              ;
+             
             services.AddControllers();
             services.AddMvc(s=> {
                 s.EnableEndpointRouting = false;

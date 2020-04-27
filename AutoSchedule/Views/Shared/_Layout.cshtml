@@ -95,7 +95,6 @@
     <script type="text/html" id="barDemoDetail">
         <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
     </script>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -123,8 +122,6 @@
                 table.reload('taskDtId');
             }, "json");
         }
-
-       
 
         var tkguid = '';
         var table;
@@ -486,7 +483,7 @@
                         title: '新增任务计划明细',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '300px'],
+                        area: ['700px', '500px'],
                         content: '/TaskPlan/TaskPlanDetailAdd?tkguid=' + tkguid
                     });
                 }

@@ -19,6 +19,7 @@ namespace AutoSchedule.Dtos.MessageModel
         public string ITEMID { get; set; }
         public string INVENTORYTYPE { get; set; }
         public string PLANQTY { get; set; }
+        public string PLANOUTQTY { get; set; }
         public string ACTUALQTY { get; set; }
         public string ACTUALOUTQTY { get; set; }
         public string ORDERSOURCECODE { get; set; }
