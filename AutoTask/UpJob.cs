@@ -632,6 +632,7 @@ namespace AutoTask
                         {
                             RtsOrderItemList.Add(new Jdwl.Api.Domain.Clps.ClpsOpenGwService.RtsOrderItem
                             {
+                                
                                 ItemId = dsData[i].DataDetail[0].Rows[j]["CLPSGOODSCODE"].SqlDataBankToString(),
                                 ItemQty = dsData[i].DataDetail[0].Rows[j]["QUANTITY"].SqlDataBankToInt(),
                             });

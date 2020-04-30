@@ -274,11 +274,12 @@ namespace AutoSchedule.Common
 
 
         /// <summary>
-        /// 退供应商订单完成信息回传
+        /// 退供应商订单完成信息回传  √
         /// </summary>
         /// <param name="e"></param>
         private void RtsCompleteFeedbackMsg(JdEventArgs e)
         {
+            //{"rtsOrderModel":{"rtsOrderCode":"202004280001","rtsOrderId":"CBS4418046830359","rtsType":"1","ownerNo":"CBU8816093026319","deliveryMode":"1","warehouseNo":"800001573","supplierNo":"CMS4418046523757","supplierName":"宋志强测试供应商","receiverInfo":{"name":"宋志强测试供应商","mobile":"","email":"数据为null","detailAddress":"天津市东丽区机场北路丰树天津空港物流园"},"orderCreateTime":"2020-04-28 09:53:13","outBizCode":"617faed3-6f7e-4dd2-b33b-1e3f3fae717d","operateTime":"2020-04-28 10:39:44","orderConfirmTime":"2020-04-28 10:39:44"},"rtsItemModelList":[{"lotInfoList":[],"itemCode":"00000007","itemId":"CMG4418288906048","planQty":1,"actualQty":1,"planOutQty":1.0,"actualOutQty":1.0}]}
             _logger.LogInformation("{EventId}:\r\n{result}", "退供应商订单回传", JsonConvert.SerializeObject(e));
             string billguid = Guid.NewGuid().ToString("N");
             var stock = JsonConvert.DeserializeObject<RtsCompleteFeedbackMsg>(e.message.msgPayload);
@@ -380,11 +381,12 @@ namespace AutoSchedule.Common
         }
 
         /// <summary>
-        /// 单据取消异步回传
+        /// 单据取消异步回传 √
         /// </summary>
         /// <param name="e"></param>
         private void OrderCancelFeedbackMsg(JdEventArgs e)
         {
+            //{"status":"1","message":"取消成功","orderCode":"202004280001","orderId":"CPL4418048123702","orderType":"CGRK"}
             _logger.LogInformation("{EventId}:\r\n{result}", "单据取消异步回传", JsonConvert.SerializeObject(e));
             string billguid = Guid.NewGuid().ToString("N");
             var stock = JsonConvert.DeserializeObject<OrderCancelFeedbackMsg>(e.message.msgPayload);
@@ -986,8 +988,7 @@ namespace AutoSchedule.Common
                     {
                         if (rds.ContainsKey(param))
                         {
-                            var closeResult = _scheduler.DeleteJob(rds.Get<JobKey>(param));
-                            if (closeResult.Result)
+                            if (await _scheduler.DeleteJob(rds.Get<JobKey>(param)))
                             {
                                 rds.Remove(param);
                                 return $"定时任务({ tk.Name})已结束";
@@ -1003,14 +1004,13 @@ namespace AutoSchedule.Common
                     {
                         if (tk.Status == "1" && jobKeys.ContainsKey(param))
                         {
-                            var closeResult = _scheduler.DeleteJob(jobKeys.GetValueOrDefault(param));
-                            if (closeResult.Result)
+                            if (await _scheduler.DeleteJob(jobKeys.GetValueOrDefault(param)))
                             {
                                 jobKeys.Remove(param);
                                 tk.Status = "0";
                                 _SqlLiteContext.TaskPlan.Update(tk);
                                 await _SqlLiteContext.SaveChangesAsync();
-                                return $"定时任务({ tk.Name})已结束";
+                                return await Task.FromResult($"定时任务({ tk.Name})已结束");
                             }
 
                         }

@@ -1,5 +1,6 @@
 using AutoSchedule.Common;
 using AutoSchedule.Dtos.Data;
+using AutoSchedule.Models;
 using FreeSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -60,10 +61,10 @@ namespace AutoSchedule
                 configure.UseISchedulerFactory();
                 configure.UseQuartzStartup();
             });
-            //自定义服务获取类
-            GetServiceByOther(services);
+
+            services.AddScoped<IScopeTest, Operation>();
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            //Microsoft.VisualStudio.Web.CodeGeneration.Design
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
@@ -71,9 +72,6 @@ namespace AutoSchedule
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddMvc().AddNewtonsoftJson(s => s.SerializerSettings.ContractResolver = new DefaultContractResolver());
-
-            //getService(services);
-            //.AddRazorRuntimeCompilation();
         }
 
         private void GetServiceByOther(IServiceCollection services)
@@ -84,11 +82,9 @@ namespace AutoSchedule
         private void getService()
         {
             //启动的时候清空Redis
-            var ss = GetContext.ServiceProvider;
-           
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                var quartzStartup = (QuartzStartup)ss.GetService(typeof(QuartzStartup));
+                var quartzStartup = (QuartzStartup)GetContext.ServiceProvider.GetService(typeof(QuartzStartup));
                 quartzStartup.rds.Clear();
             }
              
@@ -105,18 +101,14 @@ namespace AutoSchedule
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+            
             app.UseStaticFiles();
-           lifetime.ApplicationStarted.Register(UnRegService);
-            //lifetime.ApplicationStopping.Register(UnRegService);//应用停止后从服务中心注销
+            lifetime.ApplicationStarted.Register(UnRegService);
             //app.Run(r => r.Response.WriteAsync("没想到吧",Encoding.GetEncoding("utf-8")));
-
-            //清空任务计划Redis缓存
+            GetContext.ServiceProvider = app.ApplicationServices;
             getService();
-
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
@@ -125,30 +117,13 @@ namespace AutoSchedule
             });
             
         }
-
+        public HttpContext requestServices ;
         private void  UnRegService()
         {
-            var ss = GetContext.ServiceProvider;
-            //string filePath;
-          
-            //filePath = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)?AppDomain.CurrentDomain.BaseDirectory + "\\LogFile": AppDomain.CurrentDomain.BaseDirectory + "/LogFile";
-            //if (Directory.Exists(filePath) == false)
-            //{
-            //    Directory.CreateDirectory(filePath);
-            //}
-
-            var sqlliteContext = (SqlLiteContext)ss.GetService(typeof(SqlLiteContext));
-            var result = sqlliteContext.Database.ExecuteSqlRaw("UPDATE TaskPlan  SET Status = '0' where Status = '1'");
-            result = sqlliteContext.Database.ExecuteSqlRaw($"DELETE FROM Logs WHERE EventId is null or EventId=''");
-            sqlliteContext.SaveChanges();
             Console.WriteLine("网站启动成功,请勿关闭此窗口!");
             Console.WriteLine($"请访问:localhost:{Configuration.GetSection("urls").Value.Split(':')[2]} 进行下一步配置!");
             Console.WriteLine($"祝您生活愉快");
         }
 
-        private void UnRegService1()
-        {
-          
-        }
     }
 }

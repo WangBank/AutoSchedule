@@ -11,6 +11,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using LogProvider = Quartz.Logging.LogProvider;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace AutoSchedule.Controllers
 {
@@ -18,19 +20,24 @@ namespace AutoSchedule.Controllers
     {
         private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<HomeController> _logger;
-
+        public IScopeTest _scope;
         private QuartzStartup _quartzStartup;
 
-        public HomeController(ILogger<HomeController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup)
+        public HomeController(ILogger<HomeController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup, IScopeTest scope)
         {
             //LogProvider.SetCurrentLogProvider(new AutoSchedule.Common.LogProvider());
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
             _quartzStartup = quartzStartup;
+            _scope = scope;
         }
 
         public IActionResult Index()
         {
+            //清空一下无用日志
+            _SqlLiteContext.Database.ExecuteSqlRaw("UPDATE TaskPlan  SET Status = '0' where Status = '1'");
+            _SqlLiteContext.Database.ExecuteSqlRaw($"DELETE FROM Logs WHERE EventId is null or EventId=''");
+            _SqlLiteContext.SaveChanges();
             return View();
         }
 

@@ -1,38 +1,39 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace TestConsole
+namespace ConsoleTool2
 {
-   
-    public class A
+    class Program
     {
-        public virtual void Func1(int i)
+        static void Main(string[] args)
         {
-            Console.WriteLine(i);
+            while (true)
+            {
+                Task.Run(Producer);
+                Thread.Sleep(200);
+            }
         }
 
-        public  void Func2(A a)
+        static async Task Producer()
         {
-            a.Func1(1);
-            Func1(3);
-        }
-    }
-
-
-    public class B : A
-    {
-        public override void Func1(int i)
-        {
-            base.Func1(i+1);
+             await Process();
         }
 
-        public static void Main()
+        static  void Producer1()
         {
-            B b = new B();
-            A a = new A();
-            a.Func2(b);
-            b.Func2(a);
+             var result =Process().Result;
+        }
+
+        static async Task<bool> Process()
+        {
+            await Task.Run(() =>
+            {
+                Thread.Sleep(1000);
+            });
+
+            Console.WriteLine("Ended - " + DateTime.Now.ToLongTimeString());
+            return true;
         }
     }
 }
-
-

@@ -135,19 +135,27 @@
                 , id: 'datasourceDtId'
                 , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
                 , cols: [[
-                    { type: 'radio' },
+                    //{ type: 'radio' },
                     { field: 'GUID', title: '编号', sort: true },
                     { field: 'Name', title: '名称', sort: true },
                     { field: 'GroupSqlString', title: '分组数据源', sort: true },
                     { field: 'SqlString', title: '数据源', sort: true },
                     { field: 'AfterSqlString', title: '调用正常后执行语句', sort: true },
                     { field: 'AfterSqlstring2', title: '调用异常后执行语句', sort: true },
-                    { field: 'FType', title: '单据类型', sort: true },
-                    { field: 'IsStart', title: '是否启用', sort: true },
+                    {
+                        field: 'IsStart', title: '状态', sort: true, width: 80, templet: function (d) {
+                            if (d.IsStart == "1") {
+                                return "<font color='green' size='3'> <b>已启用</b></font>";
+                            } else if (d.IsStart == "0") {
+                                return "<font color='red' size='3'> <b>未启用</b></font>";
+                            }
+                        }
+                    },
                     { field: 'MainKey', title: '主关键字段', sort: true },
                     { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
                 , page: true
+                , limit:90
             });
 
             //组织机构表格
@@ -157,7 +165,7 @@
                 , toolbar: '#toolbarDemo'
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                 , cols: [[
-                    { type: 'radio' },
+                    //{ type: 'radio' },
                     //orgName = "123",orgNum = ""
                     { field: 'orgNum', title: '编号', sort: true },
                     { field: 'orgName', title: '名称', sort: true }
@@ -173,7 +181,7 @@
                 , url: '/SystemKey/SystemKeyResult'
                 , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                 , cols: [[
-                    { type: 'radio' },
+                    //{ type: 'radio' },
                     { field: 'KeyName', title: '关键字名称', sort: true },
                     { field: 'KeyValue', title: '关键字值', sort: true }
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
@@ -270,7 +278,7 @@
                     , url: '/TaskPlan/TaskPlanDetailResult?guid=' + guid
                     , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
                     , cols: [[
-                        { type: 'radio' },
+                        //{ type: 'radio' },
                         { field: 'guid', title: 'tkDetailGuid', sort: true, hide: true },
                         { field: 'dsGuid', title: '编号', sort: true },
                         { field: 'dsName', title: '名称', sort: true },
@@ -294,7 +302,7 @@
                         title: '新增数据源',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/DataSource/DataSourceAdd' //iframe的url
                     });
                 }

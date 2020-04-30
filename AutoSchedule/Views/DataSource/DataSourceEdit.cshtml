@@ -20,15 +20,7 @@
     </fieldset>
 
     <form class="layui-form">
-        <div class="layui-form-item">
-            <label class="layui-form-label">单据类型</label>
-            <div class="layui-input-block">
-                <select name="FType" lay-filter="aihao">
-                    <option value="0" selected="selected">业务单据</option>
-                </select>
-            </div>
-        </div>
-
+       
         <div class="layui-form-item" hidden="hidden">
             <label class="layui-form-label">guid</label>
             <div class="layui-input-block">
@@ -44,9 +36,19 @@
 
         <div class="layui-form-item" pane="">
             <label class="layui-form-label">是否启用</label>
-            <div class="layui-input-block">
-                <input type="checkbox" checked="" lay-verify="required" name="IsStart" lay-skin="switch" lay-filter="switchTest" title="是否启用" value="@Model.IsStart">
-            </div>
+            @if (@Model.IsStart == "1")
+            {
+                <div class="layui-input-block">
+                    <input type="checkbox" checked="" lay-verify="required" name="IsStart" lay-skin="switch" lay-filter="switchTest" title="是否启用">
+                </div>
+            }
+            else
+            {
+                <div class="layui-input-block">
+                    <input type="checkbox" lay-verify="required" name="IsStart" lay-skin="switch" lay-filter="switchTest" title="是否启用">
+                </div>
+            }
+
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label">主关键字段</label>
@@ -64,19 +66,19 @@
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">业务选择数据源</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容"  class="layui-textarea" name="SqlString">@Model.SqlString</textarea>
+                <textarea placeholder="请输入内容" class="layui-textarea" name="SqlString">@Model.SqlString</textarea>
             </div>
         </div>
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">调用正常后执行语句</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容"  class="layui-textarea" name="AfterSqlString">@Model.AfterSqlString</textarea>
+                <textarea placeholder="请输入内容" class="layui-textarea" name="AfterSqlString">@Model.AfterSqlString</textarea>
             </div>
         </div>
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">调用异常后执行语句</label>
             <div class="layui-input-block">
-                <textarea placeholder="请输入内容"  class="layui-textarea" name="AfterSqlstring2">@Model.AfterSqlstring2</textarea>
+                <textarea placeholder="请输入内容" class="layui-textarea" name="AfterSqlstring2">@Model.AfterSqlstring2</textarea>
             </div>
         </div>
         @*<div class="layui-form-item layui-form-text">
@@ -94,6 +96,7 @@
     </form>
     <script src="~/layui.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
     <script type="text/javascript">
         layui.use(['form', 'layedit', 'laydate'], function () {

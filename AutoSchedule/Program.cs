@@ -14,19 +14,22 @@ namespace AutoSchedule
              CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            NLogAspNetCoreOptions options = new NLogAspNetCoreOptions { IgnoreEmptyEventId = true ,CaptureMessageProperties = true};
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 })
-
                 .ConfigureLogging(logging =>
-
                 {
                     logging.ClearProviders();
                     logging.SetMinimumLevel(LogLevel.Information);
+                    logging.AddConsole();
                 })
-                .UseNLog();
+                .UseNLog(options);
+        }
+           
     }
 }

@@ -19,11 +19,9 @@
 
     <form class="layui-form">
         <div class="layui-form-item">
-            <label class="layui-form-label">单据类型</label>
+            <label class="layui-form-label">单据编号</label>
             <div class="layui-input-block">
-                <select name="FType" lay-filter="fType">
-                    <option value="0" selected="">业务单据</option>
-                </select>
+                <input type="text" name="GUID" lay-verify="required" autocomplete="off" placeholder="请输入单据编号" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
@@ -42,7 +40,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">主关键字段</label>
             <div class="layui-input-block">
-                <input type="text" name="MainKey" lay-verify="required" autocomplete="off" placeholder="请输入单据名称" class="layui-input">
+                <input type="text" name="MainKey" lay-verify="required" autocomplete="off" placeholder="请输入主关键字段" class="layui-input">
             </div>
         </div>
 

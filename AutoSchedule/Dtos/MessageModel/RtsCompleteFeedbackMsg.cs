@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Jdwl.Api.Domain.Clps.ClpsOpenGwService;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace AutoSchedule.Dtos.MessageModel
     {
         public RtsOrderModel rtsOrderModel { get; set; }
 
-        public List<RtsOrderItem> rtsItemModelList { get; set; }
+        public List<RtsItemModel> rtsItemModelList { get; set; }
     }
 
     public class RtsOrderModel
@@ -25,11 +26,11 @@ namespace AutoSchedule.Dtos.MessageModel
         public string orderCreateTime { get; set; }
         public string remark { get; set; }
 
-        public SenderInfo senderInfo { get; set; }
+        public ReceiverInfo receiverInfo { get; set; }
 
     }
 
-    public class RtsOrderItem
+    public class RtsItemModel
     {
         public string orderLineNo { get; set; }
         public string orderSourceCode { get; set; }
@@ -41,20 +42,13 @@ namespace AutoSchedule.Dtos.MessageModel
         public string planQty { get; set; }
         public string actualQty { get; set; }
         public string planOutQty { get; set; }
-
         public string actualOutQty { get; set; }
         public string batchCode { get; set; }
-
         public string productDate { get; set; }
         public string expireDate { get; set; }
-
         public string produceCode { get; set; }
         public string qrCode { get; set; }
-
         public List<Batch> batchs { get; set; }
-
-
-        public SenderInfo senderInfo { get; set; }
 
     }
 }

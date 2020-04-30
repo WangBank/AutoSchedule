@@ -38,7 +38,6 @@ namespace AutoSchedule.Controllers
             var dsUpdate = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
             dsUpdate.AfterSqlString = dataSourceAddIn.AfterSqlString;
             dsUpdate.AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2;
-            dsUpdate.FType = dataSourceAddIn.FType;
             dsUpdate.GroupSqlString = dataSourceAddIn.GroupSqlString;
             dsUpdate.IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ? "0" : "1";
             dsUpdate.MainKey = dataSourceAddIn.MainKey;
@@ -67,10 +66,9 @@ namespace AutoSchedule.Controllers
             var ds = await _SqlLiteContext.OpenSql.AsNoTracking().OrderByDescending(o => o.GUID).FirstOrDefaultAsync();
             Dtos.Models.DataSource dataSource = new DataSource
             {
-                GUID = (int.Parse(ds.GUID) + 1).ToString(),
+                GUID = dataSourceAddIn.GUID,
                 AfterSqlString = dataSourceAddIn.AfterSqlString,
                 AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2,
-                FType = dataSourceAddIn.FType,
                 GroupSqlString = dataSourceAddIn.GroupSqlString,
                 IsStart = string.IsNullOrEmpty(dataSourceAddIn.IsStart) ? "0" : "1",
                 MainKey = dataSourceAddIn.MainKey,
@@ -112,7 +110,6 @@ namespace AutoSchedule.Controllers
                     Name = item.Name,
                     AfterSqlString = item.AfterSqlString,
                     AfterSqlstring2 = item.AfterSqlstring2,
-                    FType = item.FType,
                     GroupSqlString = item.GroupSqlString,
                     SqlString = item.SqlString,
                     IsStart = item.IsStart,

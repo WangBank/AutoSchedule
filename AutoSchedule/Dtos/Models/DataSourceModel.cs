@@ -11,7 +11,6 @@ namespace AutoSchedule.Dtos.Models
         public string AfterSqlString { get; set; }
         public string AfterSqlstring2 { get; set; }
         public string IsStart { get; set; }
-        public string FType { get; set; }
         public string MainKey { get; set; }
     }
 
