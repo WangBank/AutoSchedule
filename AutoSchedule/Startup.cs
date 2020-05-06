@@ -27,7 +27,6 @@ namespace AutoSchedule
         public IFreeSql Fsql { get; }
         public Startup(IConfiguration configuration)
         {
-
             Configuration = configuration;
             string MessageDb = Configuration.GetConnectionString("MessageDb");
             Fsql = new FreeSqlBuilder()

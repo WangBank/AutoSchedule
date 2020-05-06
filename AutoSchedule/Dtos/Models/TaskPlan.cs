@@ -26,7 +26,7 @@ namespace AutoSchedule.Dtos.Models
         public string Frequency { get; set; }
 
         /// <summary>
-        /// 时间类型 0 秒 1 分钟 2 小时
+        /// 时间类型 0 秒 1 分钟 2 小时 
         /// </summary>
         public string FrequencyType { get; set; }
 

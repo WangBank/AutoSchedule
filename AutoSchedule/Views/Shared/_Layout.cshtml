@@ -8,43 +8,45 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
-<body class="layui-layout-body">
+<body class="main_body">
 
     <div class="layui-layout layui-layout-admin">
-        <div class="layui-header">
-            <div class="layui-logo">自动传输管理后台</div>
+        <div class="layui-header header">
+            <a href="javascript:;" class="layui-logo" style="color:white">layui后台管理</a>
             <!-- 头部区域（可配合layui已有的水平导航） -->
             <ul class="layui-nav layui-layout-left">
-            </ul>
-            <ul class="layui-nav layui-layout-right">
-                <li class="layui-nav-item">
-                    <a href="javascript:;">
-                        <img src="~/images/Wolffy.jpg" class="layui-nav-img" />
-                        王银行
-                    </a>
-                    <dl class="layui-nav-child">
-                        <dd><a href="">基本资料</a></dd>
-                        <dd><a href="">安全设置</a></dd>
-                    </dl>
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" style="color:seashell">事无对错</a>
+                    @*<dl class="layui-nav-child">
+                <dd><a href="">事无对错</a></dd>
+                <dd><a href="">人分善恶</a></dd>
+        <dd><a href="">但行所愿</a></dd>
+        <dd><a href="">莫问前程</a></dd>
+            </dl>*@
                 </li>
-                <li class="layui-nav-item"><a href="">退了</a></li>
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" style="color:seashell">人分善恶</a>
+                </li>
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" style="color:seashell">但行所愿</a>
+                </li>
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;" style="color:seashell">莫问前程</a>
+                </li>
             </ul>
         </div>
 
         <div class="layui-side layui-bg-black">
             <div class="layui-side-scroll">
-                <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
                 <ul class="layui-nav layui-nav-tree" lay-filter="test">
-
                     <li class="layui-nav-item layui-nav-itemed">
-
                         <dl class="layui-nav-child">
                             <dd><a href="/Home/Index">首页</a></dd>
                             <dd><a href="/DataSource/DataSource">数据源设置</a></dd>
                             <dd><a href="/Organization/Organization">组织机构设置</a></dd>
                             <dd><a href="/SystemKey/SystemKey">系统变量设置</a></dd>
                             <dd><a href="/TaskPlan/TaskPlan">任务计划</a></dd>
-                            <dd><a href="/Logs/Index">计划日志</a></dd>
+                            <dd><a href="/Logs/Index">任务执行日志</a></dd>
                         </dl>
                     </li>
                 </ul>
@@ -52,7 +54,6 @@
         </div>
         <div class="layui-body">
             <main role="main" class="pb-3">
-
                 @RenderBody()
             </main>
         </div>
@@ -99,10 +100,9 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/layui.js"></script>
+    <script src="~/js/bank.js"></script>
     <script>
         function renderDone(res) {
-            var checkStatus = table.checkStatus('taskDtId')
-            console.log(checkStatus.data);
             console.log(res);
         }
 
@@ -125,6 +125,18 @@
 
         var tkguid = '';
         var table;
+
+
+        layui.use('element', function () {
+            var element = layui.element;
+
+            //一些事件监听
+            element.on('tab(demo)', function (data) {
+                console.log(data);
+            });
+        });
+
+       
         layui.use('table', function () {
             table = layui.table;
             //数据源设置表格
@@ -393,7 +405,7 @@
                 if (obj.event == 'add') {
                     var data = checkStatus.data;
                     //iframe层
-                    layer.open({
+                   layer.open({
                         type: 2,
                         title: '新增任务计划',
                         shadeClose: true,
@@ -602,6 +614,7 @@
                  var logsid = '';
                 if (obj.event === 'deleteSelect') {
                     var checkStatus = table.checkStatus('taskLogDtId');
+                   
                     for (i = 0; i < checkStatus.data.length; i++) {
                         if (logsid.length ==0) {
                             logsid = checkStatus.data[i].Id;
@@ -610,7 +623,7 @@
                         }
                        
                     };
-                  
+                    
                     layer.confirm('确定删除所选的' + checkStatus.data.length+ '条日志?', function (index) {
                         $.ajax({
                             url: "/Logs/LogDelete?logNum=" + logsid,
@@ -622,6 +635,8 @@
                                 if (dataResult.code == "0") {
                                     table.reload("taskLogDtId");
                                     layer.close(index);
+                                } else {
+                                    alert(dataResult.msg)
                                 }
                             }
                         });

@@ -34,7 +34,6 @@ namespace AutoSchedule.Dtos.Models
         /// </summary>
         public string IsStart { get; set; }
 
-
         /// <summary>
         /// 主关键字段
         /// </summary>

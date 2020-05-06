@@ -49,6 +49,10 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string>LogDelete(string logNum)
         {
+            if (string.IsNullOrEmpty(logNum))
+            {
+                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "请至少选择一条日志进行删除", code = "1" });
+            }
             if (logNum.Contains(","))
             {
                 var logs = logNum.Split(',');

@@ -39,7 +39,7 @@ namespace AutoSchedule.Common
         private IScheduler _scheduler;
         public readonly IJobFactory _iocJobfactory;
         private IJobDetail jobDetail;
-        private readonly SqlLiteContext _SqlLiteContext;
+        private  SqlLiteContext _SqlLiteContext;
         public Redis rds;
         private IConfiguration _Configuration;
         private string RedisConnectstring;
@@ -63,7 +63,7 @@ namespace AutoSchedule.Common
             }
             FullRedis.Register();
             _scope = serviceProvider.CreateScope();
-            _SqlLiteContext = _scope.ServiceProvider.GetService(typeof(SqlLiteContext)) as SqlLiteContext;
+            _SqlLiteContext = _scope.ServiceProvider.GetService<SqlLiteContext>();
             SystemKeys = _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => webSocketConfig.Contains(o.KeyName)).ToList();
             groupName = SystemKeys.Where(o => o.KeyName == "groupName").FirstOrDefault().KeyValue;
             appKey = SystemKeys.Where(o => o.KeyName == "appKey").FirstOrDefault().KeyValue;
@@ -92,6 +92,7 @@ namespace AutoSchedule.Common
             {
                 PrintStackTrace(e);
             }
+            _SqlLiteContext=null;
         }
         private void OnMessageHandler(object sender, JdEventArgs e)
         {
@@ -866,6 +867,7 @@ namespace AutoSchedule.Common
         {
             try
             {
+                _SqlLiteContext = _scope.ServiceProvider.GetService<SqlLiteContext>();
                 int Second = 0;
                 if (param.Count > 1 && _scheduler != null)
                 {
@@ -875,7 +877,7 @@ namespace AutoSchedule.Common
                 {
 
                     //计算出事件的秒数
-                    var ts = await _SqlLiteContext.TaskPlan.FirstOrDefaultAsync(o => o.GUID == param[i].ToString());
+                    var ts = await _SqlLiteContext.TaskPlan.AsNoTracking().FirstOrDefaultAsync(o => o.GUID == param[i].ToString());
                     switch (ts.FrequencyType)
                     {
                         case "0":
@@ -974,12 +976,14 @@ namespace AutoSchedule.Common
                 _logger.LogError($"开启失败，失败原因:{ex.Message}");
                 return await Task.FromResult($"开启失败，失败原因:{ex.Message}");
             }
+           
         }
 
         public async Task<string> Stop(string param = "")
         {
             try
             {
+                _SqlLiteContext = _scope.ServiceProvider.GetService<SqlLiteContext>();
                 var taskPlands = await _SqlLiteContext.TaskPlan.ToListAsync();
                 var tk = await _SqlLiteContext.TaskPlan.Where(o => o.GUID == param).FirstOrDefaultAsync();
                 if (!string.IsNullOrEmpty(param))
@@ -1052,7 +1056,7 @@ namespace AutoSchedule.Common
 
                 return ex.Message;
             }
-
+          
         }
 
     }

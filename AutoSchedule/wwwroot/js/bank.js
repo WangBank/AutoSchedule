@@ -17,6 +17,12 @@ function renderForm() {
     });
 }
 
+function formClose() {
+    var index = parent.layer.getFrameIndex(window.name);
+    parent.layer.close(index);//关闭当前页
+}
+
+
 layui.use(['form', 'layedit', 'laydate'], function () {
     var form = layui.form
         , layer = layui.layer;

@@ -72,13 +72,14 @@
             <div class="layui-input-block">
                 <button type="button" class="layui-btn" lay-filter="SqlHelper" lay-submit="">测试连接</button>
                 <button type="button" class="layui-btn" lay-filter="enSure" lay-submit="">确定</button>
-                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                <button type="reset" class="layui-btn" onclick="formClose()">取消</button>
             </div>
         </div>
     </form>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/layui.js"></script>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script src="~/js/bank.js"></script>
+
     <script type="text/javascript">
         $(function () {
             $("#select").val("@Model.DBType");

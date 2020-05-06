@@ -20,7 +20,7 @@
     </fieldset>
 
     <form class="layui-form">
-       
+
         <div class="layui-form-item" hidden="hidden">
             <label class="layui-form-label">guid</label>
             <div class="layui-input-block">
@@ -90,14 +90,13 @@
         <div class="layui-form-item">
             <div class="layui-input-block">
                 <button type="button" class="layui-btn" lay-submit="" lay-filter="enSure">提交</button>
-                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                <button type="reset" class="layui-btn" onclick="formClose()">取消</button>
             </div>
         </div>
     </form>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/layui.js"></script>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script src="~/js/bank.js"></script>
     <script type="text/javascript">
         layui.use(['form', 'layedit', 'laydate'], function () {
             var form = layui.form
