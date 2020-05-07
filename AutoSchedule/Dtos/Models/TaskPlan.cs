@@ -1,13 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FreeSql.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace AutoSchedule.Dtos.Models
 {
+    [Table(Name = "TaskPlan")]
     public class TaskPlan
     {
         /// <summary>
         /// guid
         /// </summary>
         [Key]
+        [Column(IsIdentity = true, IsPrimary = true)]
         public string GUID { get; set; }
 
         /// <summary>
@@ -55,12 +58,14 @@ namespace AutoSchedule.Dtos.Models
 
     }
 
+    [Table(Name = "TaskPlanRelation")]
     public class TaskPlanDetail
     {
         /// <summary>
         /// guid
         /// </summary>
         [Key]
+        [Column(IsIdentity = true, IsPrimary = true)]
         public string GUID { get; set; }
 
         public string TaskPlanGuid { get; set; }

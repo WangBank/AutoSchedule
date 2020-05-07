@@ -9,20 +9,18 @@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body class="main_body">
-
     <div class="layui-layout layui-layout-admin">
         <div class="layui-header header">
-            <a href="javascript:;" class="layui-logo" style="color:white">layui后台管理</a>
-            <!-- 头部区域（可配合layui已有的水平导航） -->
+            <a href="javascript:;" class="layui-logo" style="color:white">AutoSchedule</a>
             <ul class="layui-nav layui-layout-left">
                 <li class="layui-nav-item layui-this">
                     <a href="javascript:;" style="color:seashell">事无对错</a>
-                    @*<dl class="layui-nav-child">
-                <dd><a href="">事无对错</a></dd>
-                <dd><a href="">人分善恶</a></dd>
-        <dd><a href="">但行所愿</a></dd>
-        <dd><a href="">莫问前程</a></dd>
-            </dl>*@
+                    <dl class="layui-nav-child">
+                        <dd><a href="">事无对错</a></dd>
+                        <dd><a href="">人分善恶</a></dd>
+                        <dd><a href="">但行所愿</a></dd>
+                        <dd><a href="">莫问前程</a></dd>
+                    </dl>
                 </li>
                 <li class="layui-nav-item layui-this">
                     <a href="javascript:;" style="color:seashell">人分善恶</a>
@@ -61,24 +59,18 @@
     <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="add">新增</button>
-            @*<button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>*@
-            @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
         </div>
     </script>
 
     <script type="text/html" id="toolbardeleteLogs">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="deleteSelect">删除所选日志</button>
-            @*<button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>*@
-            @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
         </div>
     </script>
 
     <script type="text/html" id="toolbarDemoDetail">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="add">新增任务计划明细</button>
-            @*<button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>*@
-            @*<button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>*@
         </div>
     </script>
     <script type="text/html" id="barDemoTask">
@@ -102,41 +94,40 @@
     <script src="~/layui.js"></script>
     <script src="~/js/bank.js"></script>
     <script>
-        function renderDone(res) {
-            console.log(res);
-        }
-
         //首页的三个按钮
         $("#begin").click(beginPlan);
-        function beginPlan() {
-            $.get("/Home/BeginTaskPlan?guid=", function (dataResult) {
-                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
-                table.reload('taskDtId');
-            }, "json");
-
-        }
         $("#stop").click(stopPlan);
-        function stopPlan() {
-            $.get("/Home/StopTaskPlan", function (dataResult) {
-                $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(2000).fadeOut();
-                table.reload('taskDtId');
-            }, "json");
-        }
-
         var tkguid = '';
         var table;
-
-
         layui.use('element', function () {
             var element = layui.element;
-
-            //一些事件监听
             element.on('tab(demo)', function (data) {
-                console.log(data);
             });
         });
+        layui.use(['form', 'layedit', 'laydate'], function () {
+            var form = layui.form;
+            form.on('submit(enSure)', function (data) {
+                var dataDetail = JSON.stringify(data.field);
+                console.log(dataDetail);
+                $.ajax({
+                    url: "/TaskPlan/TaskPlanDetailAdd",
+                    async: true,
+                    type: "POST",
+                    dataType: "json",
+                    contentType: "application/json;charset=UTF-8",
+                    data: dataDetail,
+                    success: function (dataResult) {
+                        if (dataResult.code != "0") {
+                            alert(dataResult.msg);
+                        }
+                        var index = parent.layer.getFrameIndex(window.name);
+                        setTimeout(function () { parent.layer.close(index) }, 1000);
+                        setTimeout(function () { parent.location.reload() }, 100);
+                    }
+                });
 
-       
+            });
+        });
         layui.use('table', function () {
             table = layui.table;
             //数据源设置表格
@@ -288,9 +279,8 @@
                     elem: '#TaskPlanDetail'
                     , toolbar: '#toolbarDemoDetail'
                     , url: '/TaskPlan/TaskPlanDetailResult?guid=' + guid
-                    , cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+                    , cellMinWidth: 80
                     , cols: [[
-                        //{ type: 'radio' },
                         { field: 'guid', title: 'tkDetailGuid', sort: true, hide: true },
                         { field: 'dsGuid', title: '编号', sort: true },
                         { field: 'dsName', title: '名称', sort: true },
@@ -307,15 +297,13 @@
             table.on('toolbar(dataSource)', function (obj) {
                 var checkStatus = table.checkStatus(obj.config.id);
                 if (obj.event == 'add') {
-                    var data = checkStatus.data;
-                    //iframe层
                     layer.open({
                         type: 2,
                         title: '新增数据源',
                         shadeClose: true,
                         shade: 0.8,
                         area: ['100%', '100%'],
-                        content: '/DataSource/DataSourceAdd' //iframe的url
+                        content: '/DataSource/DataSourceAdd' 
                     });
                 }
             });
@@ -345,7 +333,7 @@
                         title: '编辑数据源',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/DataSource/DataSourceEdit?guid=' + data.GUID //iframe的url
                     });
                 }
@@ -355,14 +343,12 @@
             table.on('toolbar(SystemKey)', function (obj) {
                 var checkStatus = table.checkStatus(obj.config.id);
                 if (obj.event == 'add') {
-                    var data = checkStatus.data;
-                    //iframe层
                     layer.open({
                         type: 2,
                         title: '新增系统变量',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/SystemKey/SystemKeyAdd' //iframe的url
                     });
                 }
@@ -393,7 +379,7 @@
                         title: '编辑数据源',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/SystemKey/SystemKeyEdit?KeyName=' + data.KeyName //iframe的url
                     });
                 }
@@ -403,14 +389,12 @@
             table.on('toolbar(TaskPlan)', function (obj) {
                 var checkStatus = table.checkStatus(obj.config.id);
                 if (obj.event == 'add') {
-                    var data = checkStatus.data;
-                    //iframe层
                    layer.open({
                         type: 2,
                         title: '新增任务计划',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/TaskPlan/TaskPlanAdd' //iframe的url
                     });
                 }
@@ -438,14 +422,20 @@
                     });
                 }
                 else if (obj.event === 'edit') {
-                    layer.open({
-                        type: 2,
-                        title: '编辑任务计划',
-                        shadeClose: true,
-                        shade: 0.8,
-                        area: ['700px', '700px'],
-                        content: '/TaskPlan/TaskPlanEdit?GUID=' + data.GUID //iframe的url
-                    });
+                    if (data.State == '已开启') {
+                        alert('任务已经开启，请停止后编辑')
+                    }
+                    else {
+                        layer.open({
+                            type: 2,
+                            title: '编辑任务计划',
+                            shadeClose: true,
+                            shade: 0.8,
+                            area: ['100%', '100%'],
+                            content: '/TaskPlan/TaskPlanEdit?GUID=' + data.GUID //iframe的url
+                        });
+                    }
+                    
                 }
                 else if (obj.event === 'begin') {
                     $.ajax({
@@ -455,12 +445,8 @@
                         dataType: "json",
                         contentType: "application/json;charset=UTF-8",
                         success: function (dataResult) {
-                            //console.log($(obj.tr[0]).find("input"));
                             if (dataResult.code == '0') {
                                 data.State = '已开启';
-                                //$($(obj.tr[0]).find("button")[2]).attr("hidden", true);
-                                // $($(obj.tr[0]).find("button")[3]).attr("hidden", false);
-                                //console.log($($(obj.tr[0]).find("input")[3]));
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(3000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-false').show().delay(6000).fadeOut();
@@ -479,9 +465,6 @@
                         success: function (dataResult) {
                             if (dataResult.code == '0') {
                                 data.State = '未开启';
-                                //$($(obj.tr[0]).find("button")[3]).attr("hidden", true);
-                                //$($(obj.tr[0]).find("button")[2]).attr("hidden", false);
-                                //console.log($($(obj.tr[0]).find("input")[3]));
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
                             } else {
                                 $('.alert').html(dataResult.msg).addClass('alert-success').show().delay(4000).fadeOut();
@@ -494,10 +477,7 @@
 
             // 任务计划明细新增
             table.on('toolbar(TaskPlanDetail)', function (obj) {
-                var checkStatus = table.checkStatus(obj.config.id);
                 if (obj.event == 'add') {
-                    var data = checkStatus.data;
-                    //iframe层
                     layer.open({
                         type: 2,
                         title: '新增任务计划明细',
@@ -534,7 +514,7 @@
                         title: '编辑任务计划明细',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/TaskPlan/TaskPlanDetailEdit?GUID=' + data.tkDetailGuid //iframe的url
                     });
                 }
@@ -542,16 +522,13 @@
 
             // 组织机构新增
             table.on('toolbar(organization)', function (obj) {
-                var checkStatus = table.checkStatus(obj.config.id);
                 if (obj.event == 'add') {
-                    var data = checkStatus.data;
-                    //iframe层
                     layer.open({
                         type: 2,
                         title: '新增组织机构',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
+                        area: ['100%', '100%'],
                         content: '/Organization/OrgAdd' //iframe的url
                     });
                 }
@@ -582,8 +559,8 @@
                         title: '组织结构修改',
                         shadeClose: true,
                         shade: 0.8,
-                        area: ['700px', '700px'],
-                        content: '/Organization/OrgEdit?orgNum=' + data.orgNum //iframe的url
+                        area: ['100%', '100%'],
+                        content: '/Organization/OrgEdit?orgNum=' + data.orgNum 
                     });
                 }
             });
@@ -645,9 +622,6 @@
             });
         });
 
-    </script>
-    <script>
-                //JavaScript代码区域
     </script>
 </body>
 </html>

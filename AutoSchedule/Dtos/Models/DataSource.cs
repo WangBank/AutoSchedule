@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
+using FreeSql.DataAnnotations;
 namespace AutoSchedule.Dtos.Models
 {
+    [Table(Name = "OpenSql")]
     public class DataSource
     {
         [Key]
+        [Column(IsIdentity = true, IsPrimary = true)]
         public string GUID { get; set; }
 
         public string Name { get; set; }

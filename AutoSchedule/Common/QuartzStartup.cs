@@ -1,8 +1,9 @@
 ﻿using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.MessageModel;
+using AutoSchedule.Dtos.Models;
+using FreeSql;
 using Jdwl.Api.Message;
 using Jdwl.Api.Message.Protocol;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -28,7 +29,7 @@ namespace AutoSchedule.Common
         private string appKey;
         private string appSecret;
         private string wss_url;
-        private string[] webSocketConfig = { "appKey", "appSecret", "groupName", "wss_url" };
+
         private List<Dtos.Models.SystemKey> SystemKeys;
         private static JdMessageClient client;
         private static readonly object locker = new object();
@@ -39,16 +40,27 @@ namespace AutoSchedule.Common
         private IScheduler _scheduler;
         public readonly IJobFactory _iocJobfactory;
         private IJobDetail jobDetail;
-        private  SqlLiteContext _SqlLiteContext;
         public Redis rds;
         private IConfiguration _Configuration;
         private string RedisConnectstring;
         private readonly int RedisDb;
-        protected readonly IServiceScope _scope;
         IFreeSql _fsql;
-        public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory, IConfiguration configuration, IServiceProvider serviceProvider, IFreeSql fsql)
+        FreeSqlFactory _freeSqlFactory;
+        IFreeSql _sqliteFSql;
+        public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory, IConfiguration configuration, IServiceProvider serviceProvider, FreeSqlFactory freeSqlFactory)
         {
-            _fsql = fsql;
+            _freeSqlFactory = freeSqlFactory;
+            string SqlLiteConn = string.Empty;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                SqlLiteConn = configuration.GetConnectionString("SqlLiteLinux");
+            }
+            else
+            {
+                SqlLiteConn = configuration.GetConnectionString("SqlLiteWin");
+            }
+            _fsql = _freeSqlFactory.GetMessageOracle();
             this._logger = logger;
             //1、声明一个调度工厂
             this._schedulerFactory = schedulerFactory;
@@ -62,13 +74,7 @@ namespace AutoSchedule.Common
                 rds = new FullRedis(RedisConnectstring, redispwd, RedisDb);
             }
             FullRedis.Register();
-            _scope = serviceProvider.CreateScope();
-            _SqlLiteContext = _scope.ServiceProvider.GetService<SqlLiteContext>();
-            SystemKeys = _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => webSocketConfig.Contains(o.KeyName)).ToList();
-            groupName = SystemKeys.Where(o => o.KeyName == "groupName").FirstOrDefault().KeyValue;
-            appKey = SystemKeys.Where(o => o.KeyName == "appKey").FirstOrDefault().KeyValue;
-            appSecret = SystemKeys.Where(o => o.KeyName == "appSecret").FirstOrDefault().KeyValue;
-            wss_url = SystemKeys.Where(o => o.KeyName == "wss_url").FirstOrDefault().KeyValue;
+            _sqliteFSql = _freeSqlFactory.GetBaseSqlLite();
             try
             {
                 if (client == null)
@@ -79,11 +85,17 @@ namespace AutoSchedule.Common
                         {
                             if (_Configuration.GetConnectionString("WebSocketStatus") == "1")
                             {
+                                string[] webSocketConfig = { "appKey", "appSecret", "groupName", "wss_url" };
+                                SystemKeys = _sqliteFSql.Select<SystemKey>().Where(o => webSocketConfig.Contains(o.KeyName)).ToList();
+                                groupName = SystemKeys.Where(o => o.KeyName == "groupName").FirstOrDefault().KeyValue;
+                                appKey = SystemKeys.Where(o => o.KeyName == "appKey").FirstOrDefault().KeyValue;
+                                appSecret = SystemKeys.Where(o => o.KeyName == "appSecret").FirstOrDefault().KeyValue;
+                                wss_url = SystemKeys.Where(o => o.KeyName == "wss_url").FirstOrDefault().KeyValue;
                                 client = new JdMessageClient(appKey, appSecret, groupName);
                                 client.OnMessage += OnMessageHandler;
                                 Console.WriteLine("监听京东Wms，WebSocket连接成功!");
                                 client.Connect(wss_url);
-                            } 
+                            }
                         }
                     }
                 }
@@ -92,7 +104,6 @@ namespace AutoSchedule.Common
             {
                 PrintStackTrace(e);
             }
-            _SqlLiteContext=null;
         }
         private void OnMessageHandler(object sender, JdEventArgs e)
         {
@@ -137,15 +148,15 @@ namespace AutoSchedule.Common
                         CheckStockFeedbackMsg(e);
                         break;
                     case "rtwCompleteFeedbackMsg":
-                        
+
                         RtwCompleteFeedbackMsg(e);
                         break;
                     case "orderCancelFeedbackMsg":
-                        
+
                         OrderCancelFeedbackMsg(e);
                         break;
                     case "rtsCompleteFeedbackMsg":
-                        
+
                         RtsCompleteFeedbackMsg(e);
                         break;
 
@@ -634,10 +645,11 @@ namespace AutoSchedule.Common
 
                 foreach (var item in stock.payMethodList)
                 {
-                    paymethods.Add(new STOCKOUTPAYMETHOD_XH_JDWMS { 
+                    paymethods.Add(new STOCKOUTPAYMETHOD_XH_JDWMS
+                    {
                         AMOUNT = item.amount,
                         GUID = Guid.NewGuid().ToString("N"),
-                        MAINGUID =billguid ,
+                        MAINGUID = billguid,
                         METHOD = item.method
                     });
                 }
@@ -650,7 +662,7 @@ namespace AutoSchedule.Common
                         GUID = Guid.NewGuid().ToString("N"),
                         ITEMID = item.itemId,
                         ITEMNAME = item.itemName,
-                        MAINGUID =billguid ,
+                        MAINGUID = billguid,
                         QUANTITY = item.quantity,
                         TYPE = "1"
                     });
@@ -673,7 +685,7 @@ namespace AutoSchedule.Common
 
                 var insertDetailCount = _fsql.Insert(details).ExecuteAffrows();
                 var insertPMCount = _fsql.Insert(paymethods).ExecuteAffrows();
-                if (insertDetailCount+ insertPMCount == stock.receiveGoodsItemList.Count+ stock.rejectGoodsItemList.Count + stock.payMethodList.Count)
+                if (insertDetailCount + insertPMCount == stock.receiveGoodsItemList.Count + stock.rejectGoodsItemList.Count + stock.payMethodList.Count)
                 {
                     //调用存储过程WMS_JDWMS_STOCKINRETURN
 
@@ -789,7 +801,7 @@ namespace AutoSchedule.Common
                         SHOPGOODSNO = item.shopGoodsNo,
                         GUID = Guid.NewGuid().ToString("N"),
                         ITEMID = item.itemId,
-                        MAINGUID  =billguid ,
+                        MAINGUID = billguid,
                         ORDERLINENO = item.orderLineNo,
                         PLANQTY = item.planQty,
                         PLANOUTQTY = item.planOutQty
@@ -798,10 +810,11 @@ namespace AutoSchedule.Common
                 List<STOCKOUTBACKLOT_XH_JDWMS> lotlist = new List<STOCKOUTBACKLOT_XH_JDWMS>();
                 foreach (var item in stock.lotInfoList)
                 {
-                    lotlist.Add(new STOCKOUTBACKLOT_XH_JDWMS { 
+                    lotlist.Add(new STOCKOUTBACKLOT_XH_JDWMS
+                    {
                         GOODSNO = item.goodsNo,
                         BATCHQTY = item.batchQty,
-                        GUID = Guid.NewGuid().ToString("N"), 
+                        GUID = Guid.NewGuid().ToString("N"),
                         MAINGUID = billguid,
                         ORDERLINE = item.orderLine
                     });
@@ -809,43 +822,43 @@ namespace AutoSchedule.Common
 
                 var insertDetailCount = _fsql.Insert(stockoutList).ExecuteAffrows();
                 insertDetailCount = _fsql.Insert(lotlist).ExecuteAffrows();
-                    //调用存储过程WMS_JDWMS_STOCKINRETURN
-                    var BILLGUID = new OracleParameter
-                    {
-                        ParameterName = "BILLGUID",
-                        OracleDbType = OracleDbType.Varchar2,
-                        Direction = ParameterDirection.Input,
-                        Value = billguid,
-                        Size = 50
-                    };
+                //调用存储过程WMS_JDWMS_STOCKINRETURN
+                var BILLGUID = new OracleParameter
+                {
+                    ParameterName = "BILLGUID",
+                    OracleDbType = OracleDbType.Varchar2,
+                    Direction = ParameterDirection.Input,
+                    Value = billguid,
+                    Size = 50
+                };
 
-                    var RETURNMSG = new OracleParameter
-                    {
-                        ParameterName = "RETURNMSG",
-                        OracleDbType = OracleDbType.Varchar2,
-                        Direction = ParameterDirection.Output,
-                        Value = "",
-                        Size = 50
-                    };
+                var RETURNMSG = new OracleParameter
+                {
+                    ParameterName = "RETURNMSG",
+                    OracleDbType = OracleDbType.Varchar2,
+                    Direction = ParameterDirection.Output,
+                    Value = "",
+                    Size = 50
+                };
 
-                    var RETURNVALUE = new OracleParameter
-                    {
-                        ParameterName = "RETURNVALUE",
-                        OracleDbType = OracleDbType.Decimal,
-                        Direction = ParameterDirection.Output,
-                        Value = "",
-                        Size = 10
-                    };
+                var RETURNVALUE = new OracleParameter
+                {
+                    ParameterName = "RETURNVALUE",
+                    OracleDbType = OracleDbType.Decimal,
+                    Direction = ParameterDirection.Output,
+                    Value = "",
+                    Size = 10
+                };
 
-                    _fsql.Ado.ExecuteNonQuery(CommandType.StoredProcedure, "WMS_JDWMS_STOCKOUT", BILLGUID, RETURNMSG, RETURNVALUE);
-                    if (RETURNVALUE.Value.ToString() != "0")
-                    {
-                        _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传保存数据,执行存储过程错误", RETURNMSG.Value);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传保存数据,执行存储过程WMS_JDWMS_STOCKOUT,返回:", RETURNMSG.Value);
-                    }
+                _fsql.Ado.ExecuteNonQuery(CommandType.StoredProcedure, "WMS_JDWMS_STOCKOUT", BILLGUID, RETURNMSG, RETURNVALUE);
+                if (RETURNVALUE.Value.ToString() != "0")
+                {
+                    _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传保存数据,执行存储过程错误", RETURNMSG.Value);
+                }
+                else
+                {
+                    _logger.LogInformation("{EventId}:\r\n{result}", "出库完成回传保存数据,执行存储过程WMS_JDWMS_STOCKOUT,返回:", RETURNMSG.Value);
+                }
 
             }
             else
@@ -867,7 +880,6 @@ namespace AutoSchedule.Common
         {
             try
             {
-                _SqlLiteContext = _scope.ServiceProvider.GetService<SqlLiteContext>();
                 int Second = 0;
                 if (param.Count > 1 && _scheduler != null)
                 {
@@ -877,7 +889,7 @@ namespace AutoSchedule.Common
                 {
 
                     //计算出事件的秒数
-                    var ts = await _SqlLiteContext.TaskPlan.AsNoTracking().FirstOrDefaultAsync(o => o.GUID == param[i].ToString());
+                    var ts = await _sqliteFSql.Select<TaskPlan>().Where(o => o.GUID == param[i]).FirstAsync();
                     switch (ts.FrequencyType)
                     {
                         case "0":
@@ -958,8 +970,11 @@ namespace AutoSchedule.Common
                             }
 
                             ts.Status = "1";
-                            _SqlLiteContext.TaskPlan.Update(ts);
-                            await _SqlLiteContext.SaveChangesAsync();
+
+                            _sqliteFSql.Update<TaskPlan>()
+              .Set(a => a.Status, ts.Status)
+              .Where(a => a.GUID == ts.GUID)
+              .ExecuteAffrows();
                             jobKeys.Add(param[i].ToString(), jobDetail.Key);
                         }
 
@@ -976,18 +991,18 @@ namespace AutoSchedule.Common
                 _logger.LogError($"开启失败，失败原因:{ex.Message}");
                 return await Task.FromResult($"开启失败，失败原因:{ex.Message}");
             }
-           
+
         }
 
         public async Task<string> Stop(string param = "")
         {
             try
             {
-                _SqlLiteContext = _scope.ServiceProvider.GetService<SqlLiteContext>();
-                var taskPlands = await _SqlLiteContext.TaskPlan.ToListAsync();
-                var tk = await _SqlLiteContext.TaskPlan.Where(o => o.GUID == param).FirstOrDefaultAsync();
+                var taskPlands = await _sqliteFSql.Select<TaskPlan>().ToListAsync();
+
                 if (!string.IsNullOrEmpty(param))
                 {
+                    var tk = await _sqliteFSql.Select<TaskPlan>().Where(o => o.GUID == param).FirstAsync();
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
                         if (rds.ContainsKey(param))
@@ -1012,8 +1027,10 @@ namespace AutoSchedule.Common
                             {
                                 jobKeys.Remove(param);
                                 tk.Status = "0";
-                                _SqlLiteContext.TaskPlan.Update(tk);
-                                await _SqlLiteContext.SaveChangesAsync();
+                                _sqliteFSql.Update<TaskPlan>()
+             .Set(a => a.Status, tk.Status)
+             .Where(a => a.GUID == tk.GUID)
+             .ExecuteAffrows();
                                 return await Task.FromResult($"定时任务({ tk.Name})已结束");
                             }
 
@@ -1021,15 +1038,14 @@ namespace AutoSchedule.Common
                         else
                         {
                             tk.Status = "0";
-                            _SqlLiteContext.TaskPlan.Update(tk);
-                            await _SqlLiteContext.SaveChangesAsync();
+                            _sqliteFSql.Update<TaskPlan>()
+              .Set(a => a.Status, tk.Status)
+              .Where(a => a.GUID == tk.GUID)
+              .ExecuteAffrows();
                             return "还未开始，怎谈得上关闭呢？";
                         }
 
                     }
-
-
-
 
                 }
                 await _scheduler.Shutdown();
@@ -1044,8 +1060,10 @@ namespace AutoSchedule.Common
                     {
                         jobKeys.Remove(taskPlands[i].GUID);
                         taskPlands[i].Status = "0";
-                        _SqlLiteContext.TaskPlan.Update(taskPlands[i]);
-                        await _SqlLiteContext.SaveChangesAsync();
+                        _sqliteFSql.Update<TaskPlan>()
+             .Set(a => a.Status, taskPlands[i].Status)
+             .Where(a => a.GUID == taskPlands[i].GUID)
+             .ExecuteAffrows();
                     }
                 }
 
@@ -1056,7 +1074,7 @@ namespace AutoSchedule.Common
 
                 return ex.Message;
             }
-          
+
         }
 
     }

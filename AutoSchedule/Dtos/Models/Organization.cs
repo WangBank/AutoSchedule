@@ -1,9 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FreeSql.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace AutoSchedule.Dtos.Models
 {
+    [Table(Name = "OrgSetting")]
     public class Organization
     {
+        [Column(IsIdentity = true, IsPrimary = true)]
         [Key]
         public string CODE { get; set; }
 

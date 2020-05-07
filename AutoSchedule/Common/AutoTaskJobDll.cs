@@ -29,65 +29,49 @@ namespace AutoSchedule.Common
     public class AutoTaskJobDll : IJob
     {
         private ILogger<AutoTaskJobDll> _logger;
-        private SqlLiteContext _SqlLiteContext;
-        public ExecSqlHelper _SqlHelper;
         public IHttpClientFactory _httpClientFactory;
-       
-        public AutoTaskJobDll(ILogger<AutoTaskJobDll> logger, SqlLiteContext SqlLiteContext, IHttpClientFactory httpClientFactory)
+        public FreeSqlFactory _freeSqlFactory;
+        public AutoTaskJobDll(ILogger<AutoTaskJobDll> logger, IHttpClientFactory httpClientFactory, FreeSqlFactory freeSqlFactory)
         {
             _logger = logger;
-            _SqlLiteContext = SqlLiteContext;
             _httpClientFactory = httpClientFactory;
+            _freeSqlFactory = freeSqlFactory;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            
             CommonHelper commonHelper = new CommonHelper();
-           
+            var _SqlLiteContext = _freeSqlFactory.GetBaseSqlLite();
             JobKey key = context.JobDetail.Key;
-                JobDataMap dataMap = context.JobDetail.JobDataMap;
-                string jobSays = dataMap.GetString("guid");
-                //从asp netcore中重新获取sqlcontext
-               // _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
-                var taskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
-                _logger.LogInformation("{EventId}:开始执行！", taskPlan.Name);
-                var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();
+            JobDataMap dataMap = context.JobDetail.JobDataMap;
+            string jobSays = dataMap.GetString("guid");
+            var TaskPlan = await _SqlLiteContext.Select<TaskPlan>().Where(o => o.GUID == jobSays).FirstAsync();
+                _logger.LogInformation("{EventId}:开始执行！", TaskPlan.Name);
                 string orgCode = TaskPlan.OrgCode;
-                var OrgSetting = await _SqlLiteContext.OrgSetting.AsNoTracking().Where(o => o.CODE == orgCode).FirstOrDefaultAsync();
+                var OrgSetting = await _SqlLiteContext.Select<Organization>().Where(o => o.CODE == orgCode).FirstAsync();
                 string connectString = OrgSetting.ConnectingString;
                 string orgType = string.Empty;
             try
             {
                 switch (OrgSetting.DBType)
                 {
-                    //Oracle 0
-                    //SqlServer  1
-                    //MySql  2
-                    //Sqlite  3
                     case "0":
                         orgType = DBTypeEnum.Oracle.ToString();
                         break;
-
                     case "1":
                         orgType = DBTypeEnum.SqlServer.ToString();
                         break;
-
                     case "2":
                         orgType = DBTypeEnum.MySql.ToString();
                         break;
-
                     case "3":
                         orgType = DBTypeEnum.Sqlite.ToString();
                         break;
-
                     default:
                         break;
                 }
-                _SqlHelper = new ExecSqlHelper(connectString, orgType);
-
-                //List<DataSource> dataSources = new List<DataSource>();
-                var taskPlanList = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == jobSays).ToListAsync();
+                var _SqlHelper = new ExecSqlHelper(connectString, orgType);
+                var taskPlanList = await _SqlLiteContext.Select<TaskPlanDetail>().Where(o => o.TaskPlanGuid == jobSays).ToListAsync();
                 string[] openSqls = new string[taskPlanList.Count];
                 for (int i = 0; i < openSqls.Length; i++)
                 {
@@ -95,9 +79,7 @@ namespace AutoSchedule.Common
                 }
                 string dataJsonData = string.Empty;
                 string dataJsonDataDetail = string.Empty;
-                //string taskApiUrl = _Configuration.GetSection("TaskApiUrls").GetSection("TaskApiUrl").Value;
                 string paramJson = string.Empty;
-                ResponseCommon responseCommon = new ResponseCommon();
                 string groupSql = string.Empty;
                 string[] sqlStrings;
                 string sqlString = string.Empty;
@@ -105,10 +87,9 @@ namespace AutoSchedule.Common
                 string afterFalse = string.Empty;
                 string MainKey = string.Empty;
                 string MainKeyValue = string.Empty;
-                var systemKes = await _SqlLiteContext.SystemKeys.AsNoTracking().Where(o => o.KeyName != "").ToListAsync();
+                var systemKes = await _SqlLiteContext.Select<SystemKey>().Where(o => o.KeyName != "").ToListAsync();
                 //计划中的数据源
-                var dataSource = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => openSqls.Contains(o.GUID)  && o.IsStart == "1").ToListAsync();
-                //反射dll
+                var dataSource = await _SqlLiteContext.Select<DataSource>().Where(o => openSqls.Contains(o.GUID)  && o.IsStart == "1").ToListAsync();
                 string startupPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string dllPath = string.Empty;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -126,19 +107,16 @@ namespace AutoSchedule.Common
                     MainKey = dataSource[j].MainKey;
                     groupSql = dataSource[j].GroupSqlString;
                     sqlString = dataSource[j].SqlString;
-
                     foreach (var item in systemKes)
                     {
                         groupSql = groupSql.Replace($"[{item.KeyName}]", item.KeyValue);
                         sqlString = sqlString.Replace($"[{item.KeyName}]", item.KeyValue);
                     }
-
                     List<Datas> datas = new List<Datas>();
-
                     if (!groupSql.Contains(MainKey))
                     {
                         //主数据源中不包含关键字MainKey
-                        _logger.LogError("{EventId}:\r\n主数据源中不包含关键字{MainKey}", taskPlan.Name, MainKey);
+                        _logger.LogError("{EventId}:\r\n主数据源中不包含关键字{MainKey}", TaskPlan.Name, MainKey);
                         return;
                     }
                     else
@@ -147,10 +125,9 @@ namespace AutoSchedule.Common
                         var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
                         if (dataMaindt.Rows.Count==0)
                         {
-                            _logger.LogError("{EventId}:\r\n查询无数据：{groupSql}", taskPlan.Name, groupSql);
+                            _logger.LogError("{EventId}:\r\n查询无数据：{groupSql}", TaskPlan.Name, groupSql);
                             return;
                         }
-                        //MainKeyValue = dataMaindt.Rows[]
                         for (int h = 0; h < dataMaindt.Rows.Count; h++)
                         {
                             List<DataTable> dataTables = new List<DataTable>();
@@ -165,53 +142,30 @@ namespace AutoSchedule.Common
                             {
                                 dataTables.Add(await _SqlHelper.GetDataTableAsync(sqlStrings[k]));
                             }
-                            
-                            // var dataDetaildt = await _SqlHelper.GetDataTableAsync(sqlString);
-                            var sss = dataMaindt.Rows[h];
                             maindetail.Rows.Clear();
                             maindetail.ImportRow(dataMaindt.Rows[h]);
                             datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
                         }
                         JobPara jobPara = new JobPara();
                         string allResult =  upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas,out string result);
-                       
-                        //记录日志
                         if (result == "0")
                         {
-                            var afterS = await _SqlHelper.ExecSqlAsync(afterSuccess);
-
-                            //记录日志
-                            _logger.LogInformation("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", taskPlan.Name, allResult, dataSource[j].Name, afterSuccess);
+                            await _SqlHelper.ExecSqlAsync(afterSuccess);
+                            _logger.LogInformation("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", TaskPlan.Name, allResult, dataSource[j].Name, afterSuccess);
                         }
                         else
                         {
-                            var afterF = await _SqlHelper.ExecSqlAsync(afterFalse);
-                            //记录日志
-                            _logger.LogError("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", taskPlan.Name,result, dataSource[j].Name, afterFalse);
+                           await _SqlHelper.ExecSqlAsync(afterFalse);
+                            _logger.LogError("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name,result, dataSource[j].Name, afterFalse);
                         }
                     }
                 }
             }
-
             catch (Exception ex)
             {
-                _logger.LogError("{EventId}错误信息:{ex.Message},{ex.StackTrace}", taskPlan.Name, ex.Message,ex.StackTrace);
-               
+                _logger.LogError("{EventId}错误信息:{ex.Message},{ex.StackTrace}", TaskPlan.Name, ex.Message,ex.StackTrace);
                 return;
             }
-            finally
-            {
-               await _SqlHelper.DisposeAsync();
-            }
-        }
-
-        public async Task<string> AsyncTesr()
-        {
-            await Task.Run(() =>
-            {
-                Thread.Sleep(5000);
-            });
-            return "1";
         }
     }
 }

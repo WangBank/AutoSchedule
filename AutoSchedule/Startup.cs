@@ -24,15 +24,10 @@ namespace AutoSchedule
 {
     public class Startup
     {
-        public IFreeSql Fsql { get; }
+       
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            string MessageDb = Configuration.GetConnectionString("MessageDb");
-            Fsql = new FreeSqlBuilder()
-                     .UseConnectionString(DataType.Oracle, MessageDb)
-                     .UseAutoSyncStructure(false)
-                     .Build();
         }
         public IConfiguration Configuration { get; }
 
@@ -50,7 +45,6 @@ namespace AutoSchedule
                 SqlLiteConn = Configuration.GetConnectionString("SqlLiteWin");
             }
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(SqlLiteConn), ServiceLifetime.Scoped);
-            services.AddSingleton<IFreeSql>(Fsql);
             services.AddHttpClient();
             //自定义注册服务
             services.AddExtendService(configure =>
@@ -60,9 +54,7 @@ namespace AutoSchedule
                 configure.UseISchedulerFactory();
                 configure.UseQuartzStartup();
             });
-
-            services.AddScoped<IScopeTest, Operation>();
-
+            services.AddSingleton<FreeSqlFactory>();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             services.AddControllers().AddJsonOptions(options =>
             {
@@ -80,7 +72,6 @@ namespace AutoSchedule
 
         private void getService()
         {
-            //启动的时候清空Redis
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 var quartzStartup = (QuartzStartup)GetContext.ServiceProvider.GetService(typeof(QuartzStartup));
