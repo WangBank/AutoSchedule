@@ -33,7 +33,6 @@ namespace AutoSchedule.Controllers
         public IActionResult Index()
         {
             //清空一下无用日志
-            _SqlLiteContext.Database.ExecuteSqlRaw("UPDATE TaskPlan  SET Status = '0' where Status = '1'");
             _SqlLiteContext.Database.ExecuteSqlRaw($"DELETE FROM Logs WHERE EventId is null or EventId=''");
             _SqlLiteContext.SaveChanges();
             return View();
@@ -66,13 +65,13 @@ namespace AutoSchedule.Controllers
                 string msg = await _quartzStartup.Start(guidhssh);
                 if (msg !="0")
                 {
-                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = msg, code = "-1" });
+                    return new ResponseCommon { msg = msg, code = "-1" }.ToJsonCommon();
                 }
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg= "定时任务已开启！", code = "0" });
+                return new ResponseCommon { msg= "定时任务已开启！", code = "0" }.ToJsonCommon();
             }
             catch (SchedulerException se)
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = se.ToString(), code = "-1" });
+                return new ResponseCommon { msg = se.ToString(), code = "-1" }.ToJsonCommon();
             }
         }
 
@@ -81,11 +80,11 @@ namespace AutoSchedule.Controllers
         {
             try
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = await _quartzStartup.Stop(guid), code = "0" });
+                return new ResponseCommon { msg = await _quartzStartup.Stop(guid), code = "0" }.ToJsonCommon();
             }
             catch (SchedulerException se)
             {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = se.ToString(), code = "-1" });
+                return new ResponseCommon { msg = se.ToString(), code = "-1" }.ToJsonCommon();
             }
         }
 

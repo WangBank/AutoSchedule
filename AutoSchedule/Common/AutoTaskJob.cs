@@ -28,14 +28,6 @@ namespace AutoSchedule.Common
         private SqlLiteContext _SqlLiteContext;
         public ExecSqlHelper _SqlHelper;
         public IHttpClientFactory _httpClientFactory;
-        //public IConfiguration _Configuration;
-        //public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IConfiguration configuration)
-        //{
-        //    _logger = logger;
-        //    _SqlLiteContext = SqlLiteContext;
-        //    _Configuration = configuration;
-        //    _services = services;
-        //}
         public AutoTaskJob(ILogger<AutoTaskJob> logger, SqlLiteContext SqlLiteContext, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
@@ -46,12 +38,11 @@ namespace AutoSchedule.Common
         public async Task Execute(IJobExecutionContext context)
         {
 
-            CommonHelper commonHelper = new CommonHelper();
+             
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
                 string jobSays = dataMap.GetString("guid");
-                //从asp netcore中重新获取sqlcontext
-               // _SqlLiteContext = (SqlLiteContext)GetContext.ServiceProvider.GetService(typeof(SqlLiteContext));
+               
                 var taskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().SingleOrDefaultAsync(o => o.GUID == jobSays);
                 _logger.LogDebug("{TaskName}({EventId}):开始执行！", taskPlan.Name, jobSays);
                 var TaskPlan = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == jobSays).FirstOrDefaultAsync();
@@ -159,7 +150,7 @@ namespace AutoSchedule.Common
                             Data = datas
                         });
 
-                        string result = await commonHelper.HttpPostAsync(TaskPlan.DllOrUrl, paramJson,client);
+                        string result = await CommonHelper.HttpPostAsync(TaskPlan.DllOrUrl, paramJson,client);
                         _logger.LogInformation("{TaskName}({EventId}):\r\n接口地址:{TaskPlan.TaskUrl},\r\n入参Json{paramJson},\r\n返回：{result}", taskPlan.Name, jobSays, TaskPlan.DllOrUrl, paramJson, result);
                         responseCommon = (ResponseCommon)System.Text.Json.JsonSerializer.Deserialize(result, typeof(ResponseCommon));
                         //记录日志

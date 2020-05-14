@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -9,9 +10,9 @@ using System.Web;
 
 namespace AutoSchedule.Common
 {
-    public class CommonHelper
+    public static  class CommonHelper
     {
-        public async Task<string> HttpPostAsync(string strURL, string paramsStr, HttpClient client,string xaccesstoken = "" )
+        public static async Task<string> HttpPostAsync(string strURL, string paramsStr, HttpClient client,string xaccesstoken = "" )
         {
             try
             {
@@ -42,7 +43,7 @@ namespace AutoSchedule.Common
             }
         }
 
-        public async Task<string> HttpGetAsync(string strURL, string xaccesstoken = "")
+        public static async Task<string> HttpGetAsync(string strURL, string xaccesstoken = "")
         {
             try
             {
@@ -70,7 +71,7 @@ namespace AutoSchedule.Common
         }
 
 
-        public Dictionary<string, string> GetQueryMap(string queryString, string charset)
+        public static Dictionary<string, string> GetQueryMap(string queryString, string charset)
         {
             Dictionary<string, string> queryMap = new Dictionary<string, string>();
             if (!string.IsNullOrEmpty(queryString))
@@ -95,6 +96,8 @@ namespace AutoSchedule.Common
             }
             return queryMap;
         }
+
+       
        
     }
 }

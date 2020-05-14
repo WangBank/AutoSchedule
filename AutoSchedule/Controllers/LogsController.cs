@@ -26,6 +26,7 @@ namespace AutoSchedule.Controllers
             return View();
         }
 
+
         [HttpGet]
         public async Task<LogsModelData> LogsResult(int page,int limit,string value = "")
         {

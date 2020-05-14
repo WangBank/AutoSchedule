@@ -40,7 +40,7 @@ namespace AutoSchedule.Common
 
         public async Task Execute(IJobExecutionContext context)
         {
-            CommonHelper commonHelper = new CommonHelper();
+            
             var _SqlLiteContext = _freeSqlFactory.GetBaseSqlLite();
             JobKey key = context.JobDetail.Key;
             JobDataMap dataMap = context.JobDetail.JobDataMap;
@@ -155,8 +155,8 @@ namespace AutoSchedule.Common
                         }
                         else
                         {
-                           await _SqlHelper.ExecSqlAsync(afterFalse);
-                            _logger.LogError("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name,result, dataSource[j].Name, afterFalse);
+                            await _SqlHelper.ExecSqlAsync(afterFalse);
+                            _logger.LogError("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name, allResult, dataSource[j].Name, afterFalse);
                         }
                     }
                 }

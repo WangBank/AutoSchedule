@@ -13,13 +13,10 @@
         <div class="layui-header header">
             <a href="javascript:;" class="layui-logo" style="color:white">AutoSchedule</a>
             <ul class="layui-nav layui-layout-left">
-                <li class="layui-nav-item layui-this">
+                @*<li class="layui-nav-item layui-this">
                     <a href="javascript:;" style="color:seashell">事无对错</a>
                     <dl class="layui-nav-child">
                         <dd><a href="">事无对错</a></dd>
-                        <dd><a href="">人分善恶</a></dd>
-                        <dd><a href="">但行所愿</a></dd>
-                        <dd><a href="">莫问前程</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item layui-this">
@@ -27,10 +24,10 @@
                 </li>
                 <li class="layui-nav-item layui-this">
                     <a href="javascript:;" style="color:seashell">但行所愿</a>
-                </li>
-                <li class="layui-nav-item layui-this">
+                </li>*@
+                @*<li class="layui-nav-item layui-this">
                     <a href="javascript:;" style="color:seashell">莫问前程</a>
-                </li>
+                </li>*@
             </ul>
         </div>
 
@@ -140,7 +137,7 @@
                 , cols: [[
                     //{ type: 'radio' },
                     { field: 'GUID', title: '编号', sort: true },
-                    { field: 'Name', title: '名称', sort: true },
+                    { field: 'Name', title: '名称', width: 240, sort: true },
                     { field: 'GroupSqlString', title: '分组数据源', sort: true },
                     { field: 'SqlString', title: '数据源', sort: true },
                     { field: 'AfterSqlString', title: '调用正常后执行语句', sort: true },
@@ -190,6 +187,7 @@
                     , { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 178 }
                 ]]
                 , page: true
+                , limit: 90
             });
 
             //任务计划表格
@@ -209,10 +207,10 @@
                     { field: 'WorkType', title: '处理数据类型', sort: true },
                     { field: 'DllOrUrl', title: 'dll或api地址', sort: true },
                     {
-                        field: 'State', title: '任务状态', sort: true, templet: function (d) {
-                            if (d.State == "已开启") {
+                        field: 'Status', title: '任务状态', sort: true, templet: function (d) {
+                            if (d.Status == "已开启") {
                                 return "<font color='green' size='3'> <b>已开启</b></font>";
-                            } else if (d.State == "未开启") {
+                            } else if (d.Status == "未开启") {
                                 return "<font color='red' size='3'> <b>未开启</b></font>";
                             }
                         }, width: 120
@@ -323,6 +321,8 @@
                                 if (dataResult.code == "0") {
                                     obj.del();
                                     layer.close(index);
+                                } else {
+                                    alert(dataResult.msg)
                                 }
                             }
                         });
@@ -405,6 +405,9 @@
                 //console.log(obj);
                 var data = obj.data;
                 if (obj.event === 'del') {
+                    if (data.Status == '已开启') {
+                        alert('任务已经开启，请停止后删除')
+                    }
                     layer.confirm('真的删除行么', function (index) {
                         $.ajax({
                             url: "/TaskPlan/TaskPlanDelete?GUID=" + data.GUID,
@@ -422,7 +425,7 @@
                     });
                 }
                 else if (obj.event === 'edit') {
-                    if (data.State == '已开启') {
+                    if (data.Status == '已开启') {
                         alert('任务已经开启，请停止后编辑')
                     }
                     else {

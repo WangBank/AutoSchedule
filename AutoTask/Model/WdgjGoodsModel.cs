@@ -156,4 +156,71 @@ namespace AutoTask.Model
         public string returninfo { get; set; }
         public List<SupplierDatainfo> datalist { get; set; }
     }
+
+
+
+    public class SelectGoods
+    {
+        public SelectGoodsResponse response { get; set; }
+    }
+
+    public class SelectGoodsResponse
+    {
+        public SelectGoodsContent content { get; set; }
+        public int code { get; set; }
+    }
+
+    public class SelectGoodsContent
+    {
+        public string code { get; set; }
+        public string flag { get; set; }
+        public SelectGoodsItem[] items { get; set; }
+        public string message { get; set; }
+        public int totalLines { get; set; }
+    }
+
+    public class SelectGoodsItem
+    {
+        public string abnormal { get; set; }
+        public string barCode { get; set; }
+        public string brandName { get; set; }
+        public string categoryId { get; set; }
+        public string cheapGift { get; set; }
+        public string color { get; set; }
+        public string consumables { get; set; }
+        public string customMade { get; set; }
+        public string expensive { get; set; }
+        public float grossWeight { get; set; }
+        public string health { get; set; }
+        public float height { get; set; }
+        public string humidity { get; set; }
+        public string imported { get; set; }
+        public string isBatchMgmt { get; set; }
+        public string isFragile { get; set; }
+        public string isSNMgmt { get; set; }
+        public string isShelfLifeMgmt { get; set; }
+        public string isValid { get; set; }
+        public string itemCode { get; set; }
+        public string itemId { get; set; }
+        public string itemName { get; set; }
+        public float length { get; set; }
+        public string liquid { get; set; }
+        public string luxury { get; set; }
+        public string mixedBatch { get; set; }
+        public string mnemonic { get; set; }
+        public string movable { get; set; }
+        public float netWeight { get; set; }
+        public string odor { get; set; }
+        public string precious { get; set; }
+        public string quality { get; set; }
+        public string sample { get; set; }
+        public string sellerGoodsSign { get; set; }
+        public string service3g { get; set; }
+        public string sex { get; set; }
+        public string shortName { get; set; }
+        public string stockUnitCode { get; set; }
+        public string temperature { get; set; }
+        public float volume { get; set; }
+        public float width { get; set; }
+    }
 }

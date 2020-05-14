@@ -1,4 +1,5 @@
-﻿using AutoSchedule.Dtos.Data;
+﻿using AutoSchedule.Common;
+using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,12 @@ namespace AutoSchedule.Controllers
     {
         private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<DataSourceController> _logger;
-
-        public DataSourceController(ILogger<DataSourceController> logger, SqlLiteContext SqlLiteContext)
+        private IFreeSql _sqliteFSql;
+        public DataSourceController(ILogger<DataSourceController> logger, SqlLiteContext SqlLiteContext, FreeSqlFactory freeSqlFactory)
         {
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
+            _sqliteFSql = freeSqlFactory.GetBaseSqlLite();
         }
 
         public IActionResult DataSource()
@@ -28,6 +30,7 @@ namespace AutoSchedule.Controllers
 
         public async Task<IActionResult> DataSourceEdit(string guid)
         {
+
             var ds = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == guid).FirstOrDefaultAsync();
             return View(ds);
         }
@@ -35,6 +38,23 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> DataSourceEdit([FromBody]DataSource dataSourceAddIn)
         {
+            var nowRunningTP = await _sqliteFSql.Select<TaskPlan>().Where(o => o.Status == "1").ToListAsync();
+            List<string> tPGuids = new List<string>();
+            foreach (var item in nowRunningTP)
+            {
+                tPGuids.Add(item.GUID);
+            }
+
+            var nowRuningTPRE = await _sqliteFSql.Select<TaskPlanDetail>().Where(o => tPGuids.Contains(o.TaskPlanGuid) && o.OpenSqlGuid == dataSourceAddIn.GUID).ToListAsync();
+
+            if (nowRuningTPRE.Count != 0)
+            {
+                tPGuids.Clear();
+                return new ResponseCommon { msg = "此数据源正在执行，不允许修改！", code = "1" }.ToJsonCommon();
+            }
+
+
+
             var dsUpdate = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
             dsUpdate.AfterSqlString = dataSourceAddIn.AfterSqlString;
             dsUpdate.AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2;
@@ -123,8 +143,30 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> DataSourceDelete(string GUID)
         {
+            //如果当前删除的在正在运行的任务中，不允许删除
+            //当前正在运行的任务
+            var nowRunningTP =await _sqliteFSql.Select<TaskPlan>().Where(o => o.Status == "1").ToListAsync();
+            List<string> tPGuids = new List<string>();
+            foreach (var item in nowRunningTP)
+            {
+                tPGuids.Add(item.GUID);
+            }
+
+            var nowRuningTPRE = await _sqliteFSql.Select<TaskPlanDetail>().Where(o => tPGuids.Contains(o.TaskPlanGuid) && o.OpenSqlGuid==GUID ).ToListAsync();
+
+            if (nowRuningTPRE.Count !=0)
+            {
+                tPGuids.Clear();
+                return new ResponseCommon { msg = "此数据源正在执行，不允许删除！", code = "1" }.ToJsonCommon();
+            }
+
             var dsdelete = _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == GUID).FirstOrDefault();
+            _sqliteFSql.Delete<TaskPlanDetail>()
+                .Where(b => b.OpenSqlGuid == GUID)
+                .ExecuteAffrows();
+
             _SqlLiteContext.OpenSql.Remove(dsdelete);
+
             if (await _SqlLiteContext.SaveChangesAsync() > 0)
             {
                 return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });

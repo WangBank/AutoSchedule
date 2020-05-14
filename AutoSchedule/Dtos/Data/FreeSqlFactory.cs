@@ -15,19 +15,7 @@ namespace AutoSchedule.Dtos.Data
         {
             Configuration = configuration;
         }
-        private IFreeSql _messageOracle { get; set; }
-        public IFreeSql GetMessageOracle()
-        {
-            if (_messageOracle == null)
-            {
-                _messageOracle = new FreeSqlBuilder()
-                  .UseConnectionString(DataType.Oracle, Configuration.GetConnectionString("MessageDb"))
-                  .UseAutoSyncStructure(false)
-                  .Build();
-            }
-            return _messageOracle;
-        }
-
+       
         public List<IFreeSql> freeSqls { get; set; }
         private IFreeSql _baseSqlLite { get; set; }
         public IFreeSql GetBaseSqlLite()

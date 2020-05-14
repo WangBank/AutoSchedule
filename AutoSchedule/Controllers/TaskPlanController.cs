@@ -15,14 +15,16 @@ namespace AutoSchedule.Controllers
 {
     public class TaskPlanController : Controller
     {
+        private IFreeSql _sqliteFSql;
         private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<TaskPlanController> _logger;
         private QuartzStartup _quartzStartup;
-        public TaskPlanController(ILogger<TaskPlanController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup)
+        public TaskPlanController(ILogger<TaskPlanController> logger, SqlLiteContext SqlLiteContext, QuartzStartup quartzStartup, FreeSqlFactory freeSqlFactory)
         {
             _SqlLiteContext = SqlLiteContext;
             _logger = logger;
             _quartzStartup = quartzStartup;
+            _sqliteFSql = freeSqlFactory.GetBaseSqlLite();
         }
 
         public IActionResult TaskPlan()
@@ -43,7 +45,7 @@ namespace AutoSchedule.Controllers
             string WorkType = string.Empty;
             foreach (var item in skey)
             {
-                string state = string.Empty;
+                string Status = string.Empty;
                 if (string.IsNullOrEmpty(item.OrgCode))
                 {
                     OrgName = "";
@@ -72,22 +74,22 @@ namespace AutoSchedule.Controllers
 
                     if (_quartzStartup.rds.ContainsKey(item.GUID))
                     {
-                        state = "已开启";
+                        Status = "已开启";
                     }
                     else
                     {
-                        state = "未开启";
+                        Status = "未开启";
                     }
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     if (item.Status == "1")
                     {
-                        state = "已开启";
+                        Status = "已开启";
                     }
                     else
                     {
-                        state = "未开启";
+                        Status = "未开启";
                     }
                 }
 
@@ -104,7 +106,7 @@ namespace AutoSchedule.Controllers
                 }
 
                 FrequencyName = $"每隔{item.Frequency + FrequencyType}执行一次任务";
-                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, Frequency = FrequencyName, DllOrUrl = item.DllOrUrl,State = state,WorkType = WorkType });
+                data.Add(new TaskPlanModel { GUID = item.GUID, CODE = item.CODE, Name = item.Name, OrgCode = OrgName, Frequency = FrequencyName, DllOrUrl = item.DllOrUrl, Status = Status, WorkType = WorkType });
             }
 
 
@@ -181,6 +183,11 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> TaskPlanEdit([FromBody]TaskPlan TaskPlanIn)
         {
+            if (_sqliteFSql.Select<TaskPlan>().Where(o=>o.GUID == TaskPlanIn.GUID).ToList().Count !=0)
+            {
+                return new ResponseCommon { msg = "此任务计划正在执行，不允许修改！", code = "1" }.ToJsonCommon();
+            }
+
             var dsuptate = await _SqlLiteContext.TaskPlan.Where(o => o.CODE == TaskPlanIn.CODE).FirstOrDefaultAsync();
             dsuptate.Frequency = TaskPlanIn.Frequency;
             dsuptate.FrequencyType = TaskPlanIn.FrequencyType;
@@ -203,6 +210,12 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> TaskPlanDelete(string GUID)
         {
+            if (_sqliteFSql.Select<TaskPlan>().Where(o => o.GUID == GUID).ToList().Count != 0)
+            {
+                return new ResponseCommon { msg = "此任务计划正在执行，不允许删除！", code = "1" }.ToJsonCommon();
+            }
+
+
             var orgdelete = await _SqlLiteContext.TaskPlan.AsNoTracking().Where(o => o.GUID == GUID).FirstOrDefaultAsync();
 
             var tkdetailrembe = await _SqlLiteContext.TaskPlanRelation.AsNoTracking().Where(o => o.TaskPlanGuid == GUID).ToListAsync();

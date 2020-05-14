@@ -36,17 +36,13 @@ namespace AutoSchedule.Dtos.Models
         /// <summary>
         /// 任务状态
         /// </summary>
-        public string State { get; set; }
+        public string Status { get; set; }
 
         /// <summary>
         /// 数据接受类型 0：发送数据到dll   1 ：发送数据到api
         /// </summary>
         public string WorkType { get; set; }
 
-        /// <summary>
-        /// 运行状态
-        /// </summary>
-        public string Status { get; set; }
     }
 
     public class TaskPlanData

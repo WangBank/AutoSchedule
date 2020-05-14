@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using AutoSchedule.Common;
 using AutoSchedule.Dtos.Data;
 using AutoSchedule.Models;
@@ -44,9 +45,37 @@ namespace AutoSchedule
             {
                 SqlLiteConn = Configuration.GetConnectionString("SqlLiteWin");
             }
+
+            services.AddSingleton(HtmlEncoder.Create(UnicodeRanges.All));
+            #region 限流
+            services.AddOptions();
+            services.AddMemoryCache();
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+            //services.Configure<IpRateLimitOptions>(options => {
+            //    options.HttpStatusCode = 429;
+            //    options.QuotaExceededResponse = new QuotaExceededResponse { Content = "{{ \"message\": \"访问被限制\", \"details\": \"最大允许值每{1}{0}次 请在{2}s后重试\" }}", ContentType = "application/json; charset=utf-8", StatusCode = 429 };
+            //    options.GeneralRules = new System.Collections.Generic.List<RateLimitRule>
+            //    {
+            //        new RateLimitRule
+            //        {
+            //            Endpoint = "*:/Home/*",
+            //            Limit = 1,
+            //            Period = "3s"
+            //        }
+            //    };
+            //    options.EnableEndpointRateLimiting = true;
+            //    options.StackBlockedRequests = false;
+            //    options.RealIpHeader = "X-Real-IP";
+            //    options.ClientIdHeader = "X-ClientId";
+            //});
+            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+
+            #endregion
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(SqlLiteConn), ServiceLifetime.Scoped);
             services.AddHttpClient();
-            //自定义注册服务
+
             services.AddExtendService(configure =>
             {
                 configure.UseAutoTaskJob();
@@ -55,14 +84,14 @@ namespace AutoSchedule
                 configure.UseQuartzStartup();
             });
             services.AddSingleton<FreeSqlFactory>();
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
-            });
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
             services.AddMvc().AddNewtonsoftJson(s => s.SerializerSettings.ContractResolver = new DefaultContractResolver());
+           
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
 
         private void GetServiceByOther(IServiceCollection services)
@@ -91,7 +120,9 @@ namespace AutoSchedule
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-            
+
+            app.UseIpRateLimiting();
+
             app.UseStaticFiles();
             lifetime.ApplicationStarted.Register(UnRegService);
             //app.Run(r => r.Response.WriteAsync("没想到吧",Encoding.GetEncoding("utf-8")));

@@ -42,5 +42,7 @@ namespace AutoSchedule.ServiceBuilder
         {
             _services.AddSingleton<QuartzStartup>();
         }
+
+
     }
 }
