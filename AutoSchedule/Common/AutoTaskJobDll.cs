@@ -40,17 +40,17 @@ namespace AutoSchedule.Common
 
         public async Task Execute(IJobExecutionContext context)
         {
-            
+
             var _SqlLiteContext = _freeSqlFactory.GetBaseSqlLite();
             JobKey key = context.JobDetail.Key;
             JobDataMap dataMap = context.JobDetail.JobDataMap;
             string jobSays = dataMap.GetString("guid");
             var TaskPlan = await _SqlLiteContext.Select<TaskPlan>().Where(o => o.GUID == jobSays).FirstAsync();
-                _logger.LogInformation("{EventId}:开始执行！", TaskPlan.Name);
-                string orgCode = TaskPlan.OrgCode;
-                var OrgSetting = await _SqlLiteContext.Select<Organization>().Where(o => o.CODE == orgCode).FirstAsync();
-                string connectString = OrgSetting.ConnectingString;
-                string orgType = string.Empty;
+            _logger.LogInformation("{EventId}:开始执行！", TaskPlan.Name);
+            string orgCode = TaskPlan.OrgCode;
+            var OrgSetting = await _SqlLiteContext.Select<Organization>().Where(o => o.CODE == orgCode).FirstAsync();
+            string connectString = OrgSetting.ConnectingString;
+            string orgType = string.Empty;
             try
             {
                 switch (OrgSetting.DBType)
@@ -146,17 +146,16 @@ namespace AutoSchedule.Common
                             maindetail.ImportRow(dataMaindt.Rows[h]);
                             datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
                         }
-                        JobPara jobPara = new JobPara();
-                        string allResult =  upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas,out string result);
-                        if (result == "0")
+                        int allResult = upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
+                        if (allResult == 0)
                         {
                             await _SqlHelper.ExecSqlAsync(afterSuccess);
-                            _logger.LogInformation("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", TaskPlan.Name, allResult, dataSource[j].Name, afterSuccess);
+                            _logger.LogInformation("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", TaskPlan.Name, dataSource[j].Name, afterSuccess);
                         }
                         else
                         {
                             await _SqlHelper.ExecSqlAsync(afterFalse);
-                            _logger.LogError("{EventId}:\r\n调用接口返回结果:{result}数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name, allResult, dataSource[j].Name, afterFalse);
+                            _logger.LogError("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name, dataSource[j].Name, afterFalse);
                         }
                     }
                 }

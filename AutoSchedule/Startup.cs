@@ -2,6 +2,7 @@ using AspNetCoreRateLimit;
 using AutoSchedule.Common;
 using AutoSchedule.Dtos.Data;
 using AutoSchedule.Models;
+using ExcuteInterface;
 using FreeSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -94,10 +95,6 @@ namespace AutoSchedule
             services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
 
-        private void GetServiceByOther(IServiceCollection services)
-        {
-            GetContext.ServiceProvider = services.BuildServiceProvider();
-        }
 
         private void getService()
         {

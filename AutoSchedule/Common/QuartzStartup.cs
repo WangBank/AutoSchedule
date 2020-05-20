@@ -1,9 +1,6 @@
 ﻿using AutoSchedule.Dtos.Data;
-using AutoSchedule.Dtos.MessageModel;
 using AutoSchedule.Dtos.Models;
 using FreeSql;
-using Jdwl.Api.Message;
-using Jdwl.Api.Message.Protocol;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

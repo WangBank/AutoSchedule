@@ -192,4 +192,26 @@ namespace AutoTask.Model
     }
 
     #endregion
+
+    #region 调拨出库单response类
+    public class DBCKDResponseBody
+    {
+        public DBCKDResponse response { get; set; }
+    }
+    public class DBCKDResponse
+    {
+        public DBCKDContent content { get; set; }
+        public int code { get; set; }
+    }
+
+    public class DBCKDContent
+    {
+        public string createTime { get; set; }
+        public string code { get; set; }
+        public string flag { get; set; }
+        public string deliveryOrderCode { get; set; }
+        public string message { get; set; }
+    }
+
+    #endregion
 }

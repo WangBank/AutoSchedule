@@ -12,6 +12,10 @@
     <Company>怕会丢失记忆</Company>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>D:\Projects\DotnetCore\AutoSchedule\DebugAndPublish\Debug\MVC\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="AspNetCoreRateLimit" Version="3.0.5" />
     <PackageReference Include="FreeSql.Provider.Oracle" Version="1.3.6" />
@@ -35,21 +39,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="BankDbHelper">
-      <HintPath>..\CommonDll\netstandard2.1\BankDbHelper.dll</HintPath>
-    </Reference>
-    <Reference Include="ExcuteInterface">
-      <HintPath>..\CommonDll\ExcuteInterface.dll</HintPath>
-    </Reference>
-    <Reference Include="LopSdk">
-      <HintPath>..\CommonDll\LopSdk.dll</HintPath>
-    </Reference>
-    <Reference Include="LopSdk.Api">
-      <HintPath>..\CommonDll\LopSdk.Api.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\CommonDll\Newtonsoft.Json.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\BankDbHelper\BankDbHelper.csproj" />
+    <ProjectReference Include="..\ExcuteInterface\ExcuteInterface.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Oracle.ManagedDataAccess">
       <HintPath>TaskDlls\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>

@@ -53,8 +53,6 @@ namespace AutoSchedule.Controllers
                 return new ResponseCommon { msg = "此数据源正在执行，不允许修改！", code = "1" }.ToJsonCommon();
             }
 
-
-
             var dsUpdate = await _SqlLiteContext.OpenSql.AsNoTracking().Where(o => o.GUID == dataSourceAddIn.GUID).FirstOrDefaultAsync();
             dsUpdate.AfterSqlString = dataSourceAddIn.AfterSqlString;
             dsUpdate.AfterSqlstring2 = dataSourceAddIn.AfterSqlstring2;
