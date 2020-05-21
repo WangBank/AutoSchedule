@@ -146,7 +146,7 @@ namespace AutoSchedule.Common
                             maindetail.ImportRow(dataMaindt.Rows[h]);
                             datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
                         }
-                        int allResult = upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
+                        int allResult = await upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
                         if (allResult == 0)
                         {
                             await _SqlHelper.ExecSqlAsync(afterSuccess);

@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace ExcuteInterface
 {
 	public interface IUpJob
 	{
 		// Token: 0x0600000D RID: 13
-		int ExecJob(JobPara jobParams, List<Datas> dsData);
+		Task<int> ExecJob(JobPara jobParams, List<Datas> dsData);
 	}
 	public class Datas
 	{
