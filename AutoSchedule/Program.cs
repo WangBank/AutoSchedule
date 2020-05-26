@@ -26,7 +26,7 @@ namespace AutoSchedule
                 {
                     logging.ClearProviders();
                     logging.SetMinimumLevel(LogLevel.Information);
-                    logging.AddConsole();
+                    //logging.AddConsole();
                 })
                 .UseNLog(options);
         }

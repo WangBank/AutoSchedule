@@ -183,7 +183,7 @@ namespace AutoSchedule.Controllers
         [HttpPost]
         public async Task<string> TaskPlanEdit([FromBody]TaskPlan TaskPlanIn)
         {
-            if (_sqliteFSql.Select<TaskPlan>().Where(o=>o.GUID == TaskPlanIn.GUID).ToList().Count !=0)
+            if (_sqliteFSql.Select<TaskPlan>().Where(o=>o.GUID == TaskPlanIn.GUID && o.Status=="1").ToList().Count !=0)
             {
                 return new ResponseCommon { msg = "此任务计划正在执行，不允许修改！", code = "1" }.ToJsonCommon();
             }
@@ -210,7 +210,7 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<string> TaskPlanDelete(string GUID)
         {
-            if (_sqliteFSql.Select<TaskPlan>().Where(o => o.GUID == GUID).ToList().Count != 0)
+            if (_sqliteFSql.Select<TaskPlan>().Where(o => o.GUID == GUID && o.Status == "1").ToList().Count != 0)
             {
                 return new ResponseCommon { msg = "此任务计划正在执行，不允许删除！", code = "1" }.ToJsonCommon();
             }

@@ -37,7 +37,6 @@ namespace AutoSchedule.Common
             _httpClientFactory = httpClientFactory;
             _freeSqlFactory = freeSqlFactory;
         }
-
         public async Task Execute(IJobExecutionContext context)
         {
 
@@ -94,7 +93,7 @@ namespace AutoSchedule.Common
                 string dllPath = string.Empty;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    dllPath = "TaskDlls/" + TaskPlan.DllOrUrl.Split(',')[0];
+                    dllPath = "TaskDlls/" + TaskPlan.DllOrUrl.Split(',')[0];    
                 }
                 else
                 {
@@ -135,7 +134,7 @@ namespace AutoSchedule.Common
                             MainKeyValue = string.Empty;
                             MainKeyValue = dataMaindt.Rows[h][MainKey].ToString();
                             afterSuccess = dataSource[j].AfterSqlString.Replace($"#{MainKey}#", MainKeyValue);
-                            afterFalse = dataSource[j].AfterSqlstring2.Replace($"#{MainKey}#", MainKeyValue);
+                            afterFalse = dataSource[j].AfterSqlstring2.Replace($"#{MainKey}#", MainKeyValue);   
                             sqlStrings = sqlString.Replace($"#{MainKey}#", MainKeyValue).Split(";");
                             dataTables.Clear();
                             for (int k = 0; k < sqlStrings.Length; k++)
