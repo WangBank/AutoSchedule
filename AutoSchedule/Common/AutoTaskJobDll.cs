@@ -31,11 +31,13 @@ namespace AutoSchedule.Common
         private ILogger<AutoTaskJobDll> _logger;
         public IHttpClientFactory _httpClientFactory;
         public FreeSqlFactory _freeSqlFactory;
-        public AutoTaskJobDll(ILogger<AutoTaskJobDll> logger, IHttpClientFactory httpClientFactory, FreeSqlFactory freeSqlFactory)
+        JobLogger _jobLogger;
+        public AutoTaskJobDll(ILogger<AutoTaskJobDll> logger, IHttpClientFactory httpClientFactory, FreeSqlFactory freeSqlFactory, JobLogger jobLogger)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _freeSqlFactory = freeSqlFactory;
+            _jobLogger = jobLogger;
         }
         public async Task Execute(IJobExecutionContext context)
         {
@@ -99,7 +101,7 @@ namespace AutoSchedule.Common
                 {
                     dllPath = "TaskDlls\\" +TaskPlan.DllOrUrl.Split(',')[0];
                 }
-                object obj = ReflectorDllHelper.ReturnObjType(dllPath, TaskPlan.DllOrUrl);
+                object obj = ReflectorDllHelper.ReturnObjType(dllPath, TaskPlan.DllOrUrl,_jobLogger);
                 IUpJob upJob = obj as IUpJob;
                 for (int j = 0; j < dataSource.Count; j++)
                 {
@@ -145,8 +147,10 @@ namespace AutoSchedule.Common
                             maindetail.ImportRow(dataMaindt.Rows[h]);
                             datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
                         }
-                        int allResult = await upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
-                        if (allResult == 0)
+
+                        
+                        var allResult =  upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
+                        if (await allResult == 0)
                         {
                             await _SqlHelper.ExecSqlAsync(afterSuccess);
                             _logger.LogInformation("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", TaskPlan.Name, dataSource[j].Name, afterSuccess);

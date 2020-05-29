@@ -1,4 +1,8 @@
-﻿using AutoSchedule.Common;
+﻿using AspNetCoreRateLimit;
+using AutoSchedule.Common;
+using AutoSchedule.Dtos.Data;
+using ExcuteInterface;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
@@ -38,9 +42,14 @@ namespace AutoSchedule.ServiceBuilder
             _services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
         }
 
-        public void UseQuartzStartup()
+        public void UseSingleCommon()
         {
+            _services.AddSingleton<FreeSqlFactory>();
             _services.AddSingleton<QuartzStartup>();
+            
+            _services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            _services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
 
 

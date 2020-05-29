@@ -7,6 +7,7 @@
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <UserSecretsId>159fdd49-74d5-4b3b-bbb0-4801f43ef4df</UserSecretsId>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <SignAssembly>false</SignAssembly>
     <Authors>王银行</Authors>
     <Company>怕会丢失记忆</Company>
@@ -58,7 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="NLogdb.config">
+    <Content Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -71,6 +72,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Db\Data - 复制.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Db\Data.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -1,41 +1,34 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoSchedule.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace ExcuteInterface
 {
-    public  class GetContext
+    public class GetContext:Singleton<GetContext>
     {
-        private static ILogger _logger;
-        private static readonly object locker = new object();
-            
-
-        public static IServiceProvider ServiceProvider { get; set; }
-        public static T GetService<T>()
+        public  IServiceProvider ServiceProvider { get; set; }
+        public  T GetService<T>()
         {
            return ServiceProvider.GetService<T>();
         }
 
-        public async static Task WriteLogAsync(LogType logType,string name,string info)    
+    }
+    public class JobLogger
+    {
+        public readonly  ILogger<JobLogger> _logger;
+        public JobLogger(ILogger<JobLogger> logger)
         {
-            
-            if (_logger == null)
-            {
-                lock (locker)
-                {
-                    if (_logger == null)
-                    {
-                        _logger = new JobLogger()._logger;
-                    }
-                }
-            }
-
+            _logger = logger;
+        }
+        public async Task WriteLogAsync(LogType logType, string name, string info)
+        {
             switch (logType)
             {
                 case LogType.Info:
-                    await Task.Run(()=> { _logger.LogInformation("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
+                    await Task.Run(() => { _logger.LogInformation("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
                     break;
                 //case LogType.Debug:
                 //    await Task.Run(() => { _logger.LogDebug("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
@@ -44,20 +37,31 @@ namespace ExcuteInterface
                     await Task.Run(() => { _logger.LogWarning("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
                     break;
                 case LogType.Error:
-                    await Task.Run(() => { _logger.LogError("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
+                    await Task.Run(() => { _logger.LogError("{EventId}:{result}", name, info); });
                     break;
                 default:
                     break;
             }
         }
-    }
-
-    public class JobLogger
-    {
-        public ILogger _logger;
-        public JobLogger()
+        public void  WriteLog(LogType logType, string name, string info)
         {
-            _logger = GetContext.GetService<ILoggerProvider>().CreateLogger("JobLogger");
+            switch (logType)
+            {
+                case LogType.Info:
+                     _logger.LogInformation("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString());
+                    break;
+                //case LogType.Debug:
+                //    await Task.Run(() => { _logger.LogDebug("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
+                //    break;
+                case LogType.Warning:
+                    _logger.LogWarning("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString());
+                    break;
+                case LogType.Error:
+                     _logger.LogError("{EventId}:{result}", name, info);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 

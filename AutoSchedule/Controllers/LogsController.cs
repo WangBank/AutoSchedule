@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
 using AutoSchedule.Dtos.RequestIn;
+using FreeSql;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,16 +14,22 @@ namespace AutoSchedule.Controllers
 {
     public class LogsController : Controller
     {
-        private SqlLiteContext _SqlLiteContext;
+        public FreeSqlFactory _freeSqlFactory;
+       // private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<LogsController> _logger;
-       
-        public LogsController(ILogger<LogsController> logger, SqlLiteContext SqlLiteContext)
+        IFreeSql _SqlLiteContext;
+
+        //, SqlLiteContext SqlLiteContext
+        public LogsController(ILogger<LogsController> logger, FreeSqlFactory freeSqlFactory)
         {
-            _SqlLiteContext = SqlLiteContext;
+            //_SqlLiteContext = SqlLiteContext;
             _logger = logger;
+            _freeSqlFactory = freeSqlFactory;
+            _SqlLiteContext = _freeSqlFactory.GetBaseLogSqlLite();
         }
         public IActionResult Index()
         {
+            _SqlLiteContext.Ado.ExecuteNonQuery($"DELETE FROM Logs WHERE EventId is null or EventId=''");
             return View();
         }
 
@@ -30,13 +37,15 @@ namespace AutoSchedule.Controllers
         [HttpGet]
         public async Task<LogsModelData> LogsResult(int page,int limit,string value = "")
         {
-            var skeyAll = _SqlLiteContext.Logs.AsNoTracking();
+          ISelect<Logs> skeyAll = _SqlLiteContext.Select<Logs>();
+            var count = _SqlLiteContext.Select<Logs>().Count().ToInt();
             if (!string.IsNullOrEmpty(value))
             {
-                skeyAll = _SqlLiteContext.Logs.AsNoTracking().Where(s => s.Level.Contains(value) || s.Message.Contains(value));
+                skeyAll = skeyAll.Where(s => s.Level.Contains(value) || s.Message.Contains(value));
             }
+          
             var skey = await skeyAll.OrderByDescending(s => s.TimestampUtc).Skip((page - 1) * limit).Take(limit).ToListAsync();
-            //var skey = await _SqlLiteContext.Logs.AsNoTracking().ToListAsync();
+            //var skey = await _SqlLiteContext.Select<Logs>().ToListAsync();
             List<LogsModel> data = new List<LogsModel>();
             foreach (var item in skey)
             {
@@ -44,7 +53,7 @@ namespace AutoSchedule.Controllers
             }
 
 
-            return new LogsModelData { msg = "", count = skeyAll.Count(), code = 0, data = data };
+            return new LogsModelData { msg = "", count = count, code = 0, data = data };
         }
 
         [HttpGet]
@@ -57,25 +66,28 @@ namespace AutoSchedule.Controllers
             if (logNum.Contains(","))
             {
                 var logs = logNum.Split(',');
-                var logList =await  _SqlLiteContext.Logs.AsNoTracking().Where(o => logs.Contains(o.Id)).ToListAsync();
-                _SqlLiteContext.Logs.RemoveRange(logList);
+                if (await _SqlLiteContext.Delete<Logs>().Where(o => logs.Contains(o.Id)).ExecuteAffrowsAsync() > 0)
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+                }
+                else
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除日志", code = "-1" });
+                }
             }
             else
             {
-                var logDelete = await _SqlLiteContext.Logs.AsNoTracking().Where(o => o.Id == logNum).FirstOrDefaultAsync();
-
-                _SqlLiteContext.Logs.Remove(logDelete);
+                if (await _SqlLiteContext.Delete<Logs>().Where(o => o.Id == logNum).ExecuteAffrowsAsync() > 0)
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
+                }
+                else
+                {
+                    return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除日志", code = "-1" });
+                }
             }
             
-
-            if (await _SqlLiteContext.SaveChangesAsync() > 0)
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "", code = "0" });
-            }
-            else
-            {
-                return System.Text.Json.JsonSerializer.Serialize(new ResponseCommon { msg = "删除日志", code = "-1" });
-            }
+           
         }
 
     }

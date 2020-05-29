@@ -1,5 +1,6 @@
 ﻿using AutoSchedule.Dtos.Data;
 using AutoSchedule.Dtos.Models;
+using ExcuteInterface;
 using FreeSql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AutoSchedule.Common
@@ -31,9 +33,11 @@ namespace AutoSchedule.Common
         private IConfiguration _Configuration;
         private string RedisConnectstring;
         private readonly int RedisDb;
+        JobLogger _jobLogger;
         private IFreeSql _sqliteFSql;
-        public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory, IConfiguration configuration, IServiceProvider serviceProvider, FreeSqlFactory freeSqlFactory)
+        public QuartzStartup(IJobFactory iocJobfactory, ILogger<QuartzStartup> logger, ISchedulerFactory schedulerFactory, IConfiguration configuration, IServiceProvider serviceProvider, FreeSqlFactory freeSqlFactory, JobLogger jobLogger)
         {
+            _jobLogger = jobLogger;
             string SqlLiteConn = string.Empty;
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -66,8 +70,11 @@ namespace AutoSchedule.Common
        
         public async Task<string> Start(List<string> param)
         {
+           
+            //return await Task.FromResult($"开启失败，失败原因");
             try
             {
+
                 int Second = 0;
                 if (param.Count > 1 && _scheduler != null)
                 {

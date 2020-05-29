@@ -32,9 +32,6 @@ namespace AutoSchedule.Controllers
 
         public IActionResult Index()
         {
-            //清空一下无用日志
-            _SqlLiteContext.Database.ExecuteSqlRaw($"DELETE FROM Logs WHERE EventId is null or EventId=''");
-            _SqlLiteContext.SaveChanges();
             return View();
         }
 

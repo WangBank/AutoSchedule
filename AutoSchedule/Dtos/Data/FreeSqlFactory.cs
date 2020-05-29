@@ -18,6 +18,7 @@ namespace AutoSchedule.Dtos.Data
        
         public List<IFreeSql> freeSqls { get; set; }
         private IFreeSql _baseSqlLite { get; set; }
+        private IFreeSql _baseLogSqlLite { get; set; }
         public IFreeSql GetBaseSqlLite()
         {
             string SqlLiteConn = string.Empty;
@@ -38,6 +39,28 @@ namespace AutoSchedule.Dtos.Data
                   .Build();
             }
             return _baseSqlLite;
+        }
+
+        public IFreeSql GetBaseLogSqlLite()
+        {
+            string SqlLiteConn = string.Empty;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                SqlLiteConn = Configuration.GetConnectionString("SqlLiteLogLinux");
+            }
+            else
+            {
+                SqlLiteConn = Configuration.GetConnectionString("SqlLiteLogWin");
+            }
+            if (_baseLogSqlLite == null)
+            {
+                _baseLogSqlLite = new FreeSqlBuilder()
+                  .UseConnectionString(DataType.Sqlite, SqlLiteConn)
+                  .UseAutoSyncStructure(false)
+                  .Build();
+            }
+            return _baseLogSqlLite;
         }
 
         public IFreeSql CreateNewDb(DataType dataType, string SqlLiteConn)

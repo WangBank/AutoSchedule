@@ -47,6 +47,7 @@ namespace AutoSchedule
                 SqlLiteConn = Configuration.GetConnectionString("SqlLiteWin");
             }
 
+
             services.AddSingleton(HtmlEncoder.Create(UnicodeRanges.All));
             #region 限流
             services.AddOptions();
@@ -72,7 +73,6 @@ namespace AutoSchedule
             services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
             services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
             services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
-
             #endregion
             services.AddDbContext<SqlLiteContext>(options => options.UseSqlite(SqlLiteConn), ServiceLifetime.Scoped);
             services.AddHttpClient();
@@ -82,17 +82,13 @@ namespace AutoSchedule
                 configure.UseAutoTaskJob();
                 configure.UseIOCJobFactory();
                 configure.UseISchedulerFactory();
-                configure.UseQuartzStartup();
+                configure.UseSingleCommon();
             });
-            services.AddSingleton<FreeSqlFactory>();
-
+            services.AddSingleton<JobLogger>();
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
-
             services.AddMvc().AddNewtonsoftJson(s => s.SerializerSettings.ContractResolver = new DefaultContractResolver());
            
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
-            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+           
         }
 
 
@@ -100,10 +96,11 @@ namespace AutoSchedule
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                var quartzStartup = (QuartzStartup)GetContext.ServiceProvider.GetService(typeof(QuartzStartup));
+                var quartzStartup = (QuartzStartup)GetContext.getInstance().ServiceProvider.GetService(typeof(QuartzStartup));
+              
                 quartzStartup.rds.Clear();
+
             }
-             
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -123,7 +120,7 @@ namespace AutoSchedule
             app.UseStaticFiles();
             lifetime.ApplicationStarted.Register(UnRegService);
             //app.Run(r => r.Response.WriteAsync("没想到吧",Encoding.GetEncoding("utf-8")));
-            GetContext.ServiceProvider = app.ApplicationServices;
+            GetContext.getInstance().ServiceProvider = app.ApplicationServices;
             getService();
             app.UseRouting();
             app.UseAuthorization();
@@ -141,6 +138,7 @@ namespace AutoSchedule
             Console.WriteLine("网站启动成功,请勿关闭此窗口!");
             Console.WriteLine($"请访问:localhost:{Configuration.GetSection("urls").Value.Split(':')[2]} 进行下一步配置!");
             Console.WriteLine($"祝您生活愉快");
+           
         }
 
     }
