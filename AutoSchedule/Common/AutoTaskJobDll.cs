@@ -28,7 +28,7 @@ namespace AutoSchedule.Common
     /// </summary>
     public class AutoTaskJobDll : IJob
     {
-        private ILogger<AutoTaskJobDll> _logger;
+        private readonly ILogger<AutoTaskJobDll> _logger;
         public IHttpClientFactory _httpClientFactory;
         public FreeSqlFactory _freeSqlFactory;
         JobLogger _jobLogger;
@@ -147,8 +147,12 @@ namespace AutoSchedule.Common
                             maindetail.ImportRow(dataMaindt.Rows[h]);
                             datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
                         }
-
-                        
+                        for (int i = 0; i < 100000; i++)
+                        {
+                            //_logger.LogError("{EventId}:{result}", "test", $"error日志{i},当前线程id{Thread.CurrentThread.ManagedThreadId}");
+                            _jobLogger.WriteLog(LogType.Error, "test", $"error日志{i},当前线程id{Thread.CurrentThread.ManagedThreadId}");
+                        }
+                        return;
                         var allResult =  upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
                         if (await allResult == 0)
                         {

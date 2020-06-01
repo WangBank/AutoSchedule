@@ -28,7 +28,7 @@ namespace AutoSchedule.Common
         private readonly ISchedulerFactory _schedulerFactory;
         private IScheduler _scheduler;
         public readonly IJobFactory _iocJobfactory;
-        private IJobDetail jobDetail;
+        
         public Redis rds;
         private IConfiguration _Configuration;
         private string RedisConnectstring;
@@ -61,20 +61,34 @@ namespace AutoSchedule.Common
             {
                 rds = new Redis(RedisConnectstring, redispwd, RedisDb);
             }
+
             _sqliteFSql = freeSqlFactory.GetBaseSqlLite();
             _sqliteFSql.Update<TaskPlan>()
             .Set(a => a.Status, "0")
             .Where(a => a.Status == "1")
             .ExecuteAffrows();
         }
-       
+
+        public async Task LogDela()
+        {
+            await taskFactory.StartNew(() =>
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    _jobLogger.WriteLog(LogType.Error, "wangzhen", $"当前线程id:{Thread.CurrentThread.ManagedThreadId.ToString()}");
+                }
+            });
+        }
+
         public async Task<string> Start(List<string> param)
         {
-           
+
+
+          //  await LogDela();
             //return await Task.FromResult($"开启失败，失败原因");
             try
             {
-
+              
                 int Second = 0;
                 if (param.Count > 1 && _scheduler != null)
                 {
@@ -103,17 +117,20 @@ namespace AutoSchedule.Common
                             break;
                     }
 
+
                     //2、通过调度工厂获得调度器
                     _scheduler = await _schedulerFactory.GetScheduler();
                     _scheduler.JobFactory = this._iocJobfactory;
                     //  替换默认工厂
                     //3、开启调度器
                     _logger.LogInformation("定时任务({EventId})启动", ts.Name);
+
                     await _scheduler.Start();
                     //4、创建一个触发器
                     var trigger = TriggerBuilder.Create()
                                     .WithSimpleSchedule(x => x.WithIntervalInSeconds(Second).RepeatForever())
                                     .Build();
+                    IJobDetail jobDetail;
                     //5、创建任务 0是dll 模式 1是api模式
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
@@ -121,6 +138,7 @@ namespace AutoSchedule.Common
                         {
                             return await Task.FromResult($"已经开启过任务{ts.Name}不允许重复开启！");
                         }
+                      
 
                         if (ts.WorkType == "0")
                         {
@@ -179,12 +197,14 @@ namespace AutoSchedule.Common
                     await _scheduler.ScheduleJob(jobDetail, trigger);
 
                 }
-                return await Task.FromResult("0");
+                // return await Task.FromResult("0");
+                return "0";
             }
             catch (Exception ex)
             {
                 _logger.LogError($"开启失败，失败原因:{ex.Message}");
-                return await Task.FromResult($"开启失败，失败原因:{ex.Message}");
+                //return await Task.FromResult($"开启失败，失败原因:{ex.Message}");
+                return $"开启失败，失败原因:{ex.Message}";
             }
 
         }

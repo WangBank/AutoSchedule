@@ -23,26 +23,6 @@ namespace ExcuteInterface
         {
             _logger = logger;
         }
-        public async Task WriteLogAsync(LogType logType, string name, string info)
-        {
-            switch (logType)
-            {
-                case LogType.Info:
-                    await Task.Run(() => { _logger.LogInformation("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
-                    break;
-                //case LogType.Debug:
-                //    await Task.Run(() => { _logger.LogDebug("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
-                //    break;
-                case LogType.Warning:
-                    await Task.Run(() => { _logger.LogWarning("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
-                    break;
-                case LogType.Error:
-                    await Task.Run(() => { _logger.LogError("{EventId}:{result}", name, info); });
-                    break;
-                default:
-                    break;
-            }
-        }
         public void  WriteLog(LogType logType, string name, string info)
         {
             switch (logType)
