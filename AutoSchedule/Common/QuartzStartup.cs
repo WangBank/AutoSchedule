@@ -83,8 +83,31 @@ namespace AutoSchedule.Common
         public async Task<string> Start(List<string> param)
         {
 
+        //    string SqlLiteConn = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "Data Source=Db/LogData.dll;" : "Data Source=Db\\LogData.dll;";
+        //    using (var logW = new FreeSqlBuilder()
+        //.UseConnectionFactory(FreeSql.DataType.Sqlite, () => new System.Data.SQLite.SQLiteConnection(SqlLiteConn))
+        // .UseAutoSyncStructure(false)
+        // .Build())
+        //    {
+        //        var logs = new List<Logs>();
+        //        for (int i = 0; i < 100000; i++)
+        //        {
+        //            logs.Add(new Logs
+        //            {
+        //                Application = "test",
+        //                EventId = "test",
+        //                Level = "test",
+        //                Logger = "freesqlLogger",
+        //                Message = i.ToString() + "当前线程id" + Thread.CurrentThread.ManagedThreadId,
+        //                TimestampUtc = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
 
-          //  await LogDela();
+        //            });
+        //        }
+        //        _ = logW.Insert(logs).NoneParameter(true).ExecuteAffrows();
+        //        logs = null;
+        //    }
+        //    return "";
+            //  await LogDela();
             //return await Task.FromResult($"开启失败，失败原因");
             try
             {

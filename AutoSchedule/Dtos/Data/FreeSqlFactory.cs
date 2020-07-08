@@ -43,20 +43,11 @@ namespace AutoSchedule.Dtos.Data
 
         public IFreeSql GetBaseLogSqlLite()
         {
-            string SqlLiteConn = string.Empty;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                SqlLiteConn = Configuration.GetConnectionString("SqlLiteLogLinux");
-            }
-            else
-            {
-                SqlLiteConn = Configuration.GetConnectionString("SqlLiteLogWin");
-            }
+            string SqlLiteConn = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? SqlLiteConn = Configuration.GetConnectionString("SqlLiteLogLinux") : Configuration.GetConnectionString("SqlLiteLogWin");
             if (_baseLogSqlLite == null)
             {
                 _baseLogSqlLite = new FreeSqlBuilder()
-                  .UseConnectionString(DataType.Sqlite, SqlLiteConn)
+                  .UseConnectionFactory(FreeSql.DataType.Sqlite, () => new System.Data.SQLite.SQLiteConnection(SqlLiteConn))
                   .UseAutoSyncStructure(false)
                   .Build();
             }

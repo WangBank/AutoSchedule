@@ -14,16 +14,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FreeSql.Provider.Sqlite" Version="1.5.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.3" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ExcuteInterface\ExcuteInterface.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="BankDbHelper">
       <HintPath>..\CommonDll\netstandard2.1\BankDbHelper.dll</HintPath>
-    </Reference>
-    <Reference Include="ExcuteInterface">
-      <HintPath>..\CommonDll\ExcuteInterface.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\CommonDll\Newtonsoft.Json.dll</HintPath>

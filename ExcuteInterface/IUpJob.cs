@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace ExcuteInterface
 {
-	public interface IUpJob
+	public interface IUpJob:IDisposable
 	{
-		// Token: 0x0600000D RID: 13
 		Task<int> ExecJob(JobPara jobParams, List<Datas> dsData);
 	}
 	public class Datas

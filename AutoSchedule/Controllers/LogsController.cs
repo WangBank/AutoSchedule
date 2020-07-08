@@ -15,21 +15,18 @@ namespace AutoSchedule.Controllers
     public class LogsController : Controller
     {
         public FreeSqlFactory _freeSqlFactory;
-       // private SqlLiteContext _SqlLiteContext;
         private readonly ILogger<LogsController> _logger;
         IFreeSql _SqlLiteContext;
 
-        //, SqlLiteContext SqlLiteContext
         public LogsController(ILogger<LogsController> logger, FreeSqlFactory freeSqlFactory)
         {
-            //_SqlLiteContext = SqlLiteContext;
             _logger = logger;
             _freeSqlFactory = freeSqlFactory;
             _SqlLiteContext = _freeSqlFactory.GetBaseLogSqlLite();
         }
         public IActionResult Index()
         {
-            _SqlLiteContext.Ado.ExecuteNonQuery($"DELETE FROM Logs WHERE EventId is null or EventId=''");
+            _SqlLiteContext.Delete<Logs>().Where(o => o.EventId == null || o.EventId == "").ExecuteAffrows();
             return View();
         }
 
@@ -45,7 +42,6 @@ namespace AutoSchedule.Controllers
             }
           
             var skey = await skeyAll.OrderByDescending(s => s.TimestampUtc).Skip((page - 1) * limit).Take(limit).ToListAsync();
-            //var skey = await _SqlLiteContext.Select<Logs>().ToListAsync();
             List<LogsModel> data = new List<LogsModel>();
             foreach (var item in skey)
             {

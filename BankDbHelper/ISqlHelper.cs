@@ -8,8 +8,11 @@ namespace BankDbHelper
 {
     public interface ISqlHelper: IDisposable
     {
-#if NS21
-
+        #if NS21
+        /// <summary>
+        /// 测试数据库连接，成功返回true
+        /// </summary>
+        /// <returns></returns>
         Task<bool> TestConnectionAsync();
 
         Task<DataSet> GetDataSetAsync(string sql);

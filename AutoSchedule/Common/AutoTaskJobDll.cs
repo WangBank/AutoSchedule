@@ -4,6 +4,7 @@ using AutoSchedule.Dtos.RequestIn;
 using AutoSchedule.TaskDlls;
 using BankDbHelper;
 using ExcuteInterface;
+using FreeSql;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -101,71 +102,72 @@ namespace AutoSchedule.Common
                 {
                     dllPath = "TaskDlls\\" +TaskPlan.DllOrUrl.Split(',')[0];
                 }
-                object obj = ReflectorDllHelper.ReturnObjType(dllPath, TaskPlan.DllOrUrl,_jobLogger);
-                IUpJob upJob = obj as IUpJob;
-                for (int j = 0; j < dataSource.Count; j++)
+                object obj = ReflectorDllHelper.ReturnObjType(dllPath, TaskPlan.DllOrUrl, _jobLogger);
+                using (IUpJob upJob = obj as IUpJob)
                 {
-                    MainKey = dataSource[j].MainKey;
-                    groupSql = dataSource[j].GroupSqlString;
-                    sqlString = dataSource[j].SqlString;
-                    foreach (var item in systemKes)
+                    for (int j = 0; j < dataSource.Count; j++)
                     {
-                        groupSql = groupSql.Replace($"[{item.KeyName}]", item.KeyValue);
-                        sqlString = sqlString.Replace($"[{item.KeyName}]", item.KeyValue);
-                    }
-                    List<Datas> datas = new List<Datas>();
-                    if (!groupSql.Contains(MainKey))
-                    {
-                        //主数据源中不包含关键字MainKey
-                        _logger.LogError("{EventId}:\r\n主数据源中不包含关键字{MainKey}", TaskPlan.Name, MainKey);
-                        return;
-                    }
-                    else
-                    {
-                        //获取当前任务中分组数据 ,主表
-                        var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
-                        if (dataMaindt.Rows.Count==0)
+                        MainKey = dataSource[j].MainKey;
+                        groupSql = dataSource[j].GroupSqlString;
+                        sqlString = dataSource[j].SqlString;
+                        foreach (var item in systemKes)
                         {
-                            _logger.LogError("{EventId}:\r\n查询无数据：{groupSql}", TaskPlan.Name, groupSql);
-                            return;
+                            groupSql = groupSql.Replace($"[{item.KeyName}]", item.KeyValue);
+                            sqlString = sqlString.Replace($"[{item.KeyName}]", item.KeyValue);
                         }
-                        for (int h = 0; h < dataMaindt.Rows.Count; h++)
+                        List<Datas> datas = new List<Datas>();
+                        if (!groupSql.Contains(MainKey))
                         {
-                            List<DataTable> dataTables = new List<DataTable>();
-                            DataTable maindetail = dataMaindt.Copy();
-                            MainKeyValue = string.Empty;
-                            MainKeyValue = dataMaindt.Rows[h][MainKey].ToString();
-                            afterSuccess = dataSource[j].AfterSqlString.Replace($"#{MainKey}#", MainKeyValue);
-                            afterFalse = dataSource[j].AfterSqlstring2.Replace($"#{MainKey}#", MainKeyValue);   
-                            sqlStrings = sqlString.Replace($"#{MainKey}#", MainKeyValue).Split(";");
-                            dataTables.Clear();
-                            for (int k = 0; k < sqlStrings.Length; k++)
-                            {
-                                dataTables.Add(await _SqlHelper.GetDataTableAsync(sqlStrings[k]));
-                            }
-                            maindetail.Rows.Clear();
-                            maindetail.ImportRow(dataMaindt.Rows[h]);
-                            datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
-                        }
-                        for (int i = 0; i < 100000; i++)
-                        {
-                            //_logger.LogError("{EventId}:{result}", "test", $"error日志{i},当前线程id{Thread.CurrentThread.ManagedThreadId}");
-                            _jobLogger.WriteLog(LogType.Error, "test", $"error日志{i},当前线程id{Thread.CurrentThread.ManagedThreadId}");
-                        }
-                        return;
-                        var allResult =  upJob.ExecJob(new JobPara {connString = connectString,dbType = orgType, jobCode = dataSource[j].GUID}, datas);
-                        if (await allResult == 0)
-                        {
-                            await _SqlHelper.ExecSqlAsync(afterSuccess);
-                            _logger.LogInformation("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", TaskPlan.Name, dataSource[j].Name, afterSuccess);
+                            //主数据源中不包含关键字MainKey
+                            _logger.LogError("{EventId}:\r\n主数据源中不包含关键字{MainKey}", TaskPlan.Name, MainKey);
                         }
                         else
                         {
-                            await _SqlHelper.ExecSqlAsync(afterFalse);
-                            _logger.LogError("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name, dataSource[j].Name, afterFalse);
+                            //获取当前任务中分组数据 ,主表
+                            var dataMaindt = await _SqlHelper.GetDataTableAsync(groupSql);
+                            if (dataMaindt.Rows.Count == 0)
+                            {
+                                _logger.LogError("{EventId}:\r\n查询无数据：{groupSql}", TaskPlan.Name, groupSql);
+                            }
+                            else
+                            {
+                                for (int h = 0; h < dataMaindt.Rows.Count; h++)
+                                {
+                                    List<DataTable> dataTables = new List<DataTable>();
+                                    DataTable maindetail = dataMaindt.Copy();
+                                    MainKeyValue = string.Empty;
+                                    MainKeyValue = dataMaindt.Rows[h][MainKey].ToString();
+                                    afterSuccess = dataSource[j].AfterSqlString.Replace($"#{MainKey}#", MainKeyValue);
+                                    afterFalse = dataSource[j].AfterSqlstring2.Replace($"#{MainKey}#", MainKeyValue);
+                                    sqlStrings = sqlString.Replace($"#{MainKey}#", MainKeyValue).Split(";");
+                                    dataTables.Clear();
+                                    for (int k = 0; k < sqlStrings.Length; k++)
+                                    {
+                                        dataTables.Add(await _SqlHelper.GetDataTableAsync(sqlStrings[k]));
+                                    }
+                                    maindetail.Rows.Clear();
+                                    maindetail.ImportRow(dataMaindt.Rows[h]);
+                                    datas.Add(new Datas { DataMain = maindetail, DataDetail = dataTables });
+                                }
+
+                                var allResult = upJob.ExecJob(new JobPara { connString = connectString, dbType = orgType, jobCode = dataSource[j].GUID }, datas);
+
+                                if (await allResult == 0)
+                                {
+                                    await _SqlHelper.ExecSqlAsync(afterSuccess);
+                                    _logger.LogInformation("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n成功后执行语句为:{afterSuccess}\r\n", TaskPlan.Name, dataSource[j].Name, afterSuccess);
+                                }
+                                else
+                                {
+                                    await _SqlHelper.ExecSqlAsync(afterFalse);
+                                    _logger.LogError("{EventId}:\r\n数据源:{dataSource[j].Name },\r\n失败后执行语句为:{afterFalse}\r\n", TaskPlan.Name, dataSource[j].Name, afterFalse);
+                                }
+                            }
+
                         }
                     }
                 }
+                
             }
             catch (Exception ex)
             {

@@ -8,32 +8,22 @@ namespace ConsoleTool2
     {
         static void Main(string[] args)
         {
-            while (true)
-            {
-                Task.Run(Producer);
-                Thread.Sleep(200);
-            }
+            TaskMethod("Task 0");
+            var t1 = new Task(()=> { TaskMethod("Task 1"); });
+            var t2 = new Task(() => { TaskMethod("Task 2"); });
+            t2.Start();
+            t1.Start();
+
+            Task.Run(()=> TaskMethod("Task 3"));
+            Task.Factory.StartNew(() => TaskMethod("Task 4"));
+            Task.Factory.StartNew(() => TaskMethod("Task 5"),TaskCreationOptions.LongRunning);
+            Console.ReadLine();
+
         }
 
-        static async Task Producer()
+       static  void TaskMethod(string name)
         {
-             await Process();
-        }
-
-        static  void Producer1()
-        {
-             var result =Process().Result;
-        }
-
-        static async Task<bool> Process()
-        {
-            await Task.Run(() =>
-            {
-                Thread.Sleep(1000);
-            });
-
-            Console.WriteLine("Ended - " + DateTime.Now.ToLongTimeString());
-            return true;
+            Console.WriteLine("task {0} is running on a thread id {1}, is thread pool thread:{2}",name,Thread.CurrentThread.ManagedThreadId,Thread.CurrentThread.IsThreadPoolThread);
         }
     }
 }

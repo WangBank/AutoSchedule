@@ -1,7 +1,10 @@
-﻿using BankDbHelper;
+﻿using AutoTask.Models;
+using BankDbHelper;
 using ExcuteInterface;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +17,31 @@ namespace AutoTask
         {
             _jobLogger = jobLogger;
         }
+        bool disposed = false;
+        SafeHandle handle = new Microsoft.Win32.SafeHandles.SafeFileHandle(IntPtr.Zero, true);
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return;
+            if (disposing)
+            {
+                handle.Dispose();
+                // Free any other managed objects here.
+                //
+            }
+            // Free any unmanaged objects here.
+            //
+            disposed = true;
+        }
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources. 
+            Dispose(true);
+
+            // Suppress finalization. 
+            // 默认Dispose方法会清理所有对象（包括托管），所以GC不再需要调用对象重写的Finalize（析构函数）。因此调用GC.SuppressFinalize可以防止GC调用Finalize（防止调用两次析构函数）。
+            GC.SuppressFinalize(this);
+        }
         public async Task<int> ExecJob(JobPara jobPara, List<Datas> dsData)
         {
             int result=0;
@@ -22,7 +50,7 @@ namespace AutoTask
             {
                 case "test":
                     _jobLogger.WriteLog(LogType.Error, "test", $"王振1,当前线程id{Thread.CurrentThread.ManagedThreadId}");
-                    testInt = TestAsync(jobPara,dsData);
+                    _ = await TestAsync(jobPara,dsData);
                     _jobLogger.WriteLog(LogType.Error, "test", $"王振2,当前线程id{Thread.CurrentThread.ManagedThreadId}");
                     break;
                 default:
@@ -33,26 +61,42 @@ namespace AutoTask
 
         public async Task<int> TestAsync(JobPara jobPara, List<Datas> dsData)
         {
-            //await Task.Run(()=> {
-            //    for (int i = 0; i < 100000; i++)
-            //    {
-            //        _jobLogger.WriteLog(LogType.Error, "test", $"error日志{i},当前线程id{Thread.CurrentThread.ManagedThreadId}");
-            //    }
-            //});
-                
-            //    for (int i = 0; i < 99; i++)
-            //    {
-            //     await _jobLogger.WriteLogAsync(LogType.Error, "test", $"error日志{i}");
+            var logs = new List<Logs>();
+            for (int i = 0; i < 100000; i++)
+            {
+                logs.Add(new Logs
+                {
+                    Application = "test",
+                    EventId = "test",
+                    Level = "test",
+                    Logger = "freesqlLogger",
+                    Message = i.ToString() + "当前线程id" + Thread.CurrentThread.ManagedThreadId,
+                    TimestampUtc = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
 
-            //    //await _jobLogger.WriteLogAsync(LogType.Error, "test", $"error日志{i}");
+                });
+            }
+            _ = await _jobLogger._SqlLiteContext.Insert(logs).ExecuteAffrowsAsync();
+            _jobLogger.Dispose();
+            logs = null;
+            //var logs = new List<Logs>();
+            //var log = new Logs();
+            //for (int i = 0; i < 100000; i++)
+            //{
+            //    logs.Add(new Logs
+            //    {
+            //        Application = "test",
+            //        EventId = "test",
+            //        Level = "test",
+            //        Logger = "freesqlLogger",
+            //        Message = i.ToString() + "当前线程id" + Thread.CurrentThread.ManagedThreadId,
+            //        TimestampUtc = DateTime.Now.ToString("yyyy-MM-dd HH:MM:SS")
 
-            //    // await Task.Run(() => { System.Console.WriteLine(i + ",fsafsdfasd," + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
-            //    //await Task.Run(() => { _ = GetContext.WriteLogAsync(LogType.Error, "test", $"error日志{i}"); });
-            //    //await GetContext.WriteLogAsync(LogType.Info, "test", $"info日志{i}");
-            //    //await GetContext.WriteLogAsync(LogType.Error, "test", $"error日志{i}");
-            //    //await GetContext.WriteLogAsync(LogType.Warning, "test", $"waring日志{i}");
+            //    });
+            //    _ = await _jobLogger.GetLogContext().Insert(logs).ExecuteAffrowsAsync();
+            //    // _jobLogger.WriteLog(LogType.Error, "test", "error日志" + i + ",当前线程id" + Thread.CurrentThread.ManagedThreadId);
+
             //}
-
+            //_ = await _jobLogger.GetLogContext().Insert(logs).ExecuteAffrowsAsync();
             return 0;
         }
     }

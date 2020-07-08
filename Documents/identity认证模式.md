@@ -101,7 +101,7 @@ http://localhost:20000/connect/authorize?client_id=AutoScheduleHybrid&redirect_u
 
 
 
-               
+​               
 
      public static IEnumerable<IdentityResource> GetIdentityResources()
             {

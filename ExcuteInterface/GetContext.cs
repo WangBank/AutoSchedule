@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoSchedule.Common;
+using FreeSql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -16,11 +18,66 @@ namespace ExcuteInterface
         }
 
     }
-    public class JobLogger
+    
+    public class JobLogger:IDisposable
     {
+        private static readonly object syslock = new object();
+        public IFreeSql _SqlLiteContext;
+        bool disposed = false;
+        SafeHandle handle = new Microsoft.Win32.SafeHandles.SafeFileHandle(IntPtr.Zero, true);
+        //public IFreeSql GetLogContext()
+        //{
+        //    if (_SqlLiteContext == null)
+        //    {
+        //        //lock (syslock)
+        //        //{
+        //        //    if (_SqlLiteContext == null)
+        //        //    {
+        //        //        string SqlLiteConn = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "Data Source=Db/LogData.dll;" : "Data Source=Db\\LogData.dll;";
+        //        //        _SqlLiteContext = new FreeSqlBuilder()
+        //        //        .UseConnectionFactory(FreeSql.DataType.Sqlite, () => new System.Data.SQLite.SQLiteConnection(SqlLiteConn))
+        //        //         .UseAutoSyncStructure(false)
+        //        //         .Build();
+        //        //    }
+        //        //}
+
+
+                       
+        //    }
+
+        //    return _SqlLiteContext;
+        //}
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+                return;
+            if (disposing)
+            {
+                handle.Dispose();
+                // Free any other managed objects here.
+                //
+            }
+            // Free any unmanaged objects here.
+            //
+            disposed = true;
+        }
+        public void Dispose()
+        {
+            // Dispose of unmanaged resources. 
+            Dispose(true);
+
+            // Suppress finalization. 
+            // 默认Dispose方法会清理所有对象（包括托管），所以GC不再需要调用对象重写的Finalize（析构函数）。因此调用GC.SuppressFinalize可以防止GC调用Finalize（防止调用两次析构函数）。
+            GC.SuppressFinalize(this);
+        }
         public readonly  ILogger<JobLogger> _logger;
         public JobLogger(ILogger<JobLogger> logger)
         {
+             string SqlLiteConn = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "Data Source=Db/LogData.dll;" : "Data Source=Db\\LogData.dll;";
+            _SqlLiteContext = new FreeSqlBuilder()
+            .UseConnectionFactory(FreeSql.DataType.Sqlite, () => new System.Data.SQLite.SQLiteConnection(SqlLiteConn))
+             .UseAutoSyncStructure(false)
+             .Build();
             _logger = logger;
         }
         public void  WriteLog(LogType logType, string name, string info)
@@ -30,14 +87,11 @@ namespace ExcuteInterface
                 case LogType.Info:
                      _logger.LogInformation("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString());
                     break;
-                //case LogType.Debug:
-                //    await Task.Run(() => { _logger.LogDebug("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString()); });
-                //    break;
                 case LogType.Warning:
                     _logger.LogWarning("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString());
                     break;
                 case LogType.Error:
-                     _logger.LogError("{EventId}:{result}", name, info);
+                     _logger.LogError("{EventId}:{result}", name, info + ",ThreadID:" + Thread.CurrentThread.ManagedThreadId.ToString());
                     break;
                 default:
                     break;

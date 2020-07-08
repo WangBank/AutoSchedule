@@ -1,2 +1,0 @@
-FreeSql.Provider.Oracle
-
